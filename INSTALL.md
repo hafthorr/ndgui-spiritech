@@ -10,7 +10,7 @@ You don't need Python or an exe. The installer is a PowerShell script (`install.
 4. Double-click **`install.bat`**. A window opens:
 
    ```
-   ndGUI for Spiritech 0.2.1
+   ndGUI for Spiritech 0.2.2
 
    Game folder: C:\Games\PRK-AO-Native\client
 
@@ -80,11 +80,11 @@ python install.py --uninstall
 python install.py --check                 # only check game folder + requirements
 ```
 
-Settings are looked for under `~/.local/share/ProjectRubiKa/prefs/Client.xml`. Set `NDGUI_PREFS=/full/path/Client.xml` if yours is elsewhere. Linux and Mac are untested so far. Reports welcome.
+Settings are looked for under `~/.local/share/ProjectRubiKa/prefs/Client.xml`. Set `NDGUI_PREFS=/full/path/Client.xml` if yours is elsewhere. Linux and Mac are untested so far. Reports welcome: ask **thedenis** on the PRK Discord.
 
 ## Troubleshooting
 
 - **The window flashes and closes:** run `install.bat` from an unpacked folder, not from inside the zip.
 - **Still looks stock in game:** log out to character select and back in. Check **Options → Interface & HUD → UI packages** lists the `Notum Dovvetech` providers.
-- **One HUD piece is stock again:** the game falls back to its built-in when a provider errors. Look in the newest file in `PRK-AO-Native\logs\` for `ndgui` and open an issue with that line and a screenshot.
+- **One HUD piece is stock again:** the game falls back to its built-in when a provider errors. Look in the newest file in `PRK-AO-Native\logs\` for `ndgui` and send that line and a screenshot to **thedenis** on the PRK Discord (or open an issue).
 - **Everything is broken:** `install.bat` → **3**. If even that fails, delete the `client\UI\Addons\ndgui*` folders, then rename each `*.stock` file back over its neighbour. You can also let the launcher repair the game.

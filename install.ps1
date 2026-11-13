@@ -320,6 +320,7 @@ function Invoke-Install([string]$ClientDir, [bool]$KeepScreens) {
     Write-Host 'Done! Start the game.' -ForegroundColor Green
     Say 'If something still looks stock, log out to character select and back in once.'
     Say 'To undo everything, run install.bat again and pick Uninstall.'
+    Write-Host "`nBugs, issues, ideas? Ask 'thedenis' on the Project Rubi-Ka Discord." -ForegroundColor Cyan
 }
 
 function Invoke-Uninstall([string]$ClientDir) {
@@ -365,6 +366,7 @@ try {
     }
 } catch {
     Write-Host "`n$($_.Exception.Message)" -ForegroundColor Red
+    Write-Host "Stuck? Ask 'thedenis' on the Project Rubi-Ka Discord (send a screenshot of this window)." -ForegroundColor Cyan
     if (-not $Interactive) { exit 1 }
 }
 if ($Interactive) { [void](Read-Host "`nPress Enter to close") }

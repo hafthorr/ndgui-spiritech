@@ -23,7 +23,7 @@ and --uninstall restores them. See INSTALL.md.
 """
 import argparse, glob, json, os, re, runpy, shutil, string, subprocess, sys, traceback
 
-VERSION = "0.2.1"
+VERSION = "0.2.2"
 REPO = os.path.dirname(os.path.abspath(__file__))
 SOURCE = os.path.join(REPO, "addons")
 # Generated on the player's machine from their own client (never copied back by --pull).
@@ -233,6 +233,7 @@ def install(client, stock_screens=False):
         say("  Pick them by hand in the game: Options > Interface & HUD > UI packages.")
     say("\nDone! Start the game. If something still looks stock, log out to character select and back in once.")
     say("To undo everything: python install.py --uninstall")
+    say("Bugs, issues, ideas? Ask 'thedenis' on the Project Rubi-Ka Discord.")
 
 
 def uninstall(client):
