@@ -78,6 +78,14 @@ function M.new(addons_dir, core_dir, opts)
   function ui.place(v, x, y) assert(v, "place nil"); v.x, v.y = x, y end
   function ui.visible(v, b) assert(v, "visible nil"); v.visible = b end
   function ui.text_color(v, c) assert(v, "text_color nil"); v.color = c end
+  H.now, H.clicks = 1000000, {}
+  if not ui.time then ui.time = function() return H.now end end
+  if not ui.destroy then function ui.destroy(v)
+    assert(v, "destroy nil")
+    if v.parent then for i, k in ipairs(v.parent.kids) do if k == v then table.remove(v.parent.kids, i); break end end end
+    v.parent, v.destroyed = nil, true
+  end end
+  if not ui.selected then function ui.selected(v, b) assert(v, "selected nil"); v.selected = b end end
   function ui.graphic_tint(v, c) assert(v, "graphic_tint nil"); v.tint = c end
   ui.parent_width = function() return opts.width or 2000 end
   ui.parent_height = function() return opts.height or 1334 end
@@ -87,6 +95,10 @@ function M.new(addons_dir, core_dir, opts)
     "visual_selected", "bind", "action", "icon", "content", "badge", "fade", "image", "caption", "corner", "center" }) do
     ui[k] = function(v) assert(v, k .. " nil view"); H.calls[k] = (H.calls[k] or 0) + 1 end
   end
+  ui.local_x = function(v) assert(v, "local_x nil"); return v.x or 0 end
+  ui.local_y = function(v) assert(v, "local_y nil"); return v.y or 0 end
+  -- keep click handlers so tests can press buttons
+  ui.on_click = function(v, cb) assert(v and type(cb) == "function", "on_click"); H.calls.on_click = (H.calls.on_click or 0) + 1; v.on_click = cb end
   ui.in_combat = function() return false end
   ui.storage.read = function() return nil end
   ui.storage.write = function() end

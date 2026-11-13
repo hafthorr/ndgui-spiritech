@@ -1,0 +1,7 @@
+<root>
+  <!-- double-click a bar to show this strip -->
+  <View name="status_edit" view_layout="horizontal" min_size="Point(91,22)" max_size="Point(91,22)" h_alignment="center" layout_borders="Rect(0,4,0,0)">
+    <Button name="status_lock" label="Lock" font_size="11" min_size="Point(44,22)" max_size="Point(44,22)" layout_borders="Rect(0,0,3,0)" tooltip="Lock this bar in place" gfxid_raised_left="GFX_NDGUI_BTN22_RAISED_LEFT" gfxid_raised_middle="GFX_NDGUI_BTN22_RAISED_MIDDLE" gfxid_raised_right="GFX_NDGUI_BTN22_RAISED_RIGHT" gfxid_hover_left="GFX_NDGUI_BTN22_HOVER_LEFT" gfxid_hover_middle="GFX_NDGUI_BTN22_HOVER_MIDDLE" gfxid_hover_right="GFX_NDGUI_BTN22_HOVER_RIGHT" gfxid_pressed_left="GFX_NDGUI_BTN22_PRESSED_LEFT" gfxid_pressed_middle="GFX_NDGUI_BTN22_PRESSED_MIDDLE" gfxid_pressed_right="GFX_NDGUI_BTN22_PRESSED_RIGHT" gfxid_selected="GFX_NDGUI_BTN22_SELECTED" />
+    <Button name="status_flat" label="Flat" font_size="11" min_size="Point(44,22)" max_size="Point(44,22)" tooltip="Lay the bar flat with the number inside" gfxid_raised_left="GFX_NDGUI_BTN22_RAISED_LEFT" gfxid_raised_middle="GFX_NDGUI_BTN22_RAISED_MIDDLE" gfxid_raised_right="GFX_NDGUI_BTN22_RAISED_RIGHT" gfxid_hover_left="GFX_NDGUI_BTN22_HOVER_LEFT" gfxid_hover_middle="GFX_NDGUI_BTN22_HOVER_MIDDLE" gfxid_hover_right="GFX_NDGUI_BTN22_HOVER_RIGHT" gfxid_pressed_left="GFX_NDGUI_BTN22_PRESSED_LEFT" gfxid_pressed_middle="GFX_NDGUI_BTN22_PRESSED_MIDDLE" gfxid_pressed_right="GFX_NDGUI_BTN22_PRESSED_RIGHT" gfxid_selected="GFX_NDGUI_BTN22_SELECTED" />
+  </View>
+</root>

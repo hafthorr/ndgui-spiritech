@@ -73,54 +73,83 @@ end
 -- callers apply default positions only while placement.moved is false.
 M.PLACEMENT_FIELD = "NdguiFrame"
 
--- options.lock_key: adds a right-click "Lock position" toggle, saved in the view's own state scope
--- (ui.state, like the pose; HUD VMs have no ui.preference).
+-- HUD pieces get no right-click and no ui.preference, so extras ride on the left-button
+-- gesture core.move already observes:
+--   options.lock_key      ui.state field (the view's own scope, like the pose) holding a drag lock;
+--                         placement.locked() / placement.set_locked(value)
+--   options.double_click  called on a double-click (two still clicks within DOUBLE_CLICK_MS)
+M.DOUBLE_CLICK_MS = 450
+
 function M.movable(view, options)
 	options = options or {}
 	local placement = ui.require("core.placement").attach(view, { only_moved = true, field = options.field or M.PLACEMENT_FIELD })
 	local move = ui.require("core.move")
 	local key, locked = options.lock_key, false
+	local watch = key or options.double_click
+	local press_x, press_y, last_click = nil, nil, nil
 	if key then
 		locked = ui.state.read(view, key) == "true"
 	end
+	local function clicked(x, y)
+		if not press_x then
+			return
+		end
+		local still = math.abs(x - press_x) + math.abs(y - press_y) < 4
+		press_x, press_y = nil, nil
+		local ok, now = pcall(ui.time)
+		if not still or not ok or type(now) ~= "number" then
+			last_click = nil
+			return
+		end
+		if last_click and now - last_click <= M.DOUBLE_CLICK_MS then
+			last_click = nil
+			if options.double_click then
+				options.double_click()
+			end
+		else
+			last_click = now
+		end
+	end
+	-- A locked piece still takes the gesture (so the release, and with it double-click, keeps
+	-- arriving) but is snapped back to where it was pressed.
+	local hold_x, hold_y
 	move.attach(view, {
 		placement = placement,
 		handle = options.handle,
 		enabled = function(x, y)
-			if locked then
-				return false
+			if watch then
+				press_x, press_y = x, y
 			end
+			if locked then
+				hold_x, hold_y = ui.local_x(view), ui.local_y(view)
+				return true
+			end
+			hold_x, hold_y = nil, nil
 			return not options.enabled or options.enabled(x, y)
 		end,
-	})
-	-- Right-click is delivered only to the innermost widget pressed (stock Team hooks every
-	-- part of a row for the same reason), so hook the target and everything inside it.
-	function placement.lock_menu_on(target)
-		if not key or not target then
-			return
-		end
-		local function open()
-			ui.menu.clear(target)
-			pcall(ui.menu.style, target, "context")
-			ui.menu.add(target, "Lock position", locked, function()
-				locked = not locked
-				ui.state.write(view, key, tostring(locked), "bool")
-			end)
-			ui.menu.show(target)
-		end
-		local function hook(widget)
-			ui.on_pointer_release(widget, "right", open)
-			local ok, count = pcall(ui.child_count, widget)
-			for index = 1, ok and count or 0 do
-				local found, child = pcall(ui.child, widget, index)
-				if found and child then
-					hook(child)
-				end
+		changed = function()
+			if hold_x then
+				ui.place(view, hold_x, hold_y)
+				placement:changed()
 			end
-		end
-		hook(target)
+		end,
+		finished = watch and function(ended, x, y)
+			if ended then
+				clicked(x, y)
+			else
+				press_x, press_y = nil, nil
+			end
+		end or nil,
+	})
+	function placement.locked()
+		return locked
 	end
-	placement.lock_menu_on(options.handle or view)
+	function placement.set_locked(value)
+		locked = value and true or false
+		if key then
+			ui.state.write(view, key, tostring(locked), "bool")
+		end
+	end
 	return placement
 end
 

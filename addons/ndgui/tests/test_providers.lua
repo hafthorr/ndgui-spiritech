@@ -35,20 +35,42 @@ for _, case in ipairs({
       local shade = H.find(H.root, "status_caption_shadow")
       check(shade and shade.text == case[3], case[1] .. " caption has a drop shadow")
       local mv = H.moves[#H.moves]
-      check(mv and mv.options.enabled(0, 0) == true, case[1] .. " drags while unlocked")
-      -- right-click goes to the innermost widget: the track/fill images and the caption text must be hooked
-      local hooked = {}
-      for _, r in ipairs(H.releases) do if r.button == "right" then hooked[r.view] = r end end
-      local all = true
-      for _, name in ipairs({ "status_bar", "status_track", "status_fill", "status_caption_plate", "status_caption" }) do
-        if not hooked[H.find(H.root, name)] then all = false; print("  not hooked: " .. name) end
-      end
-      check(all, case[1] .. " right-click on any part of the bar or numbers opens the lock menu")
-      hooked[H.find(H.root, "status_fill")].cb()
-      local item = H.menu_items[#H.menu_items]
-      check(item and item.label == "Lock position" and item.checked == false, case[1] .. " menu offers Lock position")
-      item.cb()
-      check(mv.options.enabled(0, 0) == false and H.state[mv.view].NdguiLocked == "true", case[1] .. " locked: drag refused and saved")
+      local o = mv.options
+      local edit = H.find(H.root, "status_edit")
+      check(edit and edit.visible == false, case[1] .. " edit strip hidden until double-click")
+      check(o.enabled(10, 10) == true, case[1] .. " drags while unlocked")
+      local function click() o.enabled(10, 10); o.finished(true, 10, 10); H.now = H.now + 150 end
+      click(); click()
+      edit = H.find(H.root, "status_edit")
+      check(edit.visible == true, case[1] .. " double-click shows the Lock / Flat strip")
+      local bar = H.find(H.root, "status_bar")
+      check(bar.tooltip and bar.tooltip:find("Double%-click"), case[1] .. " tooltip explains the double-click")
+      H.find(H.root, "status_lock").on_click()
+      local home_x, home_y = H.root.x, H.root.y
+      H.root.x, H.root.y = 300, 400
+      o.enabled(10, 10)
+      H.root.x, H.root.y = 520, 610  -- core.move drags it...
+      o.changed(520, 610)          -- ...and the lock snaps it back
+      o.finished(true, 230, 220)
+      check(H.root.x == 300 and H.root.y == 400 and H.state[mv.view].NdguiLocked == "true" and H.find(H.root, "status_lock").selected == true,
+        case[1] .. " Lock: drag snaps back, saved, button lit (" .. H.root.x .. "," .. H.root.y .. ")")
+      H.now = H.now + 1000
+      H.find(H.root, "status_flat").on_click()
+      local flat_bar = H.find(H.root, "status_bar")
+      local cap = H.find(H.root, "status_caption")
+      check(H.state[mv.view].NdguiFlat == "true" and flat_bar.w == nil or flat_bar ~= bar, case[1] .. " Flat rebuilds the bar")
+      check(H.find(flat_bar, "status_caption") == cap and cap.text == case[3], case[1] .. " flat: number sits inside the bar (" .. tostring(cap.text) .. ")")
+      check(H.root.w == 160, case[1] .. " flat bar is 160 wide (" .. tostring(H.root.w) .. ")")
+      H.env.status_bar_apply({ current = 1, maximum = 2, fraction = 0.5 }, false)
+      local fill = H.find(H.root, "status_fill")
+      check(fill.w == 80 and fill.h == 18, case[1] .. " flat fill grows sideways (" .. tostring(fill.w) .. "x" .. tostring(fill.h) .. ")")
+      check(H.find(H.root, "status_edit").visible == true and H.find(H.root, "status_flat").selected == true, case[1] .. " strip stays open, Flat lit")
+      click(); click()
+      check(H.find(H.root, "status_edit").visible == false, case[1] .. " double-click again hides the strip")
+      H.find(H.root, "status_flat").on_click()  -- back to vertical for the fill checks below
+      H.env.status_bar_apply(case[2], false)
+      check(H.state[mv.view].NdguiFlat == "false" and H.find(H.root, "status_caption_plate") ~= nil, case[1] .. " Flat off restores the vertical bar")
+      H.root.x, H.root.y = home_x, home_y
     end
     local fill = H.find(H.root, "status_fill")
     local vertical = case[1] == "health" or case[1] == "nano"
