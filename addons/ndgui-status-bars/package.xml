@@ -1,0 +1,5 @@
+<Package id="notum.ndgui-status-bars" name="Notum Dovvetech Status Bars">
+  <Requires package="notum.ndgui-lib" />
+  <Provides role="prk.status-bars" />
+  <Script src="main.lua" />
+</Package>

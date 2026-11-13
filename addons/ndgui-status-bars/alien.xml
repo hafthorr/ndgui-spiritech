@@ -1,0 +1,7 @@
+<root>
+  <View name="status_bar" view_layout="stacked" capture_input="true" min_size="Point(240,16)" max_size="Point(-1,16)">
+    <BitmapView name="status_track" image="library://notum.ndgui-lib/bars/track_h.png" />
+    <BitmapView name="status_fill" image="library://notum.ndgui-lib/bars/axp_h.png" h_alignment="left" v_alignment="center" />
+    <TextView name="status_caption" value="-- / --" font_size="11" color="FFFFFF" h_alignment="center" v_alignment="center" />
+  </View>
+</root>

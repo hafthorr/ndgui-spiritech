@@ -1,0 +1,7 @@
+<?xml version="1.0"?>
+<root>
+  <View name="ndgui_root" view_layout="vertical" capture_input="false">
+    <View name="ndgui_menu_slot" view_layout="horizontal" capture_input="false" />
+    <View name="ndgui_bars" view_layout="vertical" capture_input="false" layout_borders="Rect(32,6,0,0)" />
+  </View>
+</root>

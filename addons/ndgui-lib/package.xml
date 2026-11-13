@@ -1,0 +1,4 @@
+<Package id="notum.ndgui-lib" name="Notum Dovvetech Library">
+  <Assets root="assets" />
+  <Modules root="lua" />
+</Package>

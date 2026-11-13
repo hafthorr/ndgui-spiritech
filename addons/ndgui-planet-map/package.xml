@@ -1,0 +1,5 @@
+<Package id="notum.ndgui-planet-map" name="Notum Dovvetech Planet Map">
+  <Requires package="notum.ndgui-lib" />
+  <Provides role="prk.planet-map" />
+  <Script src="main.lua" />
+</Package>

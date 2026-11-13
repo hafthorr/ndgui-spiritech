@@ -1,0 +1,25 @@
+<?xml version="1.0" standalone="yes"?>
+<root>
+  <View name="rollup" capture_input="true" composite_layer="true" view_layout="stacked">
+    <BitmapView name="rollup_background" image="library://notum.ndgui-lib/window/glass.png" />
+    <BitmapView name="ndgui_titlebar_back" image="library://notum.ndgui-lib/window/titlebar.png" min_size="Point(1,24)" max_size="Point(-1,24)" v_alignment="top" />
+    <BitmapView name="ndgui_edge_top" image="library://notum.ndgui-lib/window/edge_top.png" min_size="Point(1,3)" max_size="Point(-1,3)" v_alignment="top" />
+    <BitmapView name="ndgui_edge_bottom" image="library://notum.ndgui-lib/window/edge_h.png" min_size="Point(1,3)" max_size="Point(-1,3)" v_alignment="bottom" />
+    <BitmapView name="ndgui_edge_left" image="library://notum.ndgui-lib/window/edge_v.png" min_size="Point(3,1)" max_size="Point(3,-1)" h_alignment="left" />
+    <BitmapView name="ndgui_edge_right" image="library://notum.ndgui-lib/window/edge_v_r.png" min_size="Point(3,1)" max_size="Point(3,-1)" h_alignment="right" />
+    <BitmapView name="ndgui_corner_tl" image="library://notum.ndgui-lib/window/corner_tl.png" min_size="Point(7,7)" max_size="Point(7,7)" h_alignment="left" v_alignment="top" layout_borders="Rect(3,3,0,0)" />
+    <BitmapView name="ndgui_corner_br" image="library://notum.ndgui-lib/window/corner_br.png" min_size="Point(7,7)" max_size="Point(7,7)" h_alignment="right" v_alignment="bottom" layout_borders="Rect(0,0,3,3)" />
+    <View view_layout="vertical" layout_borders="Rect(3,3,3,3)">
+      <View name="rollup_header" view_layout="horizontal" capture_input="true" min_size="Point(-1,19)" max_size="Point(-1,19)">
+        <BitmapView name="rollup_icon" interactive="true" image="gfx://GFX_GUI_WINDOW_ICON_I" min_size="Point(15,15)" max_size="Point(15,15)" v_alignment="center" layout_borders="Rect(2,0,0,0)" />
+        <BitmapView name="ndgui_accent" image="library://notum.ndgui-lib/window/accent.png" min_size="Point(3,15)" max_size="Point(3,15)" v_alignment="center" layout_borders="Rect(5,0,0,0)" />
+        <TextView name="rollup_title" font_size="12" color="C5D7E6" v_alignment="center" layout_borders="Rect(5,0,2,0)" />
+        <HLayoutSpacer />
+        <Button name="rollup_collapse" min_size="Point(15,15)" max_size="Point(15,15)" v_alignment="center" layout_borders="Rect(2,0,0,0)" gfxid_raised="GFX_GUI_ROLLUP_COLLAPSE_STATE1" gfxid_hover="GFX_GUI_ROLLUP_COLLAPSE_STATE2" gfxid_pressed="GFX_GUI_ROLLUP_COLLAPSE_STATE3" />
+        <Button name="rollup_expand" visible="false" min_size="Point(15,15)" max_size="Point(15,15)" v_alignment="center" layout_borders="Rect(2,0,0,0)" gfxid_raised="GFX_GUI_ROLLUP_EXPAND_STATE1" gfxid_hover="GFX_GUI_ROLLUP_EXPAND_STATE2" gfxid_pressed="GFX_GUI_ROLLUP_EXPAND_STATE3" />
+        <Button name="rollup_close" min_size="Point(15,15)" max_size="Point(15,15)" v_alignment="center" layout_borders="Rect(2,0,2,0)" gfxid_raised="GFX_GUI_WINDOW_CLOSE_X" gfxid_hover="GFX_GUI_WINDOW_CLOSE_X_STATE2" gfxid_pressed="GFX_GUI_WINDOW_CLOSE_X_STATE3" />
+      </View>
+      <View name="rollup_body" view_layout="vertical" layout_borders="Rect(0,6,0,4)" />
+    </View>
+  </View>
+</root>

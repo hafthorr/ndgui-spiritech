@@ -1,0 +1,5 @@
+<Package id="notum.ndgui-target-panels" name="Notum Dovvetech Target Panels">
+  <Requires package="notum.ndgui-lib" />
+  <Provides role="prk.target-panels" />
+  <Script src="main.lua" />
+</Package>

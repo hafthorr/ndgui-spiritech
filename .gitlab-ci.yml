@@ -1,0 +1,9 @@
+# No game client in CI, so this only checks that everything parses.
+# The real tests run against a client: see CONTRIBUTING.md.
+lint:
+  image: alpine:3.20
+  script:
+    - apk add --no-cache lua5.4 python3 libxml2-utils
+    - find addons -name '*.lua' -print0 | xargs -0 -n1 luac5.4 -p
+    - python3 -m py_compile install.py build_release.py addons/ndgui/tools/*.py
+    - find addons -name '*.xml' -print0 | xargs -0 -n1 xmllint --noout

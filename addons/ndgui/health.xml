@@ -1,0 +1,5 @@
+<root>
+  <PowerBar name="health_bar" view_layout="stacked" capture_input="true" bg_gfx="GFX_GUI_HOR_BAR_EMPTY" full_gfx="GFX_GUI_HOR_BAR_RED" min_size="Point(320,23)" max_size="Point(-1,23)" layout_borders="Rect(0,0,0,3)">
+    <TextView name="health_caption" value="HP  -- / --" font_size="12" color="FFFFFF" h_alignment="center" v_alignment="center" />
+  </PowerBar>
+</root>

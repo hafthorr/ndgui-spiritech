@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <View name="ndgui_compass_window" capture_input="true" composite_layer="true" view_layout="stacked">
+    <BitmapView name="ndgui_compass_back" image="library://notum.ndgui-lib/chrome/plate.png" />
+    <PannedSurfaceView name="compass_band" capture_input="true" fill_color="transparent" layout_borders="Rect(4,4,4,4)" />
+    <BitmapView name="ndgui_compass_frame" image="gfx://GFX_GUI_COMPASS_FRAME" graphic_mode="tinted" color="3D6F9A" />
+  </View>
+</root>

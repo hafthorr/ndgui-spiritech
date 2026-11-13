@@ -1,0 +1,8 @@
+<?xml version="1.0"?>
+<root>
+  <View name="control_center" view_layout="stacked" visible="false">
+    <BitmapView name="ndgui_strip" image="library://notum.ndgui-lib/chrome/strip.png" h_alignment="left" v_alignment="bottom" min_size="Point(1,30)" max_size="Point(-1,30)" />
+    <View name="left_wing_dock" view_layout="stacked" h_alignment="left" v_alignment="bottom" min_size="Point(1,30)" max_size="Point(-1,30)" />
+    <View name="right_wing_dock" view_layout="stacked" h_alignment="right" v_alignment="bottom" min_size="Point(1,30)" max_size="Point(-1,30)" />
+  </View>
+</root>

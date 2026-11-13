@@ -1,0 +1,4 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <View name="ndgui_status_window" capture_input="true" composite_layer="true" view_layout="vertical" />
+</root>

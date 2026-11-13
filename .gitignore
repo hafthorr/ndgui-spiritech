@@ -1,0 +1,45 @@
+# build output
+/build/
+/dist/
+*.spec
+
+# generated on the player's / developer's machine from the game's own UI
+/addons/ndgui-lib/lua/table.lua
+/addons/ndgui-actions/
+/addons/ndgui-agg-def/
+/addons/ndgui-chat/
+/addons/ndgui-chat-config/
+/addons/ndgui-chat-frame/
+/addons/ndgui-faction/
+/addons/ndgui-friends/
+/addons/ndgui-info/
+/addons/ndgui-inventory/
+/addons/ndgui-logout-progress/
+/addons/ndgui-market/
+/addons/ndgui-mission-terminal/
+/addons/ndgui-missions/
+/addons/ndgui-nano-programs/
+/addons/ndgui-ncu/
+/addons/ndgui-npc-chat/
+/addons/ndgui-perks/
+/addons/ndgui-pets/
+/addons/ndgui-raid/
+/addons/ndgui-raid-bar/
+/addons/ndgui-skills/
+/addons/ndgui-sneak-indicator/
+/addons/ndgui-stats/
+/addons/ndgui-target-ncu/
+/addons/ndgui-team/
+/addons/ndgui-team-invite/
+/addons/ndgui-timer-bars/
+/addons/ndgui-trade/
+/addons/ndgui-tradeskills/
+/addons/ndgui-wear/
+
+# python / editors / OS
+__pycache__/
+*.pyc
+.vscode/
+.idea/
+Thumbs.db
+.DS_Store

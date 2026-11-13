@@ -1,0 +1,6 @@
+<Package id="notum.ndgui-control-center" name="Notum Dovvetech Control Center">
+  <Requires package="notum.ndgui-lib" />
+  <Provides role="prk.control-center" />
+  <Script src="main.lua" />
+  <InteractionScript src="interaction.lua" />
+</Package>

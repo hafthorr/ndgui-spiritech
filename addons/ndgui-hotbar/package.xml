@@ -1,0 +1,6 @@
+<Package id="notum.ndgui-hotbar" name="Notum Dovvetech Shortcut Bars">
+  <Requires package="notum.ndgui-lib" />
+  <Provides role="prk.hotbar" />
+  <Script src="main.lua" />
+  <InteractionScript src="interaction.lua" />
+</Package>

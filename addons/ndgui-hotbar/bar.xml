@@ -1,0 +1,35 @@
+<?xml version="1.0" standalone="yes"?>
+<root>
+  <View name="shortcut_bar" capture_input="true" composite_layer="true" view_layout="stacked" min_size="Point(44,44)" max_size="Point(398,398)" h_alignment="center" v_alignment="end">
+    <View name="shortcut_bar_horizontal" view_layout="stacked" h_alignment="start" v_alignment="start" min_size="Point(398,44)" max_size="Point(398,44)">
+      <BitmapView name="shortcut_bar_plate" image="library://notum.ndgui-lib/hotbar/plate_h.png" min_size="Point(398,44)" max_size="Point(398,44)" />
+      <View name="shortcut_bar_row_h" view_layout="horizontal" h_alignment="start" v_alignment="start" min_size="Point(390,36)" max_size="Point(390,36)" layout_borders="Rect(4,4,0,0)">
+        <Button name="shortcut_bar_active" min_size="Point(6,36)" max_size="Point(6,36)" layout_borders="Rect(0,0,2,0)" tooltip="Make this the active shortcut bar (keys 1-0)">
+          <BitmapView name="shortcut_bar_active_icon" image="library://notum.ndgui-lib/hotbar/active_off_h.png" min_size="Point(6,36)" max_size="Point(6,36)" />
+        </Button>
+        <View name="shortcut_bar_spinner" view_layout="stacked" capture_input="true" min_size="Point(20,36)" max_size="Point(20,36)" layout_borders="Rect(0,0,2,0)">
+          <BitmapView image="library://notum.ndgui-lib/hotbar/spinner_h.png" min_size="Point(20,36)" max_size="Point(20,36)" />
+          <Button name="shortcut_bar_previous" graphic_mode="tinted" color="7F9BB0" min_size="Point(16,10)" max_size="Point(16,10)" h_alignment="start" v_alignment="start" layout_borders="Rect(2,1,0,0)" gfxid_raised="GFX_GUI_TOOLBAR_BUTTON_UP" gfxid_hover="GFX_GUI_TOOLBAR_BUTTON_UP_HILITE" gfxid_pressed="GFX_GUI_TOOLBAR_BUTTON_UP_HILITE" />
+          <TextView name="shortcut_bar_row" font_size="12" color="6CB6FF" text_alignment="center" min_size="Point(16,14)" max_size="Point(16,14)" h_alignment="start" v_alignment="start" layout_borders="Rect(2,11,0,0)" />
+          <Button name="shortcut_bar_next" graphic_mode="tinted" color="7F9BB0" min_size="Point(16,10)" max_size="Point(16,10)" h_alignment="start" v_alignment="start" layout_borders="Rect(2,25,0,0)" gfxid_raised="GFX_GUI_TOOLBAR_BUTTON_DOWN" gfxid_hover="GFX_GUI_TOOLBAR_BUTTON_DOWN_HILITE" gfxid_pressed="GFX_GUI_TOOLBAR_BUTTON_DOWN_HILITE" />
+        </View>
+        <View name="shortcut_bar_slots" view_layout="horizontal" min_size="Point(360,36)" max_size="Point(360,36)" />
+      </View>
+    </View>
+    <View name="shortcut_bar_vertical" view_layout="stacked" visible="false" h_alignment="start" v_alignment="start" min_size="Point(44,398)" max_size="Point(44,398)">
+      <BitmapView name="shortcut_bar_plate" image="library://notum.ndgui-lib/hotbar/plate_v.png" min_size="Point(44,398)" max_size="Point(44,398)" />
+      <View name="shortcut_bar_row_v" view_layout="vertical" h_alignment="start" v_alignment="start" min_size="Point(36,390)" max_size="Point(36,390)" layout_borders="Rect(4,4,0,0)">
+        <Button name="shortcut_bar_active" min_size="Point(36,6)" max_size="Point(36,6)" layout_borders="Rect(0,0,0,2)" tooltip="Make this the active shortcut bar (keys 1-0)">
+          <BitmapView name="shortcut_bar_active_icon" image="library://notum.ndgui-lib/hotbar/active_off_v.png" min_size="Point(36,6)" max_size="Point(36,6)" />
+        </Button>
+        <View name="shortcut_bar_spinner" view_layout="stacked" capture_input="true" min_size="Point(36,20)" max_size="Point(36,20)" layout_borders="Rect(0,0,0,2)">
+          <BitmapView image="library://notum.ndgui-lib/hotbar/spinner_v.png" min_size="Point(36,20)" max_size="Point(36,20)" />
+          <Button name="shortcut_bar_previous" graphic_mode="tinted" color="7F9BB0" min_size="Point(10,16)" max_size="Point(10,16)" h_alignment="start" v_alignment="start" layout_borders="Rect(1,2,0,0)" gfxid_raised="GFX_GUI_TOOLBAR_BUTTON_LEFT" gfxid_hover="GFX_GUI_TOOLBAR_BUTTON_LEFT_HILITE" gfxid_pressed="GFX_GUI_TOOLBAR_BUTTON_LEFT_HILITE" />
+          <TextView name="shortcut_bar_row" font_size="12" color="6CB6FF" text_alignment="center" min_size="Point(16,14)" max_size="Point(16,14)" h_alignment="start" v_alignment="start" layout_borders="Rect(10,3,0,0)" />
+          <Button name="shortcut_bar_next" graphic_mode="tinted" color="7F9BB0" min_size="Point(10,16)" max_size="Point(10,16)" h_alignment="start" v_alignment="start" layout_borders="Rect(25,2,0,0)" gfxid_raised="GFX_GUI_TOOLBAR_BUTTON_RIGHT" gfxid_hover="GFX_GUI_TOOLBAR_BUTTON_RIGHT_HILITE" gfxid_pressed="GFX_GUI_TOOLBAR_BUTTON_RIGHT_HILITE" />
+        </View>
+        <View name="shortcut_bar_slots" view_layout="vertical" min_size="Point(36,360)" max_size="Point(36,360)" />
+      </View>
+    </View>
+  </View>
+</root>

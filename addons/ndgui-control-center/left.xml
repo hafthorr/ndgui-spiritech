@@ -1,0 +1,31 @@
+<?xml version="1.0"?>
+<root>
+  <View name="left_wing" view_layout="horizontal" h_alignment="left" v_alignment="bottom" layout_borders="Rect(6,0,0,2)">
+    <View name="left_menu" view_layout="horizontal" v_alignment="center">
+      <Button name="actions" min_size="Point(30,26)" max_size="Point(30,26)" view_layout="stacked" layout_borders="Rect(0,0,2,0)" graphic_mode="tinted" color="3D6F9A" gfxid_raised="GFX_GUI_TAB_BACKGROUND" gfxid_hover="GFX_GUI_TAB_ACTIVE" gfxid_pressed="GFX_GUI_TAB_ACTIVE">
+        <BitmapView name="actions_icon" min_size="Point(20,20)" max_size="Point(20,20)" image="library://notum.ndgui-lib/icons/actions.png" h_alignment="center" v_alignment="center" color="FFFFFF" />
+      </Button>
+      <Button name="character" min_size="Point(30,26)" max_size="Point(30,26)" view_layout="stacked" layout_borders="Rect(0,0,2,0)" graphic_mode="tinted" color="3D6F9A" gfxid_raised="GFX_GUI_TAB_BACKGROUND" gfxid_hover="GFX_GUI_TAB_ACTIVE" gfxid_pressed="GFX_GUI_TAB_ACTIVE">
+        <BitmapView name="character_icon" min_size="Point(20,20)" max_size="Point(20,20)" image="library://notum.ndgui-lib/icons/character.png" h_alignment="center" v_alignment="center" color="FFFFFF" />
+      </Button>
+      <Button name="nano" min_size="Point(30,26)" max_size="Point(30,26)" view_layout="stacked" layout_borders="Rect(0,0,2,0)" graphic_mode="tinted" color="3D6F9A" gfxid_raised="GFX_GUI_TAB_BACKGROUND" gfxid_hover="GFX_GUI_TAB_ACTIVE" gfxid_pressed="GFX_GUI_TAB_ACTIVE">
+        <BitmapView name="nano_icon" min_size="Point(20,20)" max_size="Point(20,20)" image="library://notum.ndgui-lib/icons/nano.png" h_alignment="center" v_alignment="center" color="FFFFFF" />
+      </Button>
+      <Button name="inventory" min_size="Point(30,26)" max_size="Point(30,26)" view_layout="stacked" layout_borders="Rect(0,0,2,0)" graphic_mode="tinted" color="3D6F9A" gfxid_raised="GFX_GUI_TAB_BACKGROUND" gfxid_hover="GFX_GUI_TAB_ACTIVE" gfxid_pressed="GFX_GUI_TAB_ACTIVE">
+        <BitmapView name="inventory_icon" min_size="Point(20,20)" max_size="Point(20,20)" image="library://notum.ndgui-lib/icons/inventory.png" h_alignment="center" v_alignment="center" color="FFFFFF" />
+      </Button>
+      <Button name="wear" min_size="Point(30,26)" max_size="Point(30,26)" view_layout="stacked" layout_borders="Rect(0,0,2,0)" graphic_mode="tinted" color="3D6F9A" gfxid_raised="GFX_GUI_TAB_BACKGROUND" gfxid_hover="GFX_GUI_TAB_ACTIVE" gfxid_pressed="GFX_GUI_TAB_ACTIVE">
+        <BitmapView name="wear_icon" min_size="Point(20,20)" max_size="Point(20,20)" image="library://notum.ndgui-lib/icons/wear.png" h_alignment="center" v_alignment="center" color="FFFFFF" />
+      </Button>
+    </View>
+    <View name="left_target_dock" view_layout="horizontal" v_alignment="center" layout_borders="Rect(10,0,10,0)">
+      <Button name="left_previous" graphic_mode="tinted" min_size="Point(6,22)" max_size="Point(6,22)" color="Default" v_alignment="center" layout_borders="Rect(0,0,5,0)" gfxid_raised="GFX_GUI_CONTROLCENTER_BIGARROW_LEFT_STATE1" gfxid_hover="GFX_GUI_CONTROLCENTER_BIGARROW_LEFT_STATE3" gfxid_pressed="GFX_GUI_CONTROLCENTER_BIGARROW_LEFT_STATE2" />
+      <Button name="left_target" graphic_mode="tinted" min_size="Point(24,24)" max_size="Point(24,24)" view_layout="stacked" color="Default" gfxid_raised="GFX_GUI_CONTROLCENTER_TARGET_BUTTON" gfxid_hover="GFX_GUI_CONTROLCENTER_TARGET_BUTTON_STATE3" gfxid_pressed="GFX_GUI_CONTROLCENTER_TARGET_BUTTON_STATE2">
+        <BitmapView name="target_icon" min_size="Point(20,20)" max_size="Point(20,20)" image="library://notum.ndgui-lib/icons/target_self.png" color="FFFFFF" h_alignment="center" v_alignment="center" />
+      </Button>
+      <Button name="left_next" graphic_mode="tinted" min_size="Point(6,22)" max_size="Point(6,22)" color="Default" v_alignment="center" layout_borders="Rect(5,0,0,0)" gfxid_raised="GFX_GUI_CONTROLCENTER_BIGARROW_RIGHT_STATE1" gfxid_hover="GFX_GUI_CONTROLCENTER_BIGARROW_RIGHT_STATE3" gfxid_pressed="GFX_GUI_CONTROLCENTER_BIGARROW_RIGHT_STATE2" />
+    </View>
+    <TextView name="ncu" value="NCU --/--" font_size="11" color="7F9BB0" v_alignment="center" min_size="Point(90,18)" max_size="Point(90,18)" />
+    <TextView name="credits" value="CRED --" font_size="11" color="C6A24E" v_alignment="center" min_size="Point(130,18)" max_size="Point(130,18)" />
+  </View>
+</root>

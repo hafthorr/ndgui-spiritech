@@ -1,0 +1,3 @@
+<root>
+  <Button name="button" label="" font_size="12" min_size="Point(40,20)" max_size="Point(-1,30)" />
+</root>

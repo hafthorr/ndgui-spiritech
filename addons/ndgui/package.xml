@@ -1,0 +1,13 @@
+<Package id="notum.ndgui" name="Notum Dovvetech">
+  <Script src="theme.lua" />
+  <Script src="catalog.lua" />
+  <Script src="layout.lua" />
+  <Script src="host.lua" />
+  <Script src="config.lua" />
+  <Script src="hud.lua" />
+  <Script src="windows.lua" />
+  <Script src="menubar.lua" />
+  <Script src="ndgui.lua" />
+  <Script src="view.lua" />
+  <Script src="main.lua" />
+</Package>

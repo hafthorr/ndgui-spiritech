@@ -1,0 +1,5 @@
+<Package id="notum.ndgui-compass" name="Notum Dovvetech Compass">
+  <Requires package="notum.ndgui-lib" />
+  <Provides role="prk.compass" />
+  <Script src="main.lua" />
+</Package>

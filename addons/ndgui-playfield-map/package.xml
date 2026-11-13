@@ -1,0 +1,6 @@
+<Package id="notum.ndgui-playfield-map" name="Notum Dovvetech Local Map">
+  <Requires package="notum.ndgui-lib" />
+  <Provides role="prk.playfield-map" />
+  <Script src="markers.lua" />
+  <Script src="main.lua" />
+</Package>

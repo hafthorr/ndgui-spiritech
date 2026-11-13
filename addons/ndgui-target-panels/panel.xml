@@ -1,0 +1,31 @@
+<?xml version="1.0"?>
+<root>
+  <View name="ndgui_target_panel" capture_input="true" composite_layer="true" view_layout="vertical" h_alignment="left" v_alignment="top">
+    <View name="target_upper" view_layout="stacked" h_alignment="left" layout_borders="Rect(0,0,0,0)">
+      <BitmapView name="target_upper_plate" image="library://notum.ndgui-lib/chrome/plate.png" />
+      <View view_layout="vertical" layout_borders="Rect(7,4,7,5)">
+        <View view_layout="horizontal" min_size="Point(1,17)" max_size="Point(-1,17)">
+          <TextView name="target_upper_name" font_size="13" color="C5D7E6" v_alignment="center" weight="1" />
+          <TextView name="target_upper_pct" font_size="11" color="7F9BB0" v_alignment="center" text_alignment="right" size_to_text="false" min_size="Point(40,16)" max_size="Point(40,16)" />
+        </View>
+        <View name="target_upper_bar" view_layout="stacked" min_size="Point(64,10)" max_size="Point(-1,10)" h_alignment="left" layout_borders="Rect(0,2,0,0)">
+          <BitmapView name="target_upper_track" image="library://notum.ndgui-lib/bars/track_thin.png" />
+          <BitmapView name="target_upper_fill" image="library://notum.ndgui-lib/bars/target_h.png" graphic_mode="tinted" color="C44747" h_alignment="left" />
+        </View>
+      </View>
+    </View>
+    <View name="target_lower" view_layout="stacked" h_alignment="left" layout_borders="Rect(0,4,0,0)">
+      <BitmapView name="target_lower_plate" image="library://notum.ndgui-lib/chrome/plate.png" />
+      <View view_layout="vertical" layout_borders="Rect(7,4,7,5)">
+        <View view_layout="horizontal" min_size="Point(1,17)" max_size="Point(-1,17)">
+          <TextView name="target_lower_name" font_size="13" color="C5D7E6" v_alignment="center" weight="1" />
+          <TextView name="target_lower_pct" font_size="11" color="7F9BB0" v_alignment="center" text_alignment="right" size_to_text="false" min_size="Point(40,16)" max_size="Point(40,16)" />
+        </View>
+        <View name="target_lower_bar" view_layout="stacked" min_size="Point(64,10)" max_size="Point(-1,10)" h_alignment="left" layout_borders="Rect(0,2,0,0)">
+          <BitmapView name="target_lower_track" image="library://notum.ndgui-lib/bars/track_thin.png" />
+          <BitmapView name="target_lower_fill" image="library://notum.ndgui-lib/bars/target_h.png" graphic_mode="tinted" color="C44747" h_alignment="left" />
+        </View>
+      </View>
+    </View>
+  </View>
+</root>
