@@ -251,7 +251,41 @@ def cap(size, glyph, state, danger=False):
     return img
 
 
-FONT_BOLD = r"C:\Windows\Fonts\segoeuib.ttf"
+FONT_BOLD_CANDIDATES = [
+    r"C:\Windows\Fonts\segoeuib.ttf",
+    r"C:\Windows\Fonts\arialbd.ttf",
+    "/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf",       # Debian/Ubuntu
+    "/usr/share/fonts/dejavu-sans-fonts/DejaVuSans-Bold.ttf",     # Fedora/Bazzite
+    "/usr/share/fonts/TTF/DejaVuSans-Bold.ttf",                   # Arch
+    "/usr/share/fonts/dejavu/DejaVuSans-Bold.ttf",
+    "/usr/share/fonts/liberation-sans/LiberationSans-Bold.ttf",
+    "/usr/share/fonts/truetype/liberation/LiberationSans-Bold.ttf",
+    "/usr/share/fonts/google-noto/NotoSans-Bold.ttf",
+    "/usr/share/fonts/noto/NotoSans-Bold.ttf",
+    "/System/Library/Fonts/Supplemental/Arial Bold.ttf",          # macOS
+]
+
+
+def bold_font(size):
+    """A bold sans font on any OS: $NDGUI_FONT, known paths, fc-match, then Pillow's built-in."""
+    from PIL import ImageFont
+    paths = [os.environ.get("NDGUI_FONT")] + FONT_BOLD_CANDIDATES
+    try:
+        import subprocess
+        out = subprocess.run(["fc-match", "-f", "%{file}", "sans:bold"], capture_output=True, text=True, timeout=5)
+        paths.append(out.stdout.strip())
+    except Exception:
+        pass
+    for path in paths:
+        if path and os.path.isfile(path):
+            try:
+                return ImageFont.truetype(path, size)
+            except OSError:
+                pass
+    try:
+        return ImageFont.load_default(size)   # Pillow >= 10.1
+    except TypeError:
+        return ImageFont.load_default()
 NANO_LABELS = {"FAVOURITES": "Favorites", "COMBAT": "Combat", "MEDICAL": "Medical", "PROT": "Prot", "PSI": "Psi", "SPACE": "Space"}
 
 
@@ -268,10 +302,9 @@ def flat_button(size, state):
 
 
 def labelled(size, text, pressed):
-    from PIL import ImageFont
     img = flat_button(size, "selected" if pressed else "raised")
     d = ImageDraw.Draw(img)
-    font = ImageFont.truetype(FONT_BOLD, 10)
+    font = bold_font(10)
     box = d.textbbox((0, 0), text, font=font)
     x = (size[0] - (box[2] - box[0])) // 2 - box[0]
     y = (size[1] - (box[3] - box[1])) // 2 - box[1]
