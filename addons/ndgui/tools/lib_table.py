@@ -75,7 +75,11 @@ PATCHES = [
 		ui.visible(heading.root, self:column_shown(index))
 		if self:column_shown(index) then
 			ui.size(heading.root, width + self.style.gap, self.style.header_height)
-			ui.size(heading.title, math.max(1, width - self.style.inset), self.style.header_height)
+			-- fixed columns (icons) have no divider: let the heading use that room, so a 16px icon
+			-- column gets a real header box instead of a 10px sliver that reads as part of the next column
+			local title_width = self.columns[index].resizable == false and width + self.style.gap - 2
+				or width - self.style.inset
+			ui.size(heading.title, math.max(1, title_width), self.style.header_height)
 		else
 			ui.size(heading.root, 0, self.style.header_height)
 		end"""),
