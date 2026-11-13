@@ -93,13 +93,13 @@ function M.movable(view, options)
 			return not options.enabled or options.enabled(x, y)
 		end,
 	})
-	-- Right-click only reaches the exact widget pressed, so callers hand in the widgets
-	-- people actually click (placement.lock_menu_on(widget)); the root/handle is wired too.
+	-- Right-click is delivered only to the innermost widget pressed (stock Team hooks every
+	-- part of a row for the same reason), so hook the target and everything inside it.
 	function placement.lock_menu_on(target)
-		if not key then
+		if not key or not target then
 			return
 		end
-		ui.on_pointer_release(target, "right", function()
+		local function open()
 			ui.menu.clear(target)
 			pcall(ui.menu.style, target, "context")
 			ui.menu.add(target, "Lock position", locked, function()
@@ -107,7 +107,18 @@ function M.movable(view, options)
 				ui.state.write(view, key, tostring(locked), "bool")
 			end)
 			ui.menu.show(target)
-		end)
+		end
+		local function hook(widget)
+			ui.on_pointer_release(widget, "right", open)
+			local ok, count = pcall(ui.child_count, widget)
+			for index = 1, ok and count or 0 do
+				local found, child = pcall(ui.child, widget, index)
+				if found and child then
+					hook(child)
+				end
+			end
+		end
+		hook(target)
 	end
 	placement.lock_menu_on(options.handle or view)
 	return placement

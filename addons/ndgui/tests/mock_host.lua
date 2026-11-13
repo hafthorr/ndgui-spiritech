@@ -114,6 +114,8 @@ function M.new(addons_dir, core_dir, opts)
   -- ui.state: per-view scalar store (poses, ndGUI lock flags)
   ui.state = { read = function(v, k) assert(v and type(k) == "string"); return (H.state[v] or {})[k] or "" end,
     write = function(v, k, value) assert(v and type(k) == "string" and type(value) == "string"); H.state[v] = H.state[v] or {}; H.state[v][k] = value end }
+  ui.child_count = function(v) assert(v, "child_count nil"); return #v.kids end
+  ui.child = function(v, i) return assert(v.kids[i], "child out of range") end
   ui.on_pointer_release = function(v, button, cb) assert(v and type(cb) == "function"); H.releases[#H.releases + 1] = { view = v, button = button, cb = cb } end
   -- ui.menu.add remembers its last callback so tests can invoke a menu entry
   H.menu_items = {}

@@ -36,11 +36,15 @@ for _, case in ipairs({
       check(shade and shade.text == case[3], case[1] .. " caption has a drop shadow")
       local mv = H.moves[#H.moves]
       check(mv and mv.options.enabled(0, 0) == true, case[1] .. " drags while unlocked")
-      local bar = H.find(H.root, "status_bar")
-      local on_bar
-      for _, r in ipairs(H.releases) do if r.view == bar and r.button == "right" then on_bar = r end end
-      check(on_bar ~= nil and #H.releases == 3, case[1] .. " right-click on the bar itself opens the lock menu (" .. #H.releases .. " hooks)")
-      on_bar.cb()
+      -- right-click goes to the innermost widget: the track/fill images and the caption text must be hooked
+      local hooked = {}
+      for _, r in ipairs(H.releases) do if r.button == "right" then hooked[r.view] = r end end
+      local all = true
+      for _, name in ipairs({ "status_bar", "status_track", "status_fill", "status_caption_plate", "status_caption" }) do
+        if not hooked[H.find(H.root, name)] then all = false; print("  not hooked: " .. name) end
+      end
+      check(all, case[1] .. " right-click on any part of the bar or numbers opens the lock menu")
+      hooked[H.find(H.root, "status_fill")].cb()
       local item = H.menu_items[#H.menu_items]
       check(item and item.label == "Lock position" and item.checked == false, case[1] .. " menu offers Lock position")
       item.cb()
