@@ -14,7 +14,7 @@ local specs = {
 	experience = { label = "XP  ", tooltip = "Experience" },
 	alien = { label = "AXP  ", tooltip = "Alien Experience" },
 }
-local kind, spec, bar, fill, caption
+local kind, spec, bar, fill, caption, shadow
 local bar_w, bar_h, fraction = 0, 0, 0
 local last_w, last_h
 
@@ -56,12 +56,17 @@ function status_bar_initialize(which)
 	spec = assert(specs[which], "Unknown player status bar")
 	kind = which
 	-- XP/AXP moved into the strip in v2; a new pose field lets them dock there once.
-	placement = D.movable(root, { field = spec.vertical and D.PLACEMENT_FIELD or "NdguiStrip" })
+	-- HP/NP: right-click -> Lock position (saved per bar)
+	placement = D.movable(root, {
+		field = spec.vertical and D.PLACEMENT_FIELD or "NdguiStrip",
+		lock_key = spec.vertical and "NdguiLocked" or nil,
+	})
 	local content = ui.load(kind .. ".xml")
 	ui.add(root, content)
 	bar = ui.find(content, "status_bar")
 	fill = ui.find(content, "status_fill")
 	caption = ui.find(content, "status_caption")
+	shadow = spec.vertical and ui.find(content, "status_caption_shadow") or nil
 	ui.text_color(caption, spec.vertical and D.color.text or "#FFFFFF")
 	layout()
 	paint()
@@ -77,5 +82,8 @@ function status_bar_apply(reading, shadowknowledge)
 	fraction = math.max(0, math.min(1, tonumber(reading.fraction) or 0))
 	paint()
 	ui.text(caption, label .. text)
+	if shadow then
+		ui.text(shadow, label .. text)
+	end
 	ui.tooltip(bar, tip .. ": " .. text)
 end

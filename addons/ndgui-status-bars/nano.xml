@@ -4,6 +4,11 @@
       <BitmapView name="status_track" image="library://notum.ndgui-lib/bars/track_v.png" />
       <BitmapView name="status_fill" image="library://notum.ndgui-lib/bars/np_v.png" h_alignment="center" v_alignment="bottom" />
     </View>
-    <TextView name="status_caption" value="-- / --" font_size="11" color="FFFFFF" text_alignment="center" size_to_text="false" min_size="Point(96,18)" max_size="Point(96,18)" h_alignment="center" layout_borders="Rect(0,2,0,0)" />
+    <!-- numbers on a translucent dark plate with a 1px drop shadow, readable over bright ground -->
+    <View name="status_caption_plate" view_layout="stacked" min_size="Point(96,18)" max_size="Point(96,18)" h_alignment="center" layout_borders="Rect(0,2,0,0)">
+      <BorderView name="status_caption_back" interactive="false" color="0x8C000000" fill_color="0x8C000000" min_size="Point(84,17)" max_size="Point(84,17)" h_alignment="center" v_alignment="center" />
+      <TextView name="status_caption_shadow" value="-- / --" font_size="11" color="000000" text_alignment="center" size_to_text="false" min_size="Point(96,18)" max_size="Point(96,18)" layout_borders="Rect(1,1,0,0)" />
+      <TextView name="status_caption" value="-- / --" font_size="11" color="FFFFFF" text_alignment="center" size_to_text="false" min_size="Point(96,18)" max_size="Point(96,18)" />
+    </View>
   </View>
 </root>

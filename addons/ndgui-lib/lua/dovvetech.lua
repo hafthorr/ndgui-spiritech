@@ -73,11 +73,38 @@ end
 -- callers apply default positions only while placement.moved is false.
 M.PLACEMENT_FIELD = "NdguiFrame"
 
+-- options.lock_key: adds a right-click "Lock position" toggle, saved in the view's own state scope
+-- (ui.state, like the pose; HUD VMs have no ui.preference).
 function M.movable(view, options)
 	options = options or {}
 	local placement = ui.require("core.placement").attach(view, { only_moved = true, field = options.field or M.PLACEMENT_FIELD })
 	local move = ui.require("core.move")
-	move.attach(view, { placement = placement, handle = options.handle, enabled = options.enabled })
+	local key, locked = options.lock_key, false
+	if key then
+		locked = ui.state.read(view, key) == "true"
+	end
+	move.attach(view, {
+		placement = placement,
+		handle = options.handle,
+		enabled = function(x, y)
+			if locked then
+				return false
+			end
+			return not options.enabled or options.enabled(x, y)
+		end,
+	})
+	if key then
+		local anchor = options.handle or view
+		ui.on_pointer_release(anchor, "right", function()
+			ui.menu.clear(anchor)
+			pcall(ui.menu.style, anchor, "context")
+			ui.menu.add(anchor, "Lock position", locked, function()
+				locked = not locked
+				ui.state.write(view, key, tostring(locked), "bool")
+			end)
+			ui.menu.show(anchor)
+		end)
+	end
 	return placement
 end
 

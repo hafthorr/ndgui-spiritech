@@ -31,6 +31,18 @@ for _, case in ipairs({
     H.env.status_bar_apply(case[2], false)
     local cap = H.find(H.root, "status_caption")
     check(cap and cap.text == case[3], case[1] .. " caption = " .. tostring(cap and cap.text))
+    if case[1] == "health" or case[1] == "nano" then
+      local shade = H.find(H.root, "status_caption_shadow")
+      check(shade and shade.text == case[3], case[1] .. " caption has a drop shadow")
+      local mv = H.moves[#H.moves]
+      check(mv and mv.options.enabled(0, 0) == true, case[1] .. " drags while unlocked")
+      check(#H.releases == 1 and H.releases[1].button == "right", case[1] .. " right-click opens the lock menu")
+      H.releases[1].cb()
+      local item = H.menu_items[#H.menu_items]
+      check(item and item.label == "Lock position" and item.checked == false, case[1] .. " menu offers Lock position")
+      item.cb()
+      check(mv.options.enabled(0, 0) == false and H.state[mv.view].NdguiLocked == "true", case[1] .. " locked: drag refused and saved")
+    end
     local fill = H.find(H.root, "status_fill")
     local vertical = case[1] == "health" or case[1] == "nano"
     local length = vertical and fill.h or fill.w

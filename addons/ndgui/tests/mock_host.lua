@@ -99,14 +99,24 @@ function M.new(addons_dir, core_dir, opts)
   ui.destinations.close = function() end
   ui.destinations.is_open = function() return false end
   ui.menu = setmetatable({}, { __index = function(_, k)
-    return function(anchor) assert(anchor, "menu." .. k .. " nil anchor"); H.calls["menu." .. k] = (H.calls["menu." .. k] or 0) + 1; return H.calls["menu." .. k] end end })
+    return function(anchor, label, checked, cb) assert(anchor, "menu." .. k .. " nil anchor"); H.calls["menu." .. k] = (H.calls["menu." .. k] or 0) + 1
+      if k == "add" and H.menu_items then H.menu_items[#H.menu_items + 1] = { label = label, checked = checked, cb = cb } end
+      return H.calls["menu." .. k] end end })
   ui.on_value_changed = function(v, cb) assert(v and type(cb) == "function") end
   ui.on_lockdown = function(cb) assert(type(cb) == "function") end
   ui.compass.graphic_width = function() return 512 end
   for _, k in ipairs({ "offset", "begin", "sprite", "finish" }) do
     ui.compass[k] = function(v) assert(v, "compass." .. k .. " nil"); H.calls["compass." .. k] = (H.calls["compass." .. k] or 0) + 1 end
   end
-  ui.define("core.move", function() return { attach = function(v) return v end, place = function(v, x, y) ui.place(v, x, y) end } end)
+  H.moves, H.state, H.releases = {}, {}, {}
+  ui.define("core.move", function() return { attach = function(v, o) H.moves[#H.moves + 1] = { view = v, options = o or {} }; return v end,
+    place = function(v, x, y) ui.place(v, x, y) end } end)
+  -- ui.state: per-view scalar store (poses, ndGUI lock flags)
+  ui.state = { read = function(v, k) assert(v and type(k) == "string"); return (H.state[v] or {})[k] or "" end,
+    write = function(v, k, value) assert(v and type(k) == "string" and type(value) == "string"); H.state[v] = H.state[v] or {}; H.state[v][k] = value end }
+  ui.on_pointer_release = function(v, button, cb) assert(v and type(cb) == "function"); H.releases[#H.releases + 1] = { view = v, button = button, cb = cb } end
+  -- ui.menu.add remembers its last callback so tests can invoke a menu entry
+  H.menu_items = {}
   H.placements = {}
   ui.define("core.placement", function() return { attach = function(view, options)
     local p = { view = view, field = options and options.field, moved = false, changed = function(self) self.moved = true end }
