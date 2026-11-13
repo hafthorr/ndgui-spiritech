@@ -276,6 +276,11 @@ do
         check(t3.columns[1].id == "cost" and prefs["t.col_order"] == ",cost,name," and #t3.headers == 2,
           "moving a column re-orders and saves it (" .. tostring(prefs["t.col_order"]) .. ")")
         check(t3.rows[1] and t3.rows[1].cells[1].text == "ca" and t3.rows[1].cells[2].text == "a", "rows rebuilt in the new column order")
+        check(t3.widths[1] == 50 and t3.widths[2] == 100,
+          "widths follow their column when moved (" .. tostring(t3.widths[1]) .. "," .. tostring(t3.widths[2]) .. ")")
+        t3:move_column("cost", 1)
+        check(t3.widths[1] == 100 and t3.widths[2] == 50, "widths still right after moving back")
+        t3:move_column("cost", -1)
         local t4 = Table.create({ host = host, columns = cols, binding = function(e) return 1 end, preference = "t" })
         check(t4.columns[1].id == "cost" and cols[1].id == "name", "column order is remembered (package columns untouched)")
         t4:reset_order()

@@ -75,11 +75,7 @@ PATCHES = [
 		ui.visible(heading.root, self:column_shown(index))
 		if self:column_shown(index) then
 			ui.size(heading.root, width + self.style.gap, self.style.header_height)
-			-- fixed columns (icons) have no divider: let the heading use that room, so a 16px icon
-			-- column gets a real header box instead of a 10px sliver that reads as part of the next column
-			local title_width = self.columns[index].resizable == false and width + self.style.gap - 2
-				or width - self.style.inset
-			ui.size(heading.title, math.max(1, title_width), self.style.header_height)
+			ui.size(heading.title, math.max(1, width - self.style.inset), self.style.header_height)
 		else
 			ui.size(heading.root, 0, self.style.header_height)
 		end"""),
@@ -179,6 +175,7 @@ PATCHES = [
 			ui.text_alignment(heading.title, column.alignment or "left")
 			ui.add(self.header, fragment)
 			local id = column.id
+			heading.id = id
 			ui.on_pointer_release(heading.title, "right", function()
 				self:column_menu(heading.title, id)
 			end)
@@ -188,7 +185,8 @@ PATCHES = [
 				end)
 			end
 			local resizable = column.resizable ~= false
-			ui.visible(heading.divider, resizable)
+			-- the bar also separates fixed columns (icons) from their neighbour; only resizable ones drag
+			ui.visible(heading.divider, true)
 			if resizable then
 				local initial
 				ui.on_drag_start(heading.divider, function()
@@ -210,9 +208,10 @@ PATCHES = [
 	-- Rebuild header and rows in the current self.columns order (package-owned rows only;
 	-- native collection rows are cloned from a prototype once, so those apply on next load).
 	function Table:rebuild()
-		for index, column in ipairs(self.columns) do
+		-- widths belong to the column each header was built for, not to the (possibly re-ordered) slot
+		for index, heading in ipairs(self.headers) do
 			if self.preferred_widths[index] then
-				self.saved_widths[column.id] = self.preferred_widths[index]
+				self.saved_widths[heading.id] = self.preferred_widths[index]
 			end
 		end
 		for _, heading in ipairs(self.headers) do
