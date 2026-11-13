@@ -93,18 +93,23 @@ function M.movable(view, options)
 			return not options.enabled or options.enabled(x, y)
 		end,
 	})
-	if key then
-		local anchor = options.handle or view
-		ui.on_pointer_release(anchor, "right", function()
-			ui.menu.clear(anchor)
-			pcall(ui.menu.style, anchor, "context")
-			ui.menu.add(anchor, "Lock position", locked, function()
+	-- Right-click only reaches the exact widget pressed, so callers hand in the widgets
+	-- people actually click (placement.lock_menu_on(widget)); the root/handle is wired too.
+	function placement.lock_menu_on(target)
+		if not key then
+			return
+		end
+		ui.on_pointer_release(target, "right", function()
+			ui.menu.clear(target)
+			pcall(ui.menu.style, target, "context")
+			ui.menu.add(target, "Lock position", locked, function()
 				locked = not locked
 				ui.state.write(view, key, tostring(locked), "bool")
 			end)
-			ui.menu.show(anchor)
+			ui.menu.show(target)
 		end)
 	end
+	placement.lock_menu_on(options.handle or view)
 	return placement
 end
 

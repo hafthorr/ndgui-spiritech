@@ -67,6 +67,10 @@ function status_bar_initialize(which)
 	fill = ui.find(content, "status_fill")
 	caption = ui.find(content, "status_caption")
 	shadow = spec.vertical and ui.find(content, "status_caption_shadow") or nil
+	if spec.vertical then
+		placement.lock_menu_on(bar)
+		placement.lock_menu_on(ui.find(content, "status_caption_plate"))
+	end
 	ui.text_color(caption, spec.vertical and D.color.text or "#FFFFFF")
 	layout()
 	paint()

@@ -36,8 +36,11 @@ for _, case in ipairs({
       check(shade and shade.text == case[3], case[1] .. " caption has a drop shadow")
       local mv = H.moves[#H.moves]
       check(mv and mv.options.enabled(0, 0) == true, case[1] .. " drags while unlocked")
-      check(#H.releases == 1 and H.releases[1].button == "right", case[1] .. " right-click opens the lock menu")
-      H.releases[1].cb()
+      local bar = H.find(H.root, "status_bar")
+      local on_bar
+      for _, r in ipairs(H.releases) do if r.view == bar and r.button == "right" then on_bar = r end end
+      check(on_bar ~= nil and #H.releases == 3, case[1] .. " right-click on the bar itself opens the lock menu (" .. #H.releases .. " hooks)")
+      on_bar.cb()
       local item = H.menu_items[#H.menu_items]
       check(item and item.label == "Lock position" and item.checked == false, case[1] .. " menu offers Lock position")
       item.cb()
