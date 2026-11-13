@@ -7,6 +7,11 @@ Versions follow Semantic Versioning 2.0.0: `MAJOR.MINOR.PATCH`.
 - PATCH bumps fix tokens, scale math, or docs without a config change.
 - While the major version is 0, the client view layer is still incomplete. The Lua model is safe to load offline.
 
+## 0.2.1
+
+- Linux/macOS: `install.py` no longer dies in the skin step looking for a Windows font (`OSError: cannot open resource`). It finds DejaVu/Liberation/Noto, asks `fc-match`, or uses `$NDGUI_FONT`.
+- Releases are published by GitLab CI when a `v*` tag is pushed.
+
 ## 0.2.0 (first public release)
 
 - **Full HUD and window replacement**: 39 packages; every `core.window` window and most HUD roles on the DarkTech frame.

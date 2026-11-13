@@ -17,7 +17,7 @@ addons/                     the 9 hand-made packages, copied into client/UI/Addo
   ndgui-planet-map/         prk.planet-map       Planet Map
 install.ps1, install.bat    the player installer (PowerShell; ships in the release zip)
 install.py                  install straight from this checkout (developers, Linux/Mac)
-build_release.py            builds dist/ndgui-spiritech-<version>.zip
+build_release.py            builds release/ndgui-spiritech-<version>.zip (committed; CI publishes it)
 docs/background/            original research and design notes
 ```
 
@@ -64,10 +64,12 @@ All three must print `ALL PASS`. CI only syntax-checks (it has no game client).
 
 ## Making a release
 
-1. Bump `VERSION` in `install.py` and add a `CHANGELOG.md` entry.
-2. `python build_release.py` (game closed or not; it works on a staged copy of your client's stock files).
-3. Smoke-test: unpack `dist/ndgui-spiritech-<version>.zip`, run `install.bat`, play.
-4. Tag `v<version>`, push, and attach the zip to a GitLab release.
+1. Bump `VERSION` in `install.py` and add a `## <version>` section to `CHANGELOG.md` (it becomes the release notes).
+2. `python build_release.py` (game closed or not; it works on a staged copy of your client's stock files). It replaces the zip in `release/`.
+3. Smoke-test: unpack `release/ndgui-spiritech-<version>.zip`, run `install.bat`, play.
+4. Commit (including the zip), `git tag v<version>`, `git push --follow-tags`.
+
+GitLab CI then creates the release by itself: notes from the changelog, the zip as the download. It fails loudly if the zip, `VERSION` or changelog section doesn't match the tag. CI can't build the zip itself because that needs a game client.
 
 ## Rules of thumb
 

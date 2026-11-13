@@ -109,8 +109,11 @@ def main():
 
     packages = len(glob.glob(os.path.join(game, "Addons", "*")))
     graphics = len(glob.glob(os.path.join(game, "skin", "*.png")))
-    os.makedirs(os.path.join(REPO, "dist"), exist_ok=True)
-    archive = os.path.join(REPO, "dist", name + ".zip")
+    # release/ is committed: pushing a v<version> tag makes GitLab CI publish this zip as the release
+    os.makedirs(os.path.join(REPO, "release"), exist_ok=True)
+    for old in glob.glob(os.path.join(REPO, "release", "*.zip")):
+        os.remove(old)
+    archive = os.path.join(REPO, "release", name + ".zip")
     with zipfile.ZipFile(archive, "w", zipfile.ZIP_DEFLATED) as zf:
         for root, _, files in os.walk(out):
             for f in files:

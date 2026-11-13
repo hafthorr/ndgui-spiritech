@@ -70,7 +70,7 @@ Spiritech loads Lua/XML UI packages from `client/UI/Addons`. This repo holds **9
 
 ## Status
 
-`0.2.0`: playable, in daily use, with rough edges. Bug reports with a screenshot are gold: open an issue.
+`0.2.1`: playable, in daily use, with rough edges. Bug reports with a screenshot are gold: open an issue.
 
 ## License
 

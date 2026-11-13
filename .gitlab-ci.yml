@@ -1,9 +1,56 @@
-# No game client in CI, so this only checks that everything parses.
+# No game client in CI, so lint only checks that everything parses.
 # The real tests run against a client: see CONTRIBUTING.md.
+#
+# Releases: build_release.py writes release/ndgui-spiritech-<version>.zip (committed).
+# Pushing tag v<version> makes the release job publish that zip as the GitLab release,
+# with that version's CHANGELOG.md section as the notes.
+
+stages: [lint, release]
+
 lint:
+  stage: lint
   image: alpine:3.20
   script:
     - apk add --no-cache lua5.4 python3 libxml2-utils
     - find addons -name '*.lua' -print0 | xargs -0 -n1 luac5.4 -p
     - python3 -m py_compile install.py build_release.py addons/ndgui/tools/*.py
     - find addons -name '*.xml' -print0 | xargs -0 -n1 xmllint --noout
+
+release-notes:
+  stage: release
+  image: alpine:3.20
+  rules:
+    - if: $CI_COMMIT_TAG =~ /^v\d+\.\d+\.\d+$/
+  script:
+    - VERSION="${CI_COMMIT_TAG#v}"
+    - ZIP="release/ndgui-spiritech-${VERSION}.zip"
+    - test -f "$ZIP" || { echo "missing $ZIP - run build_release.py and commit it before tagging"; exit 1; }
+    - grep -q "^VERSION = \"${VERSION}\"" install.py || { echo "install.py VERSION is not ${VERSION}"; exit 1; }
+    # this version's CHANGELOG section, without its heading
+    - awk -v v="$VERSION" '/^## /{ if (on) exit; on = ($2 == v); next } on' CHANGELOG.md > notes.md
+    - test -s notes.md || { echo "no '## ${VERSION}' section in CHANGELOG.md"; exit 1; }
+    - 'printf "\n**Download:** ndgui-spiritech-%s.zip below, unzip, double-click install.bat. Linux/Mac: see INSTALL.md.\n" "$VERSION" >> notes.md'
+    - echo "VERSION=${VERSION}" > release.env
+    - cat notes.md
+  artifacts:
+    paths: [notes.md]
+    reports:
+      dotenv: release.env
+
+release:
+  stage: release
+  image: registry.gitlab.com/gitlab-org/release-cli:latest
+  needs: [release-notes]
+  rules:
+    - if: $CI_COMMIT_TAG =~ /^v\d+\.\d+\.\d+$/
+  script:
+    - echo "publishing ndGUI for Spiritech $VERSION"
+  release:
+    tag_name: $CI_COMMIT_TAG
+    name: "ndGUI for Spiritech $VERSION"
+    description: notes.md
+    assets:
+      links:
+        - name: "ndgui-spiritech-$VERSION.zip"
+          url: "$CI_PROJECT_URL/-/raw/$CI_COMMIT_TAG/release/ndgui-spiritech-$VERSION.zip?inline=false"
+          link_type: package
