@@ -13,7 +13,7 @@
       <BitmapView name="ndgui_corner_bl" image="library://notum.ndgui-lib/window/corner_bl.png" min_size="Point(7,7)" max_size="Point(7,7)" h_alignment="left" v_alignment="bottom" layout_borders="Rect(3,0,0,3)" />
       <BitmapView name="ndgui_corner_br" image="library://notum.ndgui-lib/window/corner_br.png" min_size="Point(7,7)" max_size="Point(7,7)" h_alignment="right" v_alignment="bottom" layout_borders="Rect(0,0,3,3)" />
     </View>
-    <View name="window_inner" view_layout="stacked" capture_input="false" layout_borders="Rect(5,29,5,5)">
+    <View name="window_inner" view_layout="stacked" capture_input="false" layout_borders="Rect(4,27,4,4)">
       <BitmapView name="ndgui_inner" image="library://notum.ndgui-lib/window/inner.png" />
     </View>
     <View view_layout="vertical" weight="1" layout_borders="Rect(3,3,3,3)">
@@ -32,7 +32,8 @@
         <Button name="window_pin" visible="false" alpha="0.6" active_alpha="1" min_size="Point(15,15)" max_size="Point(15,15)" v_alignment="center" layout_borders="Rect(0,0,3,1)" gfxid_raised="GFX_GUI_WINDOW_PIN" gfxid_hover="GFX_GUI_WINDOW_PIN_STATE2" gfxid_pressed="GFX_GUI_WINDOW_PIN_STATE3" gfxid_selected="GFX_NDGUI_PIN_ON" />
         <Button name="window_close" visible="false" alpha="0.9" active_alpha="1" min_size="Point(15,15)" max_size="Point(15,15)" v_alignment="center" layout_borders="Rect(0,0,5,1)" gfxid_raised="GFX_GUI_WINDOW_CLOSE_X" gfxid_hover="GFX_GUI_WINDOW_CLOSE_X_STATE2" gfxid_pressed="GFX_GUI_WINDOW_CLOSE_X_STATE3" />
       </View>
-      <View name="window_content" view_layout="vertical" weight="1" layout_borders="Rect(4,4,4,4)" />
+      <!-- content borders must match Core (2,1,2,2): the game sizes grid windows with Window.CONTENT_SIDES/ENDS -->
+      <View name="window_content" view_layout="vertical" weight="1" layout_borders="Rect(2,1,2,2)" />
     </View>
   </View>
 </root>
