@@ -7,6 +7,14 @@ Versions follow Semantic Versioning 2.0.0: `MAJOR.MINOR.PATCH`.
 - PATCH bumps fix tokens, scale math, or docs without a config change.
 - While the major version is 0, the client view layer is still incomplete. The Lua model is safe to load offline.
 
+## 0.2.3
+
+- **HP/NP bars**: double-click one for a small **Lock / Flat** strip. Lock keeps it in place; Flat lays it horizontally with the number inside. Saved per bar.
+- HP/NP numbers sit on a dark plate with a drop shadow, readable over bright ground.
+- **Window frame** padding and title bar now add up exactly like the game expects: grids (loot, bags, bank) no longer slide under the scrollbar, and long titles no longer push the close button off the edge.
+- **Lists**: fixed-width icon columns get a header divider; moving a column keeps its width (it used to swap widths with its neighbour).
+- Linux/macOS: the skin step finds a bold font (since 0.2.1).
+
 ## 0.2.2
 
 - Bugs, issues, ideas: ask **thedenis** on the Project Rubi-Ka Discord. Shown at the top of the README and at the end of the installer.
