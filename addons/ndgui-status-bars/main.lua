@@ -5,6 +5,7 @@
 -- XP/AXP: slim horizontal bars resting on the bottom menubar.
 local Vitals = ui.require("character.vitals")
 local D = ui.require("notum.ndgui-lib/dovvetech")
+local Unit = ui.require("notum.ndgui-lib/unit")
 local root = ui.load("window.xml")
 ui.root(root)
 local placement
@@ -178,7 +179,8 @@ function status_bar_apply(reading, shadowknowledge)
 	if shadowknowledge and kind == "experience" then
 		label, tip = "SK  ", "Shadowknowledge"
 	end
-	local text = Vitals.reading_text(reading)
+	-- thousands separators like the credits counter: 1396 / 4500 -> 1,396 / 4,500
+	local text = Vitals.reading_text(reading):gsub("%d%d%d%d+", Unit.thousands)
 	fraction = math.max(0, math.min(1, tonumber(reading.fraction) or 0))
 	caption_text = label .. text
 	tip_text = tip .. ": " .. text

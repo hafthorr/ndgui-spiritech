@@ -21,8 +21,8 @@ local placed = {}
 for _, case in ipairs({
   { "health", { current = 129, maximum = 129, fraction = 1 }, "129 / 129" },
   { "nano", { current = 90, maximum = 90, fraction = 1 }, "90 / 90" },
-  { "experience", { current = 1396, maximum = 4500, fraction = 1396 / 4500 }, "XP  1396 / 4500" },
-  { "alien", { current = nil, maximum = 1000, fraction = 0 }, "AXP  -- / 1000" },
+  { "experience", { current = 1396, maximum = 4500, fraction = 1396 / 4500 }, "XP  1,396 / 4,500" },
+  { "alien", { current = nil, maximum = 1000, fraction = 0 }, "AXP  -- / 1,000" },
 }) do
   local H = load_pkg("ndgui-status-bars")
   if H then
@@ -102,7 +102,7 @@ for _, case in ipairs({
     placed[case[1]] = H.root
     if case[1] == "experience" then
       H.env.status_bar_apply(case[2], true)
-      check(cap.text == "SK  1396 / 4500", "shadowknowledge relabels XP as SK")
+      check(cap.text == "SK  1,396 / 4,500", "shadowknowledge relabels XP as SK")
     end
   end
 end
