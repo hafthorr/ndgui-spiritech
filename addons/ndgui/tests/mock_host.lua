@@ -96,6 +96,7 @@ function M.new(addons_dir, core_dir, opts)
     "visual_selected", "bind", "action", "icon", "content", "badge", "fade", "image", "caption", "corner", "center" }) do
     ui[k] = function(v) assert(v, k .. " nil view"); H.calls[k] = (H.calls[k] or 0) + 1 end
   end
+  ui.borders = function(v, l, t, r, b) assert(v and l and t and r and b, "borders"); v.borders = { l, t, r, b } end
   ui.local_x = function(v) assert(v, "local_x nil"); return v.x or 0 end
   ui.local_y = function(v) assert(v, "local_y nil"); return v.y or 0 end
   H.state_handlers = {}
@@ -149,6 +150,11 @@ function M.new(addons_dir, core_dir, opts)
 
   local game = { control_center = { bind_aggdef = function(v) assert(v, "bind_aggdef nil") end }, character = { subscribe = function(_, _, cb)
     assert(type(cb) == "function"); H.subs[#H.subs + 1] = cb; return {} end } }
+  -- game.combat: tests feed events through H.combat(events)
+  H.combat_subs = {}
+  game.combat = { subscribe = function(kinds, cb) assert(type(kinds) == "string" and type(cb) == "function", "combat.subscribe")
+    H.combat_subs[#H.combat_subs + 1] = cb; return #H.combat_subs end, unsubscribe = function() end }
+  function H.combat(events) for _, cb in ipairs(H.combat_subs) do cb({ reset = false }, events) end end
 
   local env = { ui = ui, game = game, math = math, string = string, table = table, pairs = pairs, ipairs = ipairs,
     type = type, tostring = tostring, tonumber = tonumber, pcall = pcall, error = error, select = select,

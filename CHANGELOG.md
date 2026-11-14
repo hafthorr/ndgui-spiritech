@@ -7,6 +7,13 @@ Versions follow Semantic Versioning 2.0.0: `MAJOR.MINOR.PATCH`.
 - PATCH bumps fix tokens, scale math, or docs without a config change.
 - While the major version is 0, the client view layer is still incomplete. The Lua model is safe to load offline.
 
+## Unreleased (branch combat-frames)
+
+- **Team window**: every member is a unit frame like the target panels: profession portrait, name and level, exact HP with the damage ghost and low-HP pulse, nano, profession / side and distance. The leader gets a green name and stripe; absent members are greyed. Click to target, right-click menu, NCU strips, Leave and Recruit work as before.
+- **Floating combat numbers** on target panels and team frames: damage, bigger yellow crits, healing, misses (from the game's combat feed).
+- **Target-of-target**: the target panel shows who your target is attacking (`» You` in orange), for 8 s after its last attack.
+- The unit frame lives in ndgui-lib (`unit.xml`, `lua/unit.lua`); Team is now a hand-made package instead of a generated fork.
+
 ## 0.2.5
 
 - **New target panels**: proper unit frames with a profession portrait (or the level for NPCs), name and level, exact HP like `941 / 941 (100%)`, a pale ghost of damage just taken that drains away, a pulsing fill under 25%, nano bar, profession / side, distance and a reach dot. Double-click for **Lock**, **Size** (S / M / L) and **Compact**. Saved per panel.

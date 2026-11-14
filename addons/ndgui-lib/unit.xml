@@ -1,5 +1,5 @@
 <root>
-  <!-- One target unit frame. Every size is set from main.lua (S/M/L, compact). -->
+  <!-- One ndGUI unit frame (target panels, team rows). Every size is set from lua/unit.lua. -->
   <View name="frame" view_layout="stacked" h_alignment="left" layout_borders="Rect(0,0,0,4)">
     <BitmapView name="plate" image="library://notum.ndgui-lib/chrome/plate.png" />
     <View view_layout="horizontal">
@@ -27,9 +27,33 @@
         </View>
         <View name="row_info" view_layout="horizontal" layout_borders="Rect(0,2,0,0)">
           <TextView name="info" value="" color="7F9BB0" v_alignment="center" size_to_text="false" />
+          <TextView name="tot" value="" color="C5D7E6" text_alignment="right" v_alignment="center" size_to_text="false" visible="false" />
           <TextView name="distance" value="" color="C5D7E6" text_alignment="right" v_alignment="center" size_to_text="false" />
           <View name="reach" v_alignment="center" layout_borders="Rect(4,0,0,0)" />
         </View>
+      </View>
+    </View>
+    <!-- floating combat numbers: right-aligned, risen by shrinking their top inset -->
+    <View name="floats" view_layout="stacked">
+      <View name="float_1" view_layout="stacked" h_alignment="right" v_alignment="top" visible="false">
+        <TextView name="float_1_shadow" value="" color="000000" layout_borders="Rect(1,1,0,0)" />
+        <TextView name="float_1_text" value="" color="FFFFFF" />
+      </View>
+      <View name="float_2" view_layout="stacked" h_alignment="right" v_alignment="top" visible="false">
+        <TextView name="float_2_shadow" value="" color="000000" layout_borders="Rect(1,1,0,0)" />
+        <TextView name="float_2_text" value="" color="FFFFFF" />
+      </View>
+      <View name="float_3" view_layout="stacked" h_alignment="right" v_alignment="top" visible="false">
+        <TextView name="float_3_shadow" value="" color="000000" layout_borders="Rect(1,1,0,0)" />
+        <TextView name="float_3_text" value="" color="FFFFFF" />
+      </View>
+      <View name="float_4" view_layout="stacked" h_alignment="right" v_alignment="top" visible="false">
+        <TextView name="float_4_shadow" value="" color="000000" layout_borders="Rect(1,1,0,0)" />
+        <TextView name="float_4_text" value="" color="FFFFFF" />
+      </View>
+      <View name="float_5" view_layout="stacked" h_alignment="right" v_alignment="top" visible="false">
+        <TextView name="float_5_shadow" value="" color="000000" layout_borders="Rect(1,1,0,0)" />
+        <TextView name="float_5_text" value="" color="FFFFFF" />
       </View>
     </View>
   </View>

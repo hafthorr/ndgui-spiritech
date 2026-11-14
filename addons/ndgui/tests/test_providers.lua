@@ -200,6 +200,87 @@ if rects.friendly and rects.hostile then
   check(f.x >= 0 and h.x + h.w <= W, "panels stay on screen")
 end
 
+-- Team window: one unit frame per member, click-to-target kept, floating numbers from game.combat.
+do
+  local H = Mock.new(addons, core, { width = W, height = Hh, loose = true })
+  local team_cb, binds = nil, {}
+  local game = H.env.game
+  game.team = setmetatable({ subscribe = function(cb) team_cb = cb end, prepare_leave = function() return 1 end,
+    prepare_invite = function() return 2 end, prepare_kick = function() return 3 end, prepare_leader = function() return 4 end },
+    { __index = function() return function() end end })
+  game.targeting = { subscribe = function() end, prepare_select = function(ref) return "select:" .. ref end }
+  local unsubscribed = 0
+  game.character.unsubscribe = function() unsubscribed = unsubscribed + 1 end
+  H.env.ui.actions = setmetatable({ bind = function(v, action) binds[v] = action end }, { __index = function() return function() end end })
+  local ok, err = pcall(H.load_package, "ndgui-team")
+  check(ok, "ndgui-team loads" .. (ok and "" or (": " .. tostring(err))))
+  if ok then
+    check(role(H, "prk.team"), "team declares prk.team")
+    check(type(team_cb) == "function", "team subscribes to the roster")
+    local function member(ref, name, prof, hp, max, leader, present, is_self)
+      return { own_team = true, leader = leader, character = { reference = ref, id = #ref, name = name, is_self = is_self,
+        present = present, is_npc = false, profession = prof, level = 50, health = hp, max_health = max, nano = 100, max_nano = 200, side = 1 } }
+    end
+    team_cb({ data = { in_team = true, can_invite = true, side = 1, context = 1, members = {
+      member("me", "Ninnai", 10, 900, 1000, true, true, true), member("r2", "Bob", 1, 250, 1000, false, true),
+      member("r33", "Gone", 4, 0, 800, false, false) } } })
+    local host = H.find(H.root, "team_rows")
+    local rows = host.kids
+    local function u(i, name) return H.find(rows[i], name) end
+    check(rows[1].visible == true and rows[3].visible == true and rows[4].visible == false, "three members shown, empty rows hidden")
+    check(u(1, "name").text == "Ninnai" and u(1, "name").color == "#11EEAA" and u(1, "accent").fill == "#11EEAA", "leader: green name and stripe")
+    check(u(2, "hp_text").text == "250 / 1,000 (25%)" and u(2, "portrait_icon").image == "gfx://GFX_GUI_ICON_PROFESSION_LARGE_1",
+      "member: exact HP and profession portrait")
+    check(u(2, "info").text == "Soldier · Clan" and u(2, "np").visible == true, "member: info row and nano bar")
+    check(u(3, "name").color == "#888888" and u(3, "body").opacity == 0.55, "absent member greyed")
+    check(binds[rows[2]] == "select:r2" and binds[u(2, "hp_text")] == "select:r2", "left-click on any part targets the member")
+    -- distance: the member's own Character subscription plus self
+    local subs = #H.subs
+    check(subs >= 3, "member positions + self subscribed (" .. subs .. ")")
+    -- subscribed in order: self (at load), then Bob and Gone (roster)
+    H.subs[1]({}, { name = "Ninnai", is_self = true, x = 0, y = 0, z = 0 })
+    H.subs[2]({}, { name = "Bob", x = 3, y = 0, z = 4 })
+    check(u(2, "distance").text == "5.0 m", "member distance " .. tostring(u(2, "distance").text))
+    -- combat numbers float over the member that took them
+    H.combat({ { kind = "damage", amount = 120, target = 0, target_name = "Bob", source = 0, source_name = "Mob", critical = false },
+      { kind = "healing", amount = 40, target = 0, target_name = "Ninnai", target_is_self = true } })
+    check(u(2, "float_1").visible == true and u(2, "float_1_text").text == "-120", "damage floats over Bob")
+    check(u(1, "float_1_text").text == "+40", "healing floats over you")
+    -- a member leaves: their subscription is dropped
+    team_cb({ data = { in_team = true, can_invite = true, side = 1, context = 2, members = {
+      member("me", "Ninnai", 10, 900, 1000, true, true, true) } } })
+    check(rows[2].visible == false and unsubscribed >= 1, "leaving member hidden and unwatched")
+  end
+end
+
+-- Unit frame combat matching: names first, ids once they prove to agree; floats rise and fade.
+do
+  local T = load_pkg("ndgui-target-panels")
+  if T then
+    T.subs[1]({}, { id = 77, name = "Scalecoil", is_npc = true, level = 2, health = 173, max_health = 190 })
+    T.env.target_panel_place(W, true)
+    T.env.target_panel_apply({ name = "Scalecoil", has_bar = true, fraction = 0.91, bar_color = 0xd24b4b, in_reach = true, name_color = 0xffffff }, { name = "" }, W)
+    local f1 = T.root.kids[1]
+    check(#T.combat_subs == 1, "target panels watch game.combat once")
+    T.combat({ { kind = "damage", amount = 17, critical = true, target = 77, target_name = "Scalecoil", source_is_self = true, source_name = "Ninnai" } })
+    check(T.find(f1, "float_1_text").text == "-17!" and T.find(f1, "float_1_text").font == math.floor(15 * 1.2), "crit floats big: -17!")
+    -- same name, different id: ignored now that ids proved to agree
+    T.combat({ { kind = "damage", amount = 5, target = 78, target_name = "Scalecoil" } })
+    check(T.find(f1, "float_2").visible ~= true, "another mob with the same name does not float here")
+    -- target attacks you -> "» You"
+    T.combat({ { kind = "attack_started", source = 77, source_name = "Scalecoil", target_is_self = true, target_name = "Ninnai" } })
+    check(T.find(f1, "tot").visible == true and T.find(f1, "tot").text == "» You" and T.find(f1, "tot").color == "#ffa040", "target-of-target: » You")
+    local tick = T.updates[#T.updates]
+    tick(T.now + 500)
+    local b = T.find(f1, "float_1").borders
+    check(b and b[2] < 4 + math.floor(18 * 1.2) + 2, "float rises")
+    tick(T.now + 1200)
+    check(T.find(f1, "float_1").visible == false, "float gone after its life")
+    tick(T.now + 9000)
+    check(T.find(f1, "tot").visible == false, "» You fades after 8 s without attacks")
+  end
+end
+
 -- Hotbar.
 local B = load_pkg("ndgui-hotbar")
 if B then
