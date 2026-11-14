@@ -466,11 +466,11 @@ ui.define("ndgui.meter", function()
 		return out
 	end
 
-	-- A fight is named after the enemy that took the most damage.
+	-- A fight is named after the named enemy that took the most damage.
 	function Meter.name(seg)
 		local best
 		for _, target in pairs(seg and seg.targets or {}) do
-			if not best or target.total > best.total then
+			if target.name ~= "Unknown" and (not best or target.total > best.total) then
 				best = target
 			end
 		end

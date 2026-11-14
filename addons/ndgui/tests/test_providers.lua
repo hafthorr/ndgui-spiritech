@@ -363,6 +363,8 @@ do
     check(f("meter_fight").text == "All fights" and f("meter_peak").text == "overall: no graph", "overall")
     f("meter_reset").on_click()
     check(rows[1].visible == false and f("meter_summary").text == "No combat yet", "reset clears")
+    H.combat({ ev(100, "damage", 50, me, mob), ev(101, "damage", 5000, me, { id = 0, name = "" }) })
+    check(f("meter_overall").on_click() == nil and f("meter_summary").text:find("^Snake") ~= nil, "unnamed enemies never name the fight: " .. f("meter_summary").text)
   end
 end
 
