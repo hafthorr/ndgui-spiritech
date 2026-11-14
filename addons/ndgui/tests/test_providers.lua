@@ -514,6 +514,19 @@ if ok_cc then
   local actions = { select_self = 1, toggle_attack = 2, friendly_previous = 3, friendly_next = 4, hostile_previous = 5, hostile_next = 6 }
   CC.env.control_center_configure(actions, { { key = "sit", reference = 9 } }, { { key = "example.meter/meter", label = "Meter" } })
   CC.env.control_center_apply({ used_ncu = 0, max_ncu = 8, credits = 27691802, aggdef_advanced = false, aggdef = 25, fighting = false, has_pets = false, perks_available = false }, {})
+  -- minibar and docking column follow the Options toggles (Nov 2026 client)
+  local function cc_find(name) return CC.find(CC.root, name) end
+  check(#CC.rollup_hosts == 1 and CC.rollup_hosts[1].width == 190, "control center offers one 190 px docking column")
+  check(cc_find("minibar").visible == false and cc_find("rollup_panel").visible == false, "minibar and column hidden by default")
+  CC.env.control_center_apply({ used_ncu = 0, max_ncu = 8, credits = 27691802, aggdef_advanced = false, aggdef = 25, fighting = false,
+    has_pets = false, perks_available = false, minibar_shown = true, rollup_shown = true, rollup_background_opacity = 0.5 }, {})
+  check(cc_find("minibar").visible == true and cc_find("rollup_panel").visible == true, "Options toggles show the minibar and the column")
+  check(cc_find("rollup_background").opacity == 0.5, "column backdrop follows the opacity slider")
+  local minibar_buttons = 0
+  for _, name in ipairs({ "wear", "actions", "missions", "team", "playfield_map", "friends", "programs", "stats", "ncu" }) do
+    if cc_find("minibar_" .. name).bound then minibar_buttons = minibar_buttons + 1 end
+  end
+  check(minibar_buttons == 9, "all nine minibar buttons open their window (" .. minibar_buttons .. ")")
   CC.env.control_center_refresh()
   check(CC.find(CC.root, "ncu").text == "NCU 0/8", "NCU readout")
   check(CC.find(CC.root, "credits").text == "CRED 27,691,802", "credits grouped")

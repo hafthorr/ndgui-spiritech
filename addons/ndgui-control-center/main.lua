@@ -1,5 +1,6 @@
 -- Dovvetech prk.control-center provider: the stock Control Center contract and commands,
--- presented as one slim ndGUI strip on the bottom edge instead of two corner wings.
+-- presented as one slim ndGUI strip on the bottom edge instead of two corner wings, plus the optional
+-- top-right minibar and right-side docking column (both toggled in Options > Interface & HUD).
 local root = ui.load("root.xml")
 local left = ui.load("left.xml")
 local right = ui.load("right.xml")
@@ -251,6 +252,46 @@ local window_buttons = {
 	{ bind_window("friends", windows.friends), windows.friends },
 }
 
+-- Minibar (Options > Interface & HUD > Show minibar): the stock top-right row of window buttons.
+local Column = ui.require("core.hud_column")
+local minibar = ui.load("minibar.xml")
+ui.size(minibar, Column.WIDTH, Column.TOP)
+ui.add(root, minibar)
+for _, entry in ipairs({
+	{ "wear", windows.wear }, { "actions", windows.actions }, { "missions", windows.missions },
+	{ "team", windows.team }, { "playfield_map", windows.playfield_map }, { "friends", windows.friends },
+	{ "programs", windows.nano }, { "stats", windows.stats }, { "ncu", windows.ncu },
+}) do
+	window_buttons[#window_buttons + 1] = { bind_window("minibar_" .. entry[1], entry[2]), entry[2] }
+end
+
+-- Right-side docking column (Options > Show rollup panel): windows dragged onto it by their title bar dock
+-- here. It runs from under the minibar (when shown) down to the ndGUI strip.
+local column = nil
+if ui.docking and ui.docking.available() then
+	column = { root = ui.load("rollup_panel.xml") }
+	column.background = ui.find(column.root, "rollup_background")
+	function column:refresh()
+		local top = ui.requested_visible(minibar) and Column.TOP or 0
+		local height = math.max(0, ui.parent_height(self.root) - top - ui.minimum_height(strip))
+		if height == self.height and top == self.top then
+			return
+		end
+		self.height, self.top = height, top
+		ui.size(self.root, Column.WIDTH, height)
+		ui.place(self.root, 0, top)
+		ui.align(self.root, "end", "start")
+	end
+	function column:show(shown, opacity)
+		ui.visible(self.root, shown)
+		ui.opacity(self.background, opacity or 1)
+		self:refresh()
+	end
+	ui.attach(root, column.root, function() column:refresh() end)
+	ui.rollup_host(column.root, ui.find(column.root, "rollup_pages"), Column.WIDTH)
+	column:refresh()
+end
+
 local AGGDEF_SLIDER_WIDTH = 128
 local AGGDEF_INFO_WIDTH = 19
 local aggdef_info = ui.find(right, "aggdef_info")
@@ -385,11 +426,18 @@ end
 function control_center_refresh()
 	fit_strip()
 	update_selections()
+	if column then
+		column:refresh()
+	end
 end
 
 function control_center_apply(state, perks)
 	latest_state = state
 	latest_perks = perks
+	ui.visible(minibar, state.minibar_shown == true)
+	if column then
+		column:show(state.rollup_shown == true, state.rollup_background_opacity)
+	end
 	ui.text(ncu, "NCU " .. number(state.used_ncu) .. "/" .. number(state.max_ncu))
 	ui.text(credits, "CRED " .. grouped(state.credits))
 	show_aggdef_advanced(state.aggdef_advanced)

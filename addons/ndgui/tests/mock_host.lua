@@ -96,7 +96,7 @@ function M.new(addons_dir, core_dir, opts)
   ui.pixel_scale_y = function() return 1 end
   for _, k in ipairs({ "align", "click_through", "fill_color", "font_size", "text_alignment", "on_click",
     "visual_selected", "bind", "action", "icon", "content", "badge", "fade", "image", "caption", "corner", "center" }) do
-    ui[k] = function(v) assert(v, k .. " nil view"); H.calls[k] = (H.calls[k] or 0) + 1 end
+    ui[k] = function(v, binding) assert(v, k .. " nil view"); H.calls[k] = (H.calls[k] or 0) + 1; if k == "bind" then v.bound = binding end end
   end
   ui.borders = function(v, l, t, r, b) assert(v and l and t and r and b, "borders"); v.borders = { l, t, r, b } end
   ui.local_x = function(v) assert(v, "local_x nil"); return v.x or 0 end
@@ -144,6 +144,11 @@ function M.new(addons_dir, core_dir, opts)
   ui.on_pointer_release = function(v, button, cb) assert(v and type(cb) == "function")
     assert(button == "right", "Pointer release supports right; use on_click for left activation."); H.releases[#H.releases + 1] = { view = v, button = button, cb = cb } end
   -- ui.menu.add remembers its last callback so tests can invoke a menu entry
+  -- core.hud_column (Nov 2026 patch): the real Core file, so the column size follows the client
+  do
+    local chunk = loadfile(core_dir .. "/hud_column.lua", "t", setmetatable({ ui = ui }, { __index = _G }))
+    if chunk then chunk() end
+  end
   -- ui.docking (Nov 2026 patch): Core's dockable registers every window with the right-side column
   H.docked_views = {}
   ui.docking = { available = function() return true end,
@@ -152,6 +157,21 @@ function M.new(addons_dir, core_dir, opts)
       assert(view.name == "window" or view.tag, "docking.register needs the window root")
       H.docked_views[#H.docked_views + 1] = view end,
     restore = function(view, docked, order) assert(view and type(docked) == "boolean" and type(order) == "number") end }
+  -- docking host calls (Nov 2026 patch), checked like the client documents them
+  H.rollup_hosts = {}
+  if not ui.attach then
+    ui.attach = function(owner, panel, layout) assert(owner and panel and type(layout) == "function", "ui.attach args")
+      ui.add(owner, panel); panel.attached_layout = layout end
+  end
+  ui.rollup_host = function(panel, body, width)
+    assert(panel and body and type(width) == "number", "ui.rollup_host args")
+    local function inside(v) if v == body then return true end for _, k in ipairs(v.kids or {}) do if inside(k) then return true end end return false end
+    assert(inside(panel), "rollup_host body must be inside the panel")
+    assert(#H.rollup_hosts == 0, "one rollup host per controller")
+    H.rollup_hosts[#H.rollup_hosts + 1] = { panel = panel, body = body, width = width } end
+  ui.requested_visible = ui.requested_visible or function(v) return v.visible ~= false end
+  ui.minimum_height = ui.minimum_height or function(v) return v.h or 0 end
+  ui.opacity = function(v, o) assert(v and type(o) == "number" and o >= 0 and o <= 1, "ui.opacity 0..1") v.opacity = o end
   H.menu_items = {}
   H.placements = {}
   ui.define("core.placement", function() return { attach = function(view, options)
