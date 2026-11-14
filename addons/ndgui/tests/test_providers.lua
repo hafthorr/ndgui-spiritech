@@ -246,6 +246,14 @@ do
       { kind = "healing", amount = 40, target = 0, target_name = "Ninnai", target_is_self = true } })
     check(u(2, "float_1").visible == true and u(2, "float_1_text").text == "-120", "damage floats over Bob")
     check(u(1, "float_1_text").text == "+40", "healing floats over you")
+    -- Compact: name, level and health bar only
+    local tall = u(2, "accent").h
+    H.find(H.root, "compact_toggle").on_click()
+    check(H.find(H.root, "compact_toggle").selected == true and u(2, "portrait").visible == false and u(2, "row_info").visible == false
+      and u(2, "np").visible == false and u(2, "hp_text").text == "250 / 1,000 (25%)" and u(2, "level").text == "Lv 50", "Compact: name, level, HP bar")
+    check(u(2, "accent").h < tall, "Compact rows are shorter (" .. tostring(u(2, "accent").h) .. " < " .. tostring(tall) .. ")")
+    H.find(H.root, "compact_toggle").on_click()
+    check(u(2, "portrait").visible == true and u(2, "row_info").visible == true, "Compact off: full frames again")
     -- a member leaves: their subscription is dropped
     team_cb({ data = { in_team = true, can_invite = true, side = 1, context = 2, members = {
       member("me", "Ninnai", 10, 900, 1000, true, true, true) } } })
