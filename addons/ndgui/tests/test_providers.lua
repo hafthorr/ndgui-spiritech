@@ -830,8 +830,13 @@ do
   local function hub()
     local H = Mock.new(addons, core, { width = W, height = Hh, loose = true })
     H.env.ui.storage = { read = function(k) return store[k] or "" end, write = function(k, v) store[k] = v end }
+    local surfaces = 0
+    local info = H.env.game and H.env.game.info
+    if type(info) == "table" then info.surface = function() surfaces = surfaces + 1 end end
     local ok, err = pcall(H.load_package, "ndgui-mission-hub")
     check(ok, "ndgui-mission-hub loads" .. (ok and "" or (": " .. tostring(err))))
+    check(type(info) ~= "table" or surfaces == 1, "hub declares the Info page surface once, at load: " .. surfaces)
+    H.surfaces = function() return surfaces end
     return ok and H or nil
   end
   local page = {
@@ -855,6 +860,7 @@ do
     local ok, err = pcall(I.env.info_show, 1, page, {}, false)
     check(ok, "hub info_show runs" .. (ok and "" or (": " .. tostring(err))))
     check(I.find(I.root, "info_lines") ~= nil and I.find(I.root, "window_title").text == "Info", "hub fills the frame with Info on info_show")
+    check(I.surfaces() <= 1, "Info does not declare its surface twice")
     check(I.find(I.root, "hub_blank") == nil or I.find(I.root, "hub_blank").visible == false, "placeholder removed")
     check((store["brief:Mission Assignment MXIL: The Rome house"] or "") ~= "", "Info keeps the mission briefing")
     check(store.brief_seq == "1", "brief revision bumps: " .. tostring(store.brief_seq))

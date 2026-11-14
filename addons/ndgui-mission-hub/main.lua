@@ -5,6 +5,8 @@
 -- client still wants a root widget mounted at load: an empty frame (ndgui-lib shell.lua) that the
 -- window module fills on that first callback.
 ui.require("notum.ndgui-lib/shell").mount()
+-- and an Info package must declare its page surface at load too (harmless in the other two VMs)
+pcall(ui.require, "notum.ndgui-lib/info_page")
 local kind, impl
 
 local function get(wanted)

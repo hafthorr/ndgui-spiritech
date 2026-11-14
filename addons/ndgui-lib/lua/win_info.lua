@@ -6,9 +6,10 @@ local BASE = "library://notum.ndgui-lib/info_"
 local Window = ui.require("core.window")
 local Shell = ui.require("notum.ndgui-lib/shell")
 local Briefs = ui.require("notum.ndgui-lib/briefs")
-local content = ui.load(BASE .. "content.xml")
-local lines = ui.find(content, "info_lines")
-local scroll = ui.find(content, "info_scroll")
+local page_views = ui.require("notum.ndgui-lib/info_page") -- declares the selection surface
+local content = page_views.content
+local lines = page_views.lines
+local scroll = page_views.scroll
 local back = ui.find(content, "info_back")
 local forward = ui.find(content, "info_forward")
 local history, current = {}, 0
@@ -41,7 +42,9 @@ local frame = Shell.window({
 		window:fit_content(chosen_width, chosen_height)
 	end,
 })
-game.info.surface(lines, scroll)
+if not page_views.declared then
+	game.info.surface(lines, scroll)
+end
 ui.enabled(back, false)
 ui.enabled(forward, false)
 
