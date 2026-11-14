@@ -448,13 +448,7 @@ frame = Window.create({
 	on_visibility = function(visible)
 		window_visible = visible
 		note("window visible " .. tostring(visible))
-		if not visible and reshow_at then
-			-- the watchdog hid us on purpose: come straight back (hidden windows get no ticks)
-			reshow_at = nil
-			note("watchdog: showing the window again (from the hide)")
-			ui.visible(frame.root, true)
-			return
-		end
+
 		if visible and not opened and playfield_map_visibility then
 			playfield_map_visibility(true)
 		end
@@ -552,9 +546,16 @@ local function start_watchdog()
 	end
 	watching = true
 	ui.on_update(function(now)
+		if reshow_at and now >= reshow_at then
+			reshow_at = nil
+			note("watchdog: showing the map view again")
+			ui.visible(surface, true)
+		end
 		if not opened or last_update_at then
-			watching = false
-			ui.stop_updates()
+			if not reshow_at then
+				watching = false
+				ui.stop_updates()
+			end
 			return
 		end
 		local w, h = num(ui.width(surface)), num(ui.height(surface))
@@ -566,13 +567,14 @@ local function start_watchdog()
 			elseif not reattached and now - (shown_at or now) > 1000 then
 				-- what a manual close / reopen does: hide the window, show it again next frame
 				reattached = true
-				note("watchdog: no updates, hiding the window for a frame")
-				ui.visible(frame.root, false)
+				-- hide only the map view (the window stays up, so this ticker keeps running)
+				note("watchdog: no updates, hiding the map view for a moment")
+				ui.visible(surface, false)
 				reshow_at = now + 50
 			elseif reshow_at and now >= reshow_at then
 				reshow_at = nil
-				note("watchdog: showing the window again")
-				ui.visible(frame.root, true)
+				note("watchdog: showing the map view again")
+				ui.visible(surface, true)
 			elseif now - (shown_at or now) > 6000 then
 				note("watchdog: still no updates, giving up")
 				watching = false
