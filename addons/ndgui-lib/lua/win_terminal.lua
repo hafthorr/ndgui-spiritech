@@ -2,7 +2,7 @@
 -- provides Info, Missions and Mission Terminal from one package so they can share mission briefs.
 -- Returns its native callbacks; the requiring package routes the globals to them.
 local M = {}
-local BASE = "library://notum.ndgui-lib/hub/terminal/"
+local BASE = "library://notum.ndgui-lib/terminal_"
 -- ndGUI Mission Terminal (prk.mission-terminal), hand-made from the stock MissionTerminal package.
 -- Clicksaver-style, within what the client allows (every Request / Select / Accept is still your click):
 --   * offers are rows with the server's full summary instead of six bare icons

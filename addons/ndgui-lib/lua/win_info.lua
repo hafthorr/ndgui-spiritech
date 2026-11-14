@@ -2,7 +2,7 @@
 -- provides Info, Missions and Mission Terminal from one package so they can share mission briefs.
 -- Returns its native callbacks; the requiring package routes the globals to them.
 local M = {}
-local BASE = "library://notum.ndgui-lib/hub/info/"
+local BASE = "library://notum.ndgui-lib/info_"
 local Window = ui.require("core.window")
 local Shell = ui.require("notum.ndgui-lib/shell")
 local Briefs = ui.require("notum.ndgui-lib/briefs")

@@ -2,7 +2,7 @@
 -- provides Info, Missions and Mission Terminal from one package so they can share mission briefs.
 -- Returns its native callbacks; the requiring package routes the globals to them.
 local M = {}
-local BASE = "library://notum.ndgui-lib/hub/missions/"
+local BASE = "library://notum.ndgui-lib/missions_"
 -- ndGUI Missions window (prk.missions), hand-made from the stock Missions package.
 -- Folds to its title bar ("Missions (3) - 1:20" = the mission on your map); the mission list on the left (icon, name, time left with a draining bar) and the chosen mission on the right.
 -- Every row and the detail icon carry the native mission binding, so right-click keeps the stock

@@ -51,6 +51,8 @@ function M.new(addons_dir, core_dir, opts)
   function ui.load(f)
     local id, rest = f:match("^library://([^/]+)/(.+)$")
     if id then
+      -- like the client: a library asset is a plain file name at the library root (no folders)
+      assert(not rest:find("/", 1, true), "A UI package asset must be a local file name of the expected type: " .. f)
       local dir = assert(H.lib_folder and H.lib_folder(id), "unknown library " .. id)
       return parse(dir, rest)
     end

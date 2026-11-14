@@ -9,7 +9,7 @@ local TEMPLATE = "library://notum.ndgui-lib/window.xml"
 local frame, layout_fn, adopted
 
 function S.mount()
-	local blank = ui.load("library://notum.ndgui-lib/hub/blank.xml")
+	local blank = ui.load("library://notum.ndgui-lib/hub_blank.xml")
 	frame = Window.create({
 		template = TEMPLATE, title = "", content = blank, width = 320, height = 200,
 		layout = function(window, width, height)
