@@ -30,7 +30,7 @@ REPO = os.path.dirname(os.path.abspath(__file__))
 SOURCE = os.path.join(REPO, "addons")
 # Generated on the player's machine from their own client (never copied back by --pull).
 GENERATED_FILES = [os.path.join("ndgui-lib", "lua", "table.lua")]
-PROJECT = "denis31/ndgui-spiritech"  # public GitLab project the updater reads releases from
+PROJECT = "denis311/ndgui-spiritech"  # public GitLab project the updater reads releases from
 MARKER = os.path.join("UI", "Addons", "ndgui", "installed-version.txt")  # same file install.ps1 writes
 
 

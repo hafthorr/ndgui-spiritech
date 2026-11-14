@@ -26,7 +26,7 @@ $Game = Join-Path $Here 'game'
 $Latin1 = [System.Text.Encoding]::GetEncoding(28591)
 $Utf8 = New-Object System.Text.UTF8Encoding($false)
 $Interactive = -not ($Install -or $Uninstall -or $Update)
-$Project = 'denis31/ndgui-spiritech'   # public GitLab project the updater reads releases from
+$Project = 'denis311/ndgui-spiritech'   # public GitLab project the updater reads releases from
 
 $Info = @{}
 $InfoFile = Join-Path $Game 'build-info.txt'
