@@ -299,12 +299,13 @@ local function note(text)
 end
 local function new_trace()
 	trace_open, trace = trace_open + 1, {}
-	if trace_open == 1 then
-		for k = 0, 6 do
-			pcall(ui.storage.write, "trace_" .. k, "")
-		end
-		pcall(ui.storage.write, "zone_trace", "")
+end
+-- a new client session starts clean
+if ui.storage and ui.storage.write then
+	for k = 0, 6 do
+		pcall(ui.storage.write, "trace_" .. k, "")
 	end
+	pcall(ui.storage.write, "zone_trace", "")
 end
 local function note_facts(tag, facts)
 	note(string.format("%s changed=%s acc=%s avail=%s char=%s pos=%.0f,%.0f map=%.0fx%.0f view=%.0f,%.0f %.0fx%.0f pending=%s",
