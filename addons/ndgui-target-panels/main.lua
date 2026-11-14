@@ -239,7 +239,7 @@ local function apply_slot(f, slot)
 	local pct = tostring(math.floor(fraction * 100 + 0.5)) .. "%"
 	local text = pct
 	if c and c.health and c.max_health and c.max_health > 0 then
-		text = thousands(c.health) .. " / " .. thousands(c.max_health) .. "   " .. pct
+		text = thousands(c.health) .. " / " .. thousands(c.max_health) .. " (" .. pct .. ")"
 	end
 	ui.text(f.hp_text, text)
 	ui.text(f.hp_shadow, text)

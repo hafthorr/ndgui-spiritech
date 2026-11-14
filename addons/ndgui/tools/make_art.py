@@ -175,11 +175,8 @@ def accent_bar(size):
 # ---- Target health (neutral, tinted at runtime by the native con colour) -------
 def target_fill(size):
     w, h = size
-    img = gradient(size, [(0.0, rgb("#ffffff")), (0.5, rgb("#d8dde2")), (1.0, rgb("#8c949b"))], "y")
-    d = ImageDraw.Draw(img)
-    for x in range(24, w, 24):
-        d.line([x, 0, x, h], fill=(0, 0, 0, 50))
-    return img
+    # one smooth glossy strip (no segment ticks); tinted to the target's colour at runtime
+    return gradient(size, [(0.0, rgb("#ffffff")), (0.5, rgb("#d8dde2")), (1.0, rgb("#8c949b"))], "y")
 
 
 # ---- Shortcut bars ----------------------------------------------------------

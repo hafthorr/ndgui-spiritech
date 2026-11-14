@@ -148,7 +148,7 @@ for _, hostile in ipairs({ false, true }) do
     check(v(frame2, "frame").visible == false, tag .. " empty lower slot hides")
     local inner = v(frame1, "hp").w
     check(v(frame1, "hp_fill").w == math.floor(inner * 0.4 + 0.5) and v(frame1, "hp_fill").tint == "#d24b4b", tag .. " fill 40% in con colour")
-    check(v(frame1, "hp_text").text == "400 / 1,000   40%", tag .. " exact HP inside the bar: " .. tostring(v(frame1, "hp_text").text))
+    check(v(frame1, "hp_text").text == "400 / 1,000 (40%)", tag .. " exact HP inside the bar: " .. tostring(v(frame1, "hp_text").text))
     check(v(frame1, "portrait_level").text == "12" and v(frame1, "portrait_icon").visible == false, tag .. " NPC portrait shows level")
     check(v(frame1, "distance").text == "50 m" and v(frame1, "reach").fill == "#6fd46f", tag .. " distance 50 m, reach lit")
     check(v(frame1, "info").text == "NPC" and v(frame1, "np").visible == false, tag .. " NPC info, no nano bar")
