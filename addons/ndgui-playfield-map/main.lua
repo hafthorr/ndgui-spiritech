@@ -76,6 +76,7 @@ end
 local opened, available, buttons, areas = false, true, false, false
 local window_visible, native_shown = false, nil
 local zoom_pending, last_update_at, shown_at, reattached = false, nil, nil, false
+local reshow_at -- set while the watchdog has hidden the window for a moment
 local first_pending, centre_pending, follow_pending = false, false, false
 -- After a zone change the new map can arrive before your position does: keep centring on you
 -- for a few seconds (whatever Follow says) until the position settles.
@@ -447,6 +448,13 @@ frame = Window.create({
 	on_visibility = function(visible)
 		window_visible = visible
 		note("window visible " .. tostring(visible))
+		if not visible and reshow_at then
+			-- the watchdog hid us on purpose: come straight back (hidden windows get no ticks)
+			reshow_at = nil
+			note("watchdog: showing the window again (from the hide)")
+			ui.visible(frame.root, true)
+			return
+		end
 		if visible and not opened and playfield_map_visibility then
 			playfield_map_visibility(true)
 		end
@@ -536,7 +544,7 @@ end
 
 -- Watchdog after each open: apply the deferred zoom once the view has a size, and if the client still
 -- sends no updates, note it in the trace (the client refuses a second attach).
-local watching, reshow_at = false, nil
+local watching = false
 local function start_watchdog()
 	reattached = false
 	if watching or not ui.on_update then
