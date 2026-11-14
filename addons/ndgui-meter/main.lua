@@ -71,12 +71,12 @@ for index = 1, MAX_ROWS do
 	local view = ui.load("row.xml")
 	ui.add(host, view)
 	local row = { root = ui.find(view, "meter_row") }
-	for _, name in ipairs({ "row_track", "row_fill", "row_name", "row_name_shadow", "row_value", "row_value_shadow" }) do
+	for _, name in ipairs({ "row_track", "row_fill", "row_name", "row_name_shadow", "row_value", "row_value_shadow", "row_hit" }) do
 		row[name] = ui.find(view, name)
 	end
-	row.parts = { row.root, row.row_track, row.row_fill, row.row_name, row.row_name_shadow, row.row_value, row.row_value_shadow }
-	-- the row captures input for its parts; left activation is on_click (pointer release is right-only)
-	ui.on_click(row.root, function()
+	row.parts = { row.root, row.row_track, row.row_fill, row.row_name, row.row_name_shadow, row.row_value, row.row_value_shadow, row.row_hit }
+	-- left clicks land on the flat button laid over the row (pointer release is right-only)
+	ui.on_click(row.row_hit, function()
 		if row.click then
 			row.click()
 			render()
@@ -384,6 +384,7 @@ local function layout(window, width, height)
 	for _, row in ipairs(rows) do
 		ui.size(row.root, row_w, ROW_H - 2)
 		ui.size(row.row_track, row_w, ROW_H - 2)
+		ui.size(row.row_hit, row_w, ROW_H - 2)
 		local name_w = math.floor(row_w * 0.48)
 		ui.size(row.row_name, name_w, ROW_H - 2)
 		ui.size(row.row_name_shadow, name_w, ROW_H - 3)

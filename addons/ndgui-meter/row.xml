@@ -1,11 +1,13 @@
 <root>
   <!-- one source: a bar scaled to the leader, rank + name on the left, amount / rate / share on the right -->
-  <View name="meter_row" view_layout="stacked" h_alignment="left" layout_borders="Rect(0,0,0,2)" tooltip="" capture_input="true" interactive="true">
+  <View name="meter_row" view_layout="stacked" h_alignment="left" layout_borders="Rect(0,0,0,2)" tooltip="">
     <BitmapView name="row_track" image="library://notum.ndgui-lib/bars/track_h.png" />
     <BitmapView name="row_fill" image="library://notum.ndgui-lib/bars/target_h.png" graphic_mode="tinted" color="4FB3E8" h_alignment="left" />
     <TextView name="row_name_shadow" value="" color="000000" font_size="11" size_to_text="false" v_alignment="center" layout_borders="Rect(6,1,0,0)" />
     <TextView name="row_name" value="" color="FFFFFF" font_size="11" size_to_text="false" v_alignment="center" layout_borders="Rect(5,0,0,0)" />
     <TextView name="row_value_shadow" value="" color="000000" font_size="11" text_alignment="right" size_to_text="false" h_alignment="right" v_alignment="center" layout_borders="Rect(0,1,4,0)" />
     <TextView name="row_value" value="" color="FFFFFF" font_size="11" text_alignment="right" size_to_text="false" h_alignment="right" v_alignment="center" layout_borders="Rect(0,0,5,0)" />
+    <!-- invisible flat button on top: takes the click (like the stock ChatConfig rows) -->
+    <Button name="row_hit" flat="true" label="" selection_color="0x30789FBF" />
   </View>
 </root>
