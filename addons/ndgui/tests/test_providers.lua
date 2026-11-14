@@ -290,52 +290,79 @@ do
   local ok, err = pcall(H.load_package, "ndgui-meter")
   check(ok, "ndgui-meter loads" .. (ok and "" or (": " .. tostring(err))))
   if ok then
+    local function f(name) return H.find(H.root, name) end
     check(H.manifest:find('<View id="meter"', 1, true) ~= nil and registered == "meter", "meter is a registered addon window")
     check(#H.combat_subs == 1, "meter watches game.combat")
-    local function ev(t, kind, amount, src, tgt)
-      local e = { elapsed = t, kind = kind, amount = amount, source = src.id or 0, source_name = src.name or "", target = tgt.id or 0, target_name = tgt.name or "" }
+    local function ev(t, kind, amount, src, tgt, extra)
+      local e = { elapsed = t, kind = kind, amount = amount, source = src.id or 0, source_name = src.name or "", target = tgt.id or 0,
+        target_name = tgt.name or "", origin = "weapon", ability = 0, damage_type = 0, critical = false }
       for k, val in pairs(src) do if k ~= "id" and k ~= "name" then e["source_" .. k] = val end end
       for k, val in pairs(tgt) do if k ~= "id" and k ~= "name" then e["target_" .. k] = val end end
+      for k, val in pairs(extra or {}) do e[k] = val end
       return e
     end
     local me, bob, pet, mob = { id = 1, name = "Ninnai", is_self = true }, { id = 2, name = "Bob", is_player = true },
       { id = 3, name = "Fido", is_my_pet = true }, { id = 9, name = "Snake" }
-    H.combat({ ev(0, "damage", 300, me, mob), ev(1, "damage", 100, bob, mob), ev(2, "damage", 200, pet, mob),
-      ev(3, "damage", 50, mob, me), ev(4, "healing", 80, bob, me), ev(9, "damage", 300, me, mob) })
-    local rows = H.find(H.root, "meter_rows").kids
+    H.combat({ ev(0, "damage", 300, me, mob, { critical = true }), ev(1, "damage", 100, bob, mob), ev(2, "damage", 200, pet, mob),
+      ev(3, "damage", 50, mob, me), ev(4, "healing", 80, bob, me), ev(5, "miss", 0, me, mob),
+      ev(9, "damage", 350, me, mob, { origin = "special", ability = 777 }) })
+    local rows = f("meter_rows").kids
     local function r(i, name) return H.find(rows[i], name) end
-    local filter = H.find(H.root, "meter_filter")
-    -- default: just you and your pets (9 s of fighting; you 600 of 800)
-    check(filter.text == "Me" and r(1, "row_name").text == "1. You" and r(2, "row_name").text == "2. Fido (pet)" and rows[3].visible == false,
-      "default filter Me: you and your pet only")
-    check(r(1, "row_value").text == "600  66.7/s  75%", "share is of what is shown: " .. tostring(r(1, "row_value").text))
-    -- Team: Bob joins your team; Raid adds Carl from another subgroup; All shows everyone
-    roster({ data = { members = { { own_team = true, character = { name = "Ninnai" } }, { own_team = true, character = { name = "Bob" } },
+    local function click_row(i) local rel; for _, x in ipairs(H.releases) do if x.view == H.find(rows[i], "row_name") then rel = x end end; rel.cb() end
+    -- default: Me with pets folded into you (800 = 600 + pet 200)
+    check(f("meter_filter").text == "Me" and r(1, "row_name").text == "1. You" and rows[2].visible == false, "default: Me, pets count as you")
+    check(r(1, "row_value").text == "850  94.4/s  100%", "you: amount, per second, share: " .. tostring(r(1, "row_value").text))
+    check(f("meter_summary").text:find("Snake", 1, true) and f("meter_summary").text:find("0:09", 1, true), "fight named after the enemy, 9 s: " .. f("meter_summary").text)
+    check(f("meter_stats").text:find("crit 33%", 1, true) and f("meter_stats").text:find("miss 25%", 1, true) and f("meter_stats").text:find("max 350", 1, true),
+      "stat strip: crit, miss, max: " .. f("meter_stats").text)
+    local graph_cols = f("meter_columns").kids
+    check(graph_cols[1].visible == true and graph_cols[10].visible == true and graph_cols[11].visible == false, "graph: one column per second")
+    -- click you: abilities incl. the pet's
+    click_row(1)
+    check(f("meter_detail").visible == true and r(1, "row_name").text == "Special 777" and r(2, "row_name").text == "Weapon" and r(3, "row_name").text == "Fido: Weapon",
+      "drill-down: your abilities and the pet's")
+    f("meter_back").on_click()
+    check(f("meter_detail").visible == false, "back to the list")
+    -- pets split
+    f("meter_pets").on_click()
+    check(r(1, "row_name").text == "1. You" and r(2, "row_name").text == "2. Fido (pet)" and r(1, "row_fill").tint == "#4fb3e8" and r(2, "row_fill").tint == "#5fb8a8",
+      "pets split: you blue, pet teal")
+    -- Team (Bob, a Doctor) / Raid / All
+    roster({ data = { members = { { own_team = true, character = { name = "Ninnai" } }, { own_team = true, character = { name = "Bob", profession = 10 } },
       { own_team = false, character = { name = "Carl" } } } } })
     H.combat({ ev(9, "damage", 50, { id = 4, name = "Carl", is_player = true }, mob), ev(9, "damage", 20, { id = 5, name = "Dave", is_player = true }, mob) })
-    filter.on_click()
-    check(filter.text == "Team" and r(3, "row_name").text == "3. Bob" and rows[4].visible == false, "Team adds Bob")
-    filter.on_click()
-    check(filter.text == "Raid" and r(4, "row_name").text == "4. Carl" and rows[5].visible == false, "Raid adds Carl")
-    filter.on_click()
-    check(filter.text == "All" and r(5, "row_name").text == "5. Dave", "All adds strangers")
-    -- 9 s of fighting: you 600 / 9 s = 66.7/s, 62% of 970
-    check(r(1, "row_value").text == "600  66.7/s  62%", "you: amount, per second, share: " .. tostring(r(1, "row_value").text))
-    check(r(1, "row_fill").tint == "#4fb3e8" and r(2, "row_fill").tint == "#5fb8a8" and r(3, "row_fill").tint == "#b8743f", "you blue, pet teal, others amber")
-    check(rows[6].visible == false, "only sources with damage get a row")
-    check(H.find(H.root, "meter_summary").text:find("Fight 0:09", 1, true) ~= nil, "summary: fight time " .. tostring(H.find(H.root, "meter_summary").text))
-    H.find(H.root, "meter_taken").on_click()
-    check(r(1, "row_name").text == "1. You" and r(1, "row_value").text:find("^50") ~= nil and rows[2].visible == false, "taken: only you took damage")
-    H.find(H.root, "meter_healing").on_click()
-    check(r(1, "row_name").text == "1. Bob" and r(1, "row_fill").tint == "#4f9f5f", "healing: Bob in green")
-    -- a pause longer than 6 s starts a new fight; Overall keeps everything
-    H.find(H.root, "meter_damage").on_click()
-    H.combat({ ev(30, "damage", 40, bob, mob) })
-    check(r(1, "row_name").text == "1. Bob" and rows[2].visible == false, "new fight after a pause")
-    H.find(H.root, "meter_scope").on_click()
-    check(r(1, "row_name").text == "1. You" and H.find(H.root, "meter_scope").text == "Overall", "overall keeps the earlier fight")
-    H.find(H.root, "meter_reset").on_click()
-    check(rows[1].visible == false and H.find(H.root, "meter_summary").text == "No combat yet", "reset clears")
+    f("meter_filter").on_click()
+    check(f("meter_filter").text == "Team" and r(3, "row_name").text == "3. Bob" and r(3, "row_fill").tint == "#58b08c" and rows[4].visible == false, "Team adds Bob in Doctor colours")
+    f("meter_filter").on_click(); f("meter_filter").on_click()
+    check(f("meter_filter").text == "All" and r(5, "row_name").text == "5. Dave", "All adds strangers")
+    -- Targets: Snake took everything; click for who hit it
+    f("meter_targets").on_click()
+    check(r(1, "row_name").text == "1. Snake" and r(1, "row_value").text:find("^1,020") ~= nil and rows[2].visible == false, "targets: Snake took 1,020")
+    click_row(1)
+    check(r(1, "row_name").text == "1. You" and r(4, "row_name").text == "4. Carl", "who hit Snake")
+    f("meter_back").on_click()
+    -- Healing / Taken
+    f("meter_healing").on_click()
+    check(r(1, "row_name").text == "1. Bob", "healing: Bob")
+    f("meter_taken").on_click()
+    check(r(1, "row_name").text == "1. You" and r(1, "row_value").text:find("^50") ~= nil, "taken: you took 50")
+    -- death: the hits before it are replayed
+    H.combat({ ev(10, "damage", 70, mob, me, { origin = "special", ability = 777, critical = true }), ev(11, "death", 0, mob, me, { origin = "death" }) })
+    f("meter_deaths").on_click()
+    check(r(1, "row_name").text == "You  0:11" and r(1, "row_value").text == "by Snake  70", "deaths: you, by Snake: " .. tostring(r(1, "row_value").text))
+    click_row(1)
+    check(r(1, "row_name").text == "-8.0s  Snake" and r(2, "row_name").text == "-1.0s  Snake" and r(2, "row_value").text == "Special 777  70!", "death recap replays the hits")
+    f("meter_back").on_click()
+    -- a pause starts fight 2; < goes back to fight 1; Overall keeps both
+    f("meter_damage").on_click()
+    H.combat({ ev(40, "damage", 40, bob, { id = 10, name = "Rat" }) })
+    check(f("meter_summary").text:find("Rat", 1, true) and f("meter_fight").text:find("2/2", 1, true), "new fight after a pause: " .. f("meter_fight").text)
+    f("meter_prev").on_click()
+    check(f("meter_summary").text:find("Snake", 1, true) and f("meter_fight").text == "Fight 1/2", "< shows the earlier fight")
+    f("meter_overall").on_click()
+    check(f("meter_fight").text == "All fights" and f("meter_peak").text == "overall: no graph", "overall")
+    f("meter_reset").on_click()
+    check(rows[1].visible == false and f("meter_summary").text == "No combat yet", "reset clears")
   end
 end
 

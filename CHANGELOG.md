@@ -12,7 +12,11 @@ Versions follow Semantic Versioning 2.0.0: `MAJOR.MINOR.PATCH`.
 - **Team window**: every member is a unit frame like the target panels: profession portrait, name and level, exact HP with the damage ghost and low-HP pulse, nano, profession / side and distance. The leader gets a green name and stripe; absent members are greyed. Click to target, right-click menu, NCU strips, Leave and Recruit work as before.
 - **Floating combat numbers** on target panels and team frames: damage, bigger yellow crits, healing, misses (from the game's combat feed).
 - **Target-of-target**: the target panel shows who your target is attacking (`» You` in orange), for 8 s after its last attack.
-- **Damage Meter** (new addon window: Control Center > Actions > Addons > Damage Meter): Damage / Healing / Taken per source as skinned bars with amount, per second and share; This fight (ends after 6 s without combat) or Overall; you in blue, pets teal; only you, your pets and players are listed. Resizable: rows fit the height.
+- **Damage Meter** (new addon window: Control Center > Actions > Addons > Damage Meter):
+  - **Damage / Healing / Taken / Targets / Deaths** as skinned bars: amount, per second, share.
+  - **Click a row** for its breakdown: abilities (weapon by damage type, named specials, nanos, shields) with hits, crit %, biggest hit; who hit a target; or the last 10 hits before a death.
+  - **Live per-second graph**, a stat strip (crit, miss, biggest hit, best 5 s burst) and a fight clock that ticks while you fight.
+  - **Me / Team / Raid / All** (default Me), **fight history** (`<` `>`, last 10, named after the main enemy), **Overall**, **Pets** folded into you, players tinted by profession.
 - **Nameplates** (new provider, `prk.nameplates`): clean overhead names with a thin outline, a framed health bar in soft consider colours (green, amber, red), organization in muted steel, thin corner ticks for selected (blue) / attacking (red), one dark panel when backing is on. GM / PvP / roleplay tags and distance scaling as stock.
 - The unit frame lives in ndgui-lib (`unit.xml`, `lua/unit.lua`); Team is now a hand-made package instead of a generated fork.
 

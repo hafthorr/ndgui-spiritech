@@ -1,0 +1,4 @@
+<root>
+  <!-- one second of the graph -->
+  <BitmapView name="meter_column" image="library://notum.ndgui-lib/bars/target_h.png" graphic_mode="tinted" color="B8743F" v_alignment="bottom" layout_borders="Rect(0,0,1,0)" />
+</root>
