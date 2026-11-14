@@ -12,6 +12,7 @@ Versions follow Semantic Versioning 2.0.0: `MAJOR.MINOR.PATCH`.
 - **Team window**: every member is a unit frame like the target panels: profession portrait, name and level, exact HP with the damage ghost and low-HP pulse, nano, profession / side and distance. The leader gets a green name and stripe; absent members are greyed. Click to target, right-click menu, NCU strips, Leave and Recruit work as before.
 - **Floating combat numbers** on target panels and team frames: damage, bigger yellow crits, healing, misses (from the game's combat feed).
 - **Target-of-target**: the target panel shows who your target is attacking (`» You` in orange), for 8 s after its last attack.
+- **Damage Meter** (new addon window: Control Center > Actions > Addons > Damage Meter): Damage / Healing / Taken per source as skinned bars with amount, per second and share; This fight (ends after 6 s without combat) or Overall; you in blue, pets teal; only you, your pets and players are listed. Resizable: rows fit the height.
 - The unit frame lives in ndgui-lib (`unit.xml`, `lua/unit.lua`); Team is now a hand-made package instead of a generated fork.
 
 ## 0.2.5

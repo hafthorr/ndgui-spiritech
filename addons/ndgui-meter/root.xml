@@ -1,0 +1,4 @@
+<?xml version="1.0"?>
+<root>
+  <View name="ndgui_meter_addon" view_layout="stacked" />
+</root>

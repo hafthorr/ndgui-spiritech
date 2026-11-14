@@ -281,6 +281,50 @@ do
   end
 end
 
+-- Damage meter: standalone window (Control Center > Actions > Addons) over game.combat.
+do
+  local H = Mock.new(addons, core, { width = W, height = Hh, loose = true })
+  local registered
+  H.env.ui.register_view = function(v, id) registered = id end
+  local ok, err = pcall(H.load_package, "ndgui-meter")
+  check(ok, "ndgui-meter loads" .. (ok and "" or (": " .. tostring(err))))
+  if ok then
+    check(H.manifest:find('<Window id="meter"', 1, true) ~= nil and registered == "meter", "meter is a registered addon window")
+    check(#H.combat_subs == 1, "meter watches game.combat")
+    local function ev(t, kind, amount, src, tgt)
+      local e = { elapsed = t, kind = kind, amount = amount, source = src.id or 0, source_name = src.name or "", target = tgt.id or 0, target_name = tgt.name or "" }
+      for k, val in pairs(src) do if k ~= "id" and k ~= "name" then e["source_" .. k] = val end end
+      for k, val in pairs(tgt) do if k ~= "id" and k ~= "name" then e["target_" .. k] = val end end
+      return e
+    end
+    local me, bob, pet, mob = { id = 1, name = "Ninnai", is_self = true }, { id = 2, name = "Bob", is_player = true },
+      { id = 3, name = "Fido", is_my_pet = true }, { id = 9, name = "Snake" }
+    H.combat({ ev(0, "damage", 300, me, mob), ev(1, "damage", 100, bob, mob), ev(2, "damage", 200, pet, mob),
+      ev(3, "damage", 50, mob, me), ev(4, "healing", 80, bob, me), ev(9, "damage", 300, me, mob) })
+    local rows = H.find(H.root, "meter_rows").kids
+    local function r(i, name) return H.find(rows[i], name) end
+    check(r(1, "row_name").text == "1. You" and r(2, "row_name").text == "2. Fido (pet)" and r(3, "row_name").text == "3. Bob",
+      "damage ranks you, pet, Bob (mob not listed)")
+    -- 9 s of fighting (gaps <= 6 s count): you 600 / 9 s = 66.7/s, 67% of 900
+    check(r(1, "row_value").text == "600  66.7/s  67%", "you: amount, per second, share: " .. tostring(r(1, "row_value").text))
+    check(r(1, "row_fill").tint == "#4fb3e8" and r(2, "row_fill").tint == "#5fb8a8" and r(3, "row_fill").tint == "#b8743f", "you blue, pet teal, others amber")
+    check(rows[4].visible == false, "only sources with damage get a row")
+    check(H.find(H.root, "meter_summary").text:find("Fight 0:09", 1, true) ~= nil, "summary: fight time " .. tostring(H.find(H.root, "meter_summary").text))
+    H.find(H.root, "meter_taken").on_click()
+    check(r(1, "row_name").text == "1. You" and r(1, "row_value").text:find("^50") ~= nil and rows[2].visible == false, "taken: only you took damage")
+    H.find(H.root, "meter_healing").on_click()
+    check(r(1, "row_name").text == "1. Bob" and r(1, "row_fill").tint == "#4f9f5f", "healing: Bob in green")
+    -- a pause longer than 6 s starts a new fight; Overall keeps everything
+    H.find(H.root, "meter_damage").on_click()
+    H.combat({ ev(30, "damage", 40, bob, mob) })
+    check(r(1, "row_name").text == "1. Bob" and rows[2].visible == false, "new fight after a pause")
+    H.find(H.root, "meter_scope").on_click()
+    check(r(1, "row_name").text == "1. You" and H.find(H.root, "meter_scope").text == "Overall", "overall keeps the earlier fight")
+    H.find(H.root, "meter_reset").on_click()
+    check(rows[1].visible == false and H.find(H.root, "meter_summary").text == "No combat yet", "reset clears")
+  end
+end
+
 -- Hotbar.
 local B = load_pkg("ndgui-hotbar")
 if B then
