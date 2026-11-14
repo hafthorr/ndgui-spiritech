@@ -7,6 +7,19 @@ Versions follow Semantic Versioning 2.0.0: `MAJOR.MINOR.PATCH`.
 - PATCH bumps fix tokens, scale math, or docs without a config change.
 - While the major version is 0, the client view layer is still incomplete. The Lua model is safe to load offline.
 
+## 0.2.7
+
+- **Mission Hub** (new package; replaces the Info, Missions and Mission Terminal windows):
+  - **Info keeps each mission briefing you look at**: cash, XP, zone, item reward and description, shared by all your characters.
+  - **Missions**: the list with draining time-left bars (blue, yellow under 30 min, red under 10) and a side pane with the chosen mission's briefing, pay, zone and reward. Left-click a row to show it, right-click for the stock menu. **Folds** to its title bar with the time left (`Missions (2) - 1:20`) and comes back at its old height.
+  - **Mission Terminal**: offer rows with the summary; offers you've Ctrl-clicked once show pay, zone and reward. **Watch list** (comma separated) lights matching offers gold, matching the briefing and reward too, and logs this session's matches. Four slider **presets** (left-click applies, right-click saves, auto-named), all seven sliders, roll counter, credits spent on chosen-reward rolls, recent chosen rewards.
+  - Each new offer still needs one Ctrl-click: the client gives its details only to the Info window, and only on a real click.
+- **Compass** redrawn: outlined dotted strip with N / E / S / W that reads on light and dark ground, a green waypoint marker pinned to the edge, a caret, and the distance. Without the ndGUI skin it keeps the old framed compass.
+- **Team**: **Compact** button (name, level and health bar only), remembered with the window.
+- **Target panels**: long names scroll inside their box; HP text turns black on bright (green, yellow) bars.
+- **Local Map**: after zoning it re-applies the zoom and keeps centring on you until your position arrives. If the map is still black after logging in or zoning, close and reopen it: the stock map does the same (client bug).
+- Installer: packages replaced by the Mission Hub (`ndgui-info`, `ndgui-missions`, `ndgui-mission-terminal`) are removed on update.
+
 ## 0.2.6
 
 - **Team window**: every member is a unit frame like the target panels: profession portrait, name and level, exact HP with the damage ghost and low-HP pulse, nano, profession / side and distance. The leader gets a green name and stripe; absent members are greyed. Click to target, right-click menu, NCU strips, Leave and Recruit work as before.

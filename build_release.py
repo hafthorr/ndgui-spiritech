@@ -6,7 +6,7 @@
 
 Works on a staging copy made from your client's *stock* files (the *.stock backups when
 ndGUI is already installed), so your live game is never touched:
-  1. copies addons/ (the 9 hand-made packages) into the staging client,
+  1. copies addons/ (the 13 hand-made packages) into the staging client,
   2. runs the generators: fork_windows.py, fork_hud.py, lib_table.py, square_buttons.py,
   3. renders the DarkTech skin as an overlay (only changed/new graphics, skin.py --overlay),
   4. packs  game/Addons (39 packages), game/Layouts + game/Packages (patched screens),

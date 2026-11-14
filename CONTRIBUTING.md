@@ -3,7 +3,7 @@
 ## Layout of the repo
 
 ```
-addons/                     the 9 hand-made packages, copied into client/UI/Addons as-is
+addons/                     the 13 hand-made packages, copied into client/UI/Addons as-is
   ndgui/                    settings host + all the tools and tests
     tools/                  generators (Python 3.8+, Pillow)
     tests/                  offline Lua 5.4 tests against a mock client host
@@ -21,7 +21,7 @@ build_release.py            builds release/ndgui-spiritech-<version>.zip (commit
 docs/background/            original research and design notes
 ```
 
-The other 30 packages (`ndgui-inventory`, `ndgui-ncu`, …) are **generated** from the game's own `UI/Packages`. They aren't in git: generate them with the tools below. `ndgui-lib/lua/table.lua` is generated too.
+The other 26 packages (`ndgui-inventory`, `ndgui-ncu`, …) are **generated** from the game's own `UI/Packages`. They aren't in git: generate them with the tools below. `ndgui-lib/lua/table.lua` is generated too.
 
 ## Tools (`addons/ndgui/tools`, run from the installed `client/UI/Addons/ndgui`)
 

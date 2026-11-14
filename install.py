@@ -25,7 +25,7 @@ and --uninstall restores them. See INSTALL.md.
 """
 import argparse, glob, json, os, re, runpy, shutil, string, subprocess, sys, traceback
 
-VERSION = "0.2.6"
+VERSION = "0.2.7"
 REPO = os.path.dirname(os.path.abspath(__file__))
 SOURCE = os.path.join(REPO, "addons")
 # Generated on the player's machine from their own client (never copied back by --pull).
@@ -202,9 +202,18 @@ def ours(folder):
     return bool(re.search(r'<Package id="notum\.ndgui', open(manifest, encoding="utf-8").read()))
 
 
+# Packages earlier releases installed that a newer one replaced (0.2.7: ndgui-mission-hub provides
+# Info, Missions and Mission Terminal). Left installed they would claim those roles again.
+OBSOLETE = ("ndgui-info", "ndgui-missions", "ndgui-mission-terminal")
+
+
 def copy_packages(client):
     addons = os.path.join(client, "UI", "Addons")
     os.makedirs(addons, exist_ok=True)
+    for name in OBSOLETE:
+        folder = os.path.join(addons, name)
+        if os.path.isdir(folder) and ours(folder):
+            shutil.rmtree(folder)
     names = sorted(n for n in os.listdir(SOURCE) if os.path.isdir(os.path.join(SOURCE, n)))
     for name in names:
         dest = os.path.join(addons, name)

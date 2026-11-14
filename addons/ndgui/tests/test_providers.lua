@@ -584,7 +584,7 @@ for _, case in ipairs({
   if ok then check(role(H, case[2]), case[1] .. " declares " .. case[2]) end
 end
 -- Hideable columns: every table window loads with the ndgui-lib table, and toggling works.
-for _, case in ipairs({ "ndgui-nano-programs", "ndgui-inventory", "ndgui-friends", "ndgui-missions", "ndgui-trade",
+for _, case in ipairs({ "ndgui-nano-programs", "ndgui-inventory", "ndgui-friends", "ndgui-trade",
   "ndgui-actions", "ndgui-market" }) do
   local H = Mock.new(addons, core, { width = W, height = Hh, loose = true })
   local ok, err = pcall(H.load_package, case)
@@ -772,10 +772,10 @@ end
 -- Missions: collapsible header, list + detail pane, binding kept on rows and the detail icon.
 do
   local H = Mock.new(addons, core, { width = W, height = Hh, loose = true })
-  local ok, err = pcall(H.load_package, "ndgui-missions")
-  check(ok, "ndgui-missions loads" .. (ok and "" or (": " .. tostring(err))))
+  local ok, err = pcall(H.load_package, "ndgui-mission-hub")
+  check(ok, "hub loads as Missions" .. (ok and "" or (": " .. tostring(err))))
   if ok then
-    check(role(H, "prk.missions"), "ndgui-missions declares prk.missions")
+    check(role(H, "prk.missions"), "hub declares prk.missions")
     local env = H.env
     local a = { token = 11, icon = 5, name = "Kill the Raider", timed = true, minutes = 90, selected = false }
     local b = { token = 12, icon = 6, name = "Find the Data Disk", timed = true, minutes = 120, selected = true }
@@ -926,8 +926,8 @@ do
   local H = Mock.new(addons, core, { width = W, height = Hh, loose = true })
   local store = {}
   H.env.ui.storage = { read = function(k) return store[k] or "" end, write = function(k, v) store[k] = v end }
-  local ok, err = pcall(H.load_package, "ndgui-mission-terminal")
-  check(ok, "ndgui-mission-terminal loads" .. (ok and "" or (": " .. tostring(err))))
+  local ok, err = pcall(H.load_package, "ndgui-mission-hub")
+  check(ok, "hub loads as Mission Terminal" .. (ok and "" or (": " .. tostring(err))))
   if ok then
     check(role(H, "prk.mission-terminal"), "terminal declares prk.mission-terminal")
     local env = H.env
@@ -953,7 +953,7 @@ do
     end)
     local H2 = Mock.new(addons, core, { width = W, height = Hh, loose = true })
     H2.env.ui.storage = { read = function(k) return store[k] or "" end, write = function(k, v) store[k] = v end }
-    ok, err = pcall(H2.load_package, "ndgui-mission-terminal")
+    ok, err = pcall(H2.load_package, "ndgui-mission-hub")
     check(ok, "terminal reloads with a watch list" .. (ok and "" or (": " .. tostring(err))))
     env = H2.env
     env.mission_terminal_configure("Request", "Accept", labels)

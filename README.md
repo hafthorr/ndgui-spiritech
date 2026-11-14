@@ -17,7 +17,7 @@ Near-black navy panels, steel-blue frames, a blue accent, square buttons. The cl
 **HUD**
 - Slim **control center** strip on the bottom edge: menus, target cycling, NCU, credits, DEF/AGG slider.
 - **Health / nano** bars by your character, numbers on a dark plate so they stay readable. **Double-click** one for its **Lock** (stays put) and **Flat** (horizontal, number inside) buttons. **XP / AXP** sit on the menubar (`XP  1,396 / 4,500`).
-- **Compass** top centre.
+- **Compass** top centre: an outlined dotted strip with N / E / S / W that reads on light and dark ground, a green waypoint marker pinned to the edge when it's behind you, and the distance (`312 m`, `1.2 km`).
 - **Target panels**: unit frames with profession portrait, level, exact HP (`941 / 941 (100%)`), a pale "damage just taken" ghost, low-HP pulse, nano, profession / side, distance and a reach dot. **Double-click** for **Lock**, **Size** (S / M / L) and **Compact**.
 - **Floating combat numbers** over target panels and team frames (damage, bigger yellow crits, healing, misses), and **who your target is attacking** (`» You` in orange).
 - **Nameplates**: clean names, a framed health bar in soft level colours (green, amber, red), corner ticks for selected / attacking.
@@ -26,9 +26,15 @@ Near-black navy panels, steel-blue frames, a blue accent, square buttons. The cl
 - Restyled **NCU, target NCU, faction, chat, chat config, raid bars, timer bars, team invite, sneak indicator, logout countdown**.
 
 **Windows** (every `core.window` window gets the ndGUI frame)
-Inventory, Wear, Stats, Skills, Nano Programs, Missions, Mission Terminal, Team, Raid, Friends, Pets, Perks, Trade, Tradeskills, Market, Info, NPC dialogue, Actions, Agg/Def, chat windows.
+Inventory, Wear, Stats, Skills, Nano Programs, Team, Raid, Friends, Pets, Perks, Trade, Tradeskills, Market, Info, NPC dialogue, Actions, Agg/Def, chat windows.
 
-**Team** (AI-hand-made): every member is a unit frame like the target panels: profession portrait, exact HP with the damage ghost, nano, distance, leader in green, absent members greyed. Click to target, right-click menu, NCU strips as before.
+**Team** (AI-hand-made): every member is a unit frame like the target panels: profession portrait, exact HP with the damage ghost, nano, distance, leader in green, absent members greyed. Click to target, right-click menu, NCU strips as before. **Compact** shows name, level and health only.
+
+**Missions, Mission Terminal and Info** (AI-hand-made, one package: Mission Hub)
+- **Info keeps every mission briefing you look at** (cash, XP, zone, item reward, description), shared by all your characters.
+- **Missions**: the list with time-left bars (blue, yellow under 30 min, red under 10) and a side pane with the chosen mission's briefing, pay, zone and reward. Folds to its title bar (`Missions (2) - 1:20`).
+- **Mission Terminal**: offer rows instead of six bare icons; once you've Ctrl-clicked an offer its row shows `2,827 credits · 486 XP · RomeBlue` and the reward. A **watch list** lights matching offers gold (it searches the briefing and reward too) and logs them; four slider **presets** (left-click applies, right-click saves); roll counter and what chosen-reward rolls cost.
+- The client hands an offer's details only to Info, and only on a real Ctrl-click, so each new offer needs that one click.
 
 **Damage Meter** (AI-hand-made; Control Center > Actions > **Addons** > Damage Meter)
 - **Damage / Healing / Taken / Targets / Deaths** as bars: amount, per second, share. **Me / Team / Raid / All**.
@@ -72,7 +78,7 @@ Full guide, options, updating after a client patch, and troubleshooting: **[INST
 
 ## How it works (one paragraph)
 
-Spiritech loads Lua/XML UI packages from `client/UI/Addons`. This repo holds **9 totally AI-hand-made packages** ([`addons/`](addons)) and the Python tools that derive the other **30** from the game's own UI. They also square every button and paint the DarkTech skin. `build_release.py` runs all of that once, on a developer's machine, and zips the result. The player's `install.ps1` then only copies the packages, swaps in the patched screen layouts, merges the finished skin images into the game's graphics file (`cd_image/gui/Default`), and selects the ndGUI providers. It keeps `*.stock` backups of everything it touches. Details are in [CONTRIBUTING.md](CONTRIBUTING.md).
+Spiritech loads Lua/XML UI packages from `client/UI/Addons`. This repo holds **13 totally AI-hand-made packages** ([`addons/`](addons)) and the Python tools that derive the other **26** from the game's own UI. They also square every button and paint the DarkTech skin. `build_release.py` runs all of that once, on a developer's machine, and zips the result. The player's `install.ps1` then only copies the packages, swaps in the patched screen layouts, merges the finished skin images into the game's graphics file (`cd_image/gui/Default`), and selects the ndGUI providers. It keeps `*.stock` backups of everything it touches. Details are in [CONTRIBUTING.md](CONTRIBUTING.md).
 
 ## Known limits
 
@@ -84,7 +90,7 @@ Spiritech loads Lua/XML UI packages from `client/UI/Addons`. This repo holds **9
 
 ## Status
 
-`0.2.6`: playable, in daily use, with rough edges.
+`0.2.7`: playable, in daily use, with rough edges.
 
 ## Bugs, issues, ideas
 
