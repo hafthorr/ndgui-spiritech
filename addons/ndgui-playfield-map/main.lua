@@ -74,6 +74,7 @@ end
 
 -- ---- state ------------------------------------------------------------------
 local opened, available, buttons, areas = false, true, false, false
+local window_visible, native_shown = false, nil
 local first_pending, centre_pending, follow_pending = false, false, false
 -- After a zone change the new map can arrive before your position does: keep centring on you
 -- for a few seconds (whatever Follow says) until the position settles.
@@ -423,6 +424,15 @@ frame = Window.create({
 	width = wanted_width,
 	height = wanted_height,
 	layout = layout,
+	-- The window can be on screen without the native "shown" call (restored open at login, still open
+	-- across a zone): remember what the screen says so updates are never ignored while you can see it.
+	on_visibility = function(visible)
+		window_visible = visible
+		note("window visible " .. tostring(visible))
+		if visible and not opened and playfield_map_visibility then
+			playfield_map_visibility(true)
+		end
+	end,
 	menu = {
 		{ label = "Show Buttons", checked = buttons, invoke = playfield_map_toggle_buttons },
 		{ label = "Minimap", checked = settings.compact, invoke = function() set_compact(not settings.compact) end },
@@ -508,6 +518,7 @@ end
 
 function playfield_map_visibility(shown)
 	note("visibility " .. tostring(shown))
+	native_shown = shown
 	opened = shown
 	centre_pending, follow_pending = shown, false
 	previous_x, previous_y, previous_character = nil, nil, nil
@@ -558,7 +569,12 @@ end
 
 function playfield_map_update(facts)
 	if not opened then
-		return
+		if not window_visible then
+			return
+		end
+		-- updates while the window is on screen but we were never told it opened: open now
+		note("update while visible but not opened: opening")
+		playfield_map_visibility(true)
 	end
 	last_facts = facts
 	if facts.changed then
