@@ -69,7 +69,7 @@ There's nothing else to install: no Python, no exe. The installer is a plain Pow
    It finds the game by itself. If it can't, it opens a folder picker: choose the folder that holds `PRK.Client.exe`.
 4. Start the game. If something still looks stock, log out to character select and back in once.
 
-**Update:** run `install.bat` and pick **2) Update to the newest version**. It downloads the latest release from GitLab and installs it. Also re-run it after a game patch, which may put stock files back.
+**Update:** run `install.bat` and pick **2) Update to the newest version**. It downloads the latest release from GitHub and installs it. Also re-run it after a game patch, which may put stock files back.
 **Undo everything:** run `install.bat` and pick **4) Uninstall**. Every game file it touches is backed up first.
 
 Linux/Mac, or building from source: `python install.py` (see [INSTALL.md](INSTALL.md)).
@@ -90,7 +90,7 @@ Spiritech loads Lua/XML UI packages from `client/UI/Addons`. This repo holds **1
 
 ## Status
 
-`0.2.7`: playable, in daily use, with rough edges.
+`0.2.8`: playable, in daily use, with rough edges.
 
 ## Bugs, issues, ideas
 

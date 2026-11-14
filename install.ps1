@@ -4,7 +4,7 @@
   Easiest: double-click install.bat.  Or from PowerShell in this folder:
     .\install.ps1                      menu
     .\install.ps1 -Install             install / update from this folder, no questions
-    .\install.ps1 -Update              download the newest release from GitLab and install it
+    .\install.ps1 -Update              download the newest release from GitHub and install it
     .\install.ps1 -Install -StockScreens   keep the game's own screens (Options, login...) stock
     .\install.ps1 -Uninstall           back to the stock UI
     .\install.ps1 -Install -Client "D:\Games\PRK-AO-Native\client"
@@ -26,7 +26,7 @@ $Game = Join-Path $Here 'game'
 $Latin1 = [System.Text.Encoding]::GetEncoding(28591)
 $Utf8 = New-Object System.Text.UTF8Encoding($false)
 $Interactive = -not ($Install -or $Uninstall -or $Update)
-$Project = 'denis311/ndgui-spiritech'   # public GitLab project the updater reads releases from
+$Project = 'hafthorr/ndgui-spiritech'   # public GitHub repository the updater reads releases from
 
 $Info = @{}
 $InfoFile = Join-Path $Game 'build-info.txt'
@@ -342,20 +342,20 @@ function Test-Newer([string]$Candidate, [string]$Current) {
 }
 
 function Invoke-Update([string]$ClientDir) {
-    # Read the newest release from GitLab, download its zip, run that version's installer.
+    # Read the newest release from GitHub, download its zip, run that version's installer.
     [Net.ServicePointManager]::SecurityProtocol = [Net.ServicePointManager]::SecurityProtocol -bor [Net.SecurityProtocolType]::Tls12
     $installed = Get-InstalledVersion $ClientDir
     Say "`nInstalled: $(if ($installed) { $installed } else { 'nothing yet' })"
-    Say 'Checking GitLab for the newest release...'
-    $api = "https://gitlab.com/api/v4/projects/$([uri]::EscapeDataString($Project))/releases/permalink/latest"
+    Say 'Checking GitHub for the newest release...'
+    $api = "https://api.github.com/repos/$Project/releases/latest"
     try {
         $release = Invoke-RestMethod -Uri $api -UseBasicParsing -Headers @{ 'User-Agent' = 'ndgui-installer' }
     } catch {
-        throw "Could not reach GitLab ($($_.Exception.Message)). Check your internet connection, or download the zip by hand: https://gitlab.com/$Project/-/releases"
+        throw "Could not reach GitHub ($($_.Exception.Message)). Check your internet connection, or download the zip by hand: https://github.com/$Project/releases"
     }
     $latest = ([string]$release.tag_name).TrimStart('v')
-    $link = @($release.assets.links | Where-Object { $_.name -like '*.zip' -or $_.url -like '*.zip*' })[0]
-    if (-not $latest -or -not $link) { throw "The newest GitLab release has no download. Get it by hand: https://gitlab.com/$Project/-/releases" }
+    $link = @($release.assets | Where-Object { $_.name -like '*.zip' })[0]
+    if (-not $latest -or -not $link) { throw "The newest GitHub release has no download. Get it by hand: https://github.com/$Project/releases" }
     Say "Newest:    $latest"
     if ($installed -and $installed -match '^\d' -and -not (Test-Newer $latest $installed)) {
         Write-Host "`nYou already have the newest ndGUI ($installed)." -ForegroundColor Green
@@ -371,7 +371,7 @@ function Invoke-Update([string]$ClientDir) {
     $zip = Join-Path $work 'ndgui-spiritech.zip'
     Say "Downloading ndGUI $latest..."
     $ProgressPreference = 'SilentlyContinue'   # the progress bar makes downloads in 5.1 very slow
-    Invoke-WebRequest -Uri $link.url -OutFile $zip -UseBasicParsing -Headers @{ 'User-Agent' = 'ndgui-installer' }
+    Invoke-WebRequest -Uri $link.browser_download_url -OutFile $zip -UseBasicParsing -Headers @{ 'User-Agent' = 'ndgui-installer' }
     Expand-Archive -LiteralPath $zip -DestinationPath $work -Force
     $next = @(Get-ChildItem -LiteralPath $work -Recurse -Filter 'install.ps1')[0]
     if (-not $next) { throw 'The downloaded zip has no install.ps1.' }
@@ -414,7 +414,7 @@ try {
         if ($installed) { Say "Installed: ndGUI $installed" }
         Say ''
         Say "  1) Install / update to $Version (this folder)"
-        Say '  2) Update to the newest version (downloads from GitLab)'
+        Say '  2) Update to the newest version (downloads from GitHub)'
         Say "  3) Install $Version, but keep the game's own screens stock (Options, login...)"
         Say '  4) Uninstall (back to the stock UI)'
         Say '  5) Quit'

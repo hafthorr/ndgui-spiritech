@@ -1,0 +1,45 @@
+# No game client in CI, so lint only checks that everything parses.
+# The real tests run against a client: see CONTRIBUTING.md.
+#
+# Releases: build_release.py writes release/ndgui-spiritech-<version>.zip (committed).
+# Pushing tag v<version> publishes that zip as the GitHub release,
+# with that version's CHANGELOG.md section as the notes.
+name: ci
+on:
+  push:
+    branches: [main]
+    tags: ['v*.*.*']
+  pull_request:
+
+permissions:
+  contents: write
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: sudo apt-get update -q && sudo apt-get install -yq lua5.4 libxml2-utils
+      - run: find addons -name '*.lua' -print0 | xargs -0 -n1 luac5.4 -p
+      - run: python3 -m py_compile install.py build_release.py addons/ndgui/tools/*.py
+      - run: find addons -name '*.xml' -print0 | xargs -0 -n1 xmllint --noout
+
+  release:
+    if: startsWith(github.ref, 'refs/tags/v')
+    needs: lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Publish the committed zip
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          TAG="${GITHUB_REF_NAME}"
+          VERSION="${TAG#v}"
+          ZIP="release/ndgui-spiritech-${VERSION}.zip"
+          test -f "$ZIP" || { echo "missing $ZIP - run build_release.py and commit it before tagging"; exit 1; }
+          grep -q "^VERSION = \"${VERSION}\"" install.py || { echo "install.py VERSION is not ${VERSION}"; exit 1; }
+          awk -v v="$VERSION" '/^## /{ if (on) exit; on = ($2 == v); next } on' CHANGELOG.md > notes.md
+          test -s notes.md || { echo "no '## ${VERSION}' section in CHANGELOG.md"; exit 1; }
+          printf "\n**Download:** ndgui-spiritech-%s.zip below, unzip, double-click install.bat. Linux/Mac: see INSTALL.md.\n" "$VERSION" >> notes.md
+          gh release create "$TAG" "$ZIP" --title "ndGUI for Spiritech $VERSION" --notes-file notes.md

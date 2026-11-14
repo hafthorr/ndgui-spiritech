@@ -7,6 +7,10 @@ Versions follow Semantic Versioning 2.0.0: `MAJOR.MINOR.PATCH`.
 - PATCH bumps fix tokens, scale math, or docs without a config change.
 - While the major version is 0, the client view layer is still incomplete. The Lua model is safe to load offline.
 
+## 0.2.8
+
+- The project moved to **GitHub: https://github.com/hafthorr/ndgui-spiritech**. The installer's updater and its download links now read releases from there. Installers from 0.2.7 and older still look on GitLab, which is gone: download this release by hand once (Releases on the GitHub page), and the updater works from then on.
+
 ## 0.2.7
 
 - **Mission Hub** (new package; replaces the Info, Missions and Mission Terminal windows):

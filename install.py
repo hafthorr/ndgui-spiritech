@@ -8,7 +8,7 @@ building everything on the spot. For developers, and for Linux/Mac.
 Needs Python 3.8+ and Pillow:
     python install.py                      interactive menu
     python install.py --install            install or update from this folder (auto-detects the client)
-    python install.py --update             get the newest release from GitLab and install it
+    python install.py --update             get the newest release from GitHub and install it
                                            (git checkout: git pull; otherwise downloads the source)
     python install.py --install --client "D:/Games/PRK-AO-Native/client"
     python install.py --uninstall          put the stock UI back and remove ndGUI
@@ -25,12 +25,12 @@ and --uninstall restores them. See INSTALL.md.
 """
 import argparse, glob, json, os, re, runpy, shutil, string, subprocess, sys, traceback
 
-VERSION = "0.2.7"
+VERSION = "0.2.8"
 REPO = os.path.dirname(os.path.abspath(__file__))
 SOURCE = os.path.join(REPO, "addons")
 # Generated on the player's machine from their own client (never copied back by --pull).
 GENERATED_FILES = [os.path.join("ndgui-lib", "lua", "table.lua")]
-PROJECT = "denis311/ndgui-spiritech"  # public GitLab project the updater reads releases from
+PROJECT = "hafthorr/ndgui-spiritech"  # public GitHub repository the updater reads releases from
 MARKER = os.path.join("UI", "Addons", "ndgui", "installed-version.txt")  # same file install.ps1 writes
 
 
@@ -265,15 +265,15 @@ def version_key(text):
 
 
 def latest_release():
-    import urllib.parse, urllib.request
-    url = f"https://gitlab.com/api/v4/projects/{urllib.parse.quote(PROJECT, safe='')}/releases/permalink/latest"
+    import urllib.request
+    url = f"https://api.github.com/repos/{PROJECT}/releases/latest"
     request = urllib.request.Request(url, headers={"User-Agent": "ndgui-installer"})
     try:
         with urllib.request.urlopen(request, timeout=30) as reply:
             return json.load(reply)["tag_name"]
     except Exception as error:
-        raise SystemExit(f"Could not reach GitLab ({error}). Check your connection, or get it by hand: "
-                         f"https://gitlab.com/{PROJECT}/-/releases")
+        raise SystemExit(f"Could not reach GitHub ({error}). Check your connection, or get it by hand: "
+                         f"https://github.com/{PROJECT}/releases")
 
 
 def run_installer(folder, client):
@@ -288,7 +288,7 @@ def download_source(tag):
     work = os.path.join(tempfile.gettempdir(), f"ndgui-spiritech-update-{tag}")
     shutil.rmtree(work, ignore_errors=True)
     os.makedirs(work)
-    url = f"https://gitlab.com/{PROJECT}/-/archive/{tag}/ndgui-spiritech-{tag}.tar.gz"
+    url = f"https://github.com/{PROJECT}/archive/refs/tags/{tag}.tar.gz"
     archive = os.path.join(work, "source.tar.gz")
     say(f"Downloading ndGUI {tag} (source)...")
     request = urllib.request.Request(url, headers={"User-Agent": "ndgui-installer"})
@@ -313,7 +313,7 @@ def download_source(tag):
 def update(client):
     installed = installed_version(client)
     say(f"Installed: {installed or 'nothing yet'}")
-    say("Checking GitLab for the newest release...")
+    say("Checking GitHub for the newest release...")
     tag = latest_release()
     latest = tag.lstrip("v")
     say(f"Newest:    {latest}")
@@ -389,7 +389,7 @@ def menu(client):
     if installed:
         say(f"Installed: ndGUI {installed}\n")
     say(f"  1) Install / update to {VERSION} (this folder)")
-    say("  2) Update to the newest version (from GitLab)")
+    say("  2) Update to the newest version (from GitHub)")
     say(f"  3) Install {VERSION}, but keep the game's own screens stock (Options, login...)")
     say("  4) Uninstall (back to the stock UI)")
     say("  5) Quit")
@@ -411,7 +411,7 @@ def main():
     parser.add_argument("--client", help="game client folder (the one with PRK.Client.exe and UI/)")
     parser.add_argument("--install", action="store_true")
     parser.add_argument("--uninstall", action="store_true")
-    parser.add_argument("--update", action="store_true", help="install the newest GitLab release")
+    parser.add_argument("--update", action="store_true", help="install the newest GitHub release")
     parser.add_argument("--check", action="store_true")
     parser.add_argument("--pull", action="store_true", help=argparse.SUPPRESS)
     parser.add_argument("--stock-screens", action="store_true")

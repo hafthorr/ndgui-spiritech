@@ -109,7 +109,7 @@ def main():
 
     packages = len(glob.glob(os.path.join(game, "Addons", "*")))
     graphics = len(glob.glob(os.path.join(game, "skin", "*.png")))
-    # release/ is committed: pushing a v<version> tag makes GitLab CI publish this zip as the release
+    # release/ is committed: pushing a v<version> tag makes the GitHub release workflow publish this zip as the release
     os.makedirs(os.path.join(REPO, "release"), exist_ok=True)
     for old in glob.glob(os.path.join(REPO, "release", "*.zip")):
         os.remove(old)

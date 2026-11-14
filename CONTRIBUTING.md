@@ -71,7 +71,7 @@ All three must print `ALL PASS`. CI only syntax-checks (it has no game client).
 3. Smoke-test: unpack `release/ndgui-spiritech-<version>.zip`, run `install.bat`, play.
 4. Commit (including the zip), `git tag v<version>`, `git push --follow-tags`.
 
-GitLab CI then creates the release by itself: notes from the changelog, the zip as the download. It fails loudly if the zip, `VERSION` or changelog section doesn't match the tag. CI can't build the zip itself because that needs a game client.
+The GitHub release workflow (`.github/workflows/release.yml`) then creates the release by itself: notes from the changelog, the zip as the download. It fails loudly if the zip, `VERSION` or changelog section doesn't match the tag. CI can't build the zip itself because that needs a game client.
 
 ## Rules of thumb
 

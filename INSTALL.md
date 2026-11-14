@@ -10,13 +10,13 @@ You don't need Python or an exe. The installer is a PowerShell script (`install.
 4. Double-click **`install.bat`**. A window opens:
 
    ```
-   ndGUI for Spiritech 0.2.7
+   ndGUI for Spiritech 0.2.8
 
    Game folder: C:\Games\PRK-AO-Native\client
 
-     1) Install / update to 0.2.7 (this folder)
-     2) Update to the newest version (downloads from GitLab)
-     3) Install 0.2.7, but keep the game's own screens stock (Options, login...)
+     1) Install / update to 0.2.8 (this folder)
+     2) Update to the newest version (downloads from GitHub)
+     3) Install 0.2.8, but keep the game's own screens stock (Options, login...)
      4) Uninstall (back to the stock UI)
      5) Quit
    ```
@@ -36,7 +36,7 @@ From a PowerShell window you can also point it at the game directly:
 .\install.ps1 -Install -Client "D:\Games\PRK-AO-Native\client"
 .\install.ps1 -Install -StockScreens      # keep Options/login screens stock
 .\install.ps1 -Uninstall
-.\install.ps1 -Update                    # download the newest release from GitLab and install it
+.\install.ps1 -Update                    # download the newest release from GitHub and install it
 ```
 
 ### "Windows protected your PC" / "Do you want to run this file?"
@@ -58,7 +58,7 @@ If step 4 says there are no game settings yet (it's your first-ever start), star
 
 ## Updating
 
-- **New ndGUI version:** run `install.bat` → **2**. It asks GitLab for the newest release, and if that's newer than what's installed, downloads the zip and installs it. With no window, from PowerShell: `.\install.ps1 -Update`. It tells you where it unpacked the new version, so you can use that copy's `install.bat` later. (Or download the zip by hand and run its `install.bat` → **1**.)
+- **New ndGUI version:** run `install.bat` → **2**. It asks GitHub for the newest release, and if that's newer than what's installed, downloads the zip and installs it. With no window, from PowerShell: `.\install.ps1 -Update`. It tells you where it unpacked the new version, so you can use that copy's `install.bat` later. (Or download the zip by hand and run its `install.bat` → **1**.)
 - **After a game patch:** run `install.bat` again. A patch can put stock files back.
   - If the patch changed the game's UI a lot, the installer warns that the build was made for another game version. Pieces that no longer fit fall back to the stock UI by themselves (the game never shows a broken HUD), and a new ndGUI release will catch up.
   - If a patch replaced a game file the installer had backed up, delete that `*.stock` file before reinstalling. Otherwise uninstall would put the *old* file back.
@@ -79,7 +79,7 @@ python install.py --install               # no questions
 python install.py --install --client "/path/to/PRK-AO-Native/client"
 python install.py --install --stock-screens
 python install.py --uninstall
-python install.py --update                # newest GitLab release: git pull in a checkout, else downloads the source
+python install.py --update                # newest GitHub release: git pull in a checkout, else downloads the source
 python install.py --check                 # only check game folder + requirements
 ```
 
