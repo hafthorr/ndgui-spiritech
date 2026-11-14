@@ -1,0 +1,12 @@
+<?xml version="1.0"?>
+<root>
+  <!-- ndGUI Team Buffs: a member per row, a buff per column. Sizes are set from main.lua. -->
+  <View name="team_content" view_layout="vertical" layout_borders="Rect(3,3,3,3)">
+    <View name="team_head" view_layout="horizontal">
+      <View name="team_head_pad" min_size="Point(110,24)" max_size="Point(110,24)" />
+    </View>
+    <View name="team_rows" view_layout="vertical" layout_borders="Rect(0,3,0,0)" />
+    <TextView name="team_empty" value="Not in a team." color="5F7486" font_size="11" size_to_text="false" />
+    <TextView name="team_hint" value="Click a member to target them, then cast. Red = missing." color="5F7486" font_size="10" size_to_text="false" layout_borders="Rect(0,4,0,0)" />
+  </View>
+</root>

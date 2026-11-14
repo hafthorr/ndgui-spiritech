@@ -1,0 +1,12 @@
+<?xml version="1.0"?>
+<root>
+  <!-- one member: name, then a cell per buff column; the flat button on top targets the member -->
+  <View name="member_row" view_layout="stacked" layout_borders="Rect(0,0,0,2)">
+    <View name="member_back" />
+    <View view_layout="horizontal">
+      <TextView name="member_name" value="" color="E6EEF5" font_size="11" size_to_text="false" v_alignment="center" layout_borders="Rect(4,0,0,0)" />
+      <View name="member_cells" view_layout="horizontal" />
+    </View>
+    <Button name="member_hit" flat="true" label="" selection_color="0x40789FBF" />
+  </View>
+</root>

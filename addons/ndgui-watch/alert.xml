@@ -1,0 +1,15 @@
+<?xml version="1.0"?>
+<root>
+  <!-- the alert banner: one line, most urgent alert; never takes a click -->
+  <View name="alert" view_layout="stacked" capture_input="false" visible="false">
+    <View name="alert_back" capture_input="false" />
+    <View name="alert_edge" capture_input="false" v_alignment="bottom" />
+    <View view_layout="horizontal" capture_input="false" h_alignment="center">
+      <ItemSlotView name="alert_icon" interactive="false" icon_fit="cover" min_size="Point(22,22)" max_size="Point(22,22)" v_alignment="center" visible="false" layout_borders="Rect(0,0,6,0)" />
+      <View view_layout="stacked" capture_input="false" v_alignment="center">
+        <TextView name="alert_shadow" value="" color="000000" font_size="16" size_to_text="true" layout_borders="Rect(1,1,0,0)" />
+        <TextView name="alert_text" value="" color="FFFFFF" font_size="16" size_to_text="true" />
+      </View>
+    </View>
+  </View>
+</root>

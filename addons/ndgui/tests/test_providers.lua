@@ -836,6 +836,93 @@ do
   end
 end
 
+-- Buff Watch: your buffs / debuffs, what you put on the target, the team grid and the alert banner.
+do
+  local H = Mock.new(addons, core, { width = W, height = Hh, loose = true })
+  local registered, effects_subs, char_subs, roster, binds = {}, {}, {}, nil, {}
+  local clock = 1000000
+  H.env.ui.time = function() return clock end
+  H.env.ui.register_view = function(v, id) registered[id] = v end
+  H.env.game.effects = { subscribe = function(subject, cb) effects_subs[subject] = cb; return 1 end }
+  H.env.game.character = { subscribe = function(subject, stats, cb) char_subs[subject] = cb; return 1 end }
+  H.env.game.team = { subscribe = function(cb) roster = cb; return 1 end }
+  H.env.game.targeting = { prepare_select = function(ref) return "select:" .. ref end }
+  H.env.ui.actions = { bind = function(v, action) binds[#binds + 1] = { v, action } end }
+  local ok, err = pcall(H.load_package, "ndgui-watch")
+  check(ok, "ndgui-watch loads" .. (ok and "" or (": " .. tostring(err))))
+  if ok then
+    local function f(name) return H.find(H.root, name) end
+    check(registered.buffs ~= nil and registered.team_buffs ~= nil, "Buff Watch and Team Buffs are addon windows")
+    check(effects_subs.self and effects_subs.target and effects_subs.team and char_subs.self and char_subs.target and roster,
+      "watches self / target / team effects, self and target, the roster")
+    local function fx(ref, name, remaining, duration, extra)
+      local e = { reference = ref, name = name, icon = ref, remaining = remaining, duration = duration, hostile = false,
+        hidden = false, permanent = false, description = "", kind = "Friendly" }
+      for k, v in pairs(extra or {}) do e[k] = v end
+      return e
+    end
+    char_subs.self(nil, { id = 42, health = 1000, max_health = 1000, nano = 500, max_nano = 500 })
+    effects_subs.self({ reset = true, sampled_at_ms = clock, data = { { subject = "me", known = true, effects = {
+      fx(1, "Cyclic Coat of Barbs", 1200, 1200), fx(2, "Minor Wilderness Protection", 40, 2700),
+      fx(3, "Hidden Thing", 10, 10, { hidden = true }) } } } })
+    local names = {}
+    -- visible text views named `name`, skipping hidden subtrees
+    local function texts(name)
+      local out = {}
+      local function walk(v) if v.visible == false then return end
+        if v.name == name then out[#out + 1] = v.text end
+        for _, k in ipairs(v.kids or {}) do walk(k) end end
+      walk(H.root)
+      return out
+    end
+    local function walk() names = texts("buff_name") end
+    walk()
+    check(names[1] == "Minor Wilderness Protection" and names[2] == "Cyclic Coat of Barbs" and #names == 2,
+      "your buffs, soonest to end first, hidden ones left out: " .. table.concat(names, ", "))
+    -- a debuff lands: it goes first and raises the banner
+    effects_subs.self({ reset = false, sampled_at_ms = clock, data = { { subject = "me", known = true, effects = {
+      fx(1, "Cyclic Coat of Barbs", 1200, 1200), fx(2, "Minor Wilderness Protection", 40, 2700),
+      fx(9, "Snake Venom", 30, 30, { hostile = true }) } } } })
+    walk()
+    check(names[1] == "Snake Venom", "debuffs on you come first: " .. tostring(names[1]))
+    H.tick()
+    check(f("alert").visible == true and f("alert_text").text == "DEBUFF  Snake Venom", "debuff raises the banner: " .. tostring(f("alert_text").text))
+    -- timers count down between samples; an expiring long buff alerts after the debuff alert passes
+    clock = clock + 30000
+    H.tick()
+    check(f("alert_text").text == "Minor Wilderness Protection ends in 10s", "expiring buff alert: " .. tostring(f("alert_text").text))
+    -- low health beats everything
+    char_subs.self(nil, { id = 42, health = 200, max_health = 1000, nano = 500, max_nano = 500 })
+    clock = clock + 300
+    H.tick()
+    check(f("alert_text").text == "LOW HEALTH  20%", "low health alert: " .. tostring(f("alert_text").text))
+    -- target: only what you cast
+    char_subs.target(nil, { id = 7, name = "Snake" })
+    effects_subs.target({ sampled_at_ms = clock, data = { { subject = "snake", known = true, effects = {
+      fx(20, "Your DoT", 18, 30, { hostile = true, caster = 42 }), fx(21, "Someone Else's DoT", 18, 30, { hostile = true, caster = 5 }) } } } })
+    check(f("target_head").text == "ON SNAKE", "target section names the target")
+    local found_mine, found_other = false, false
+    for _, t in ipairs(texts("buff_name")) do
+      if t == "Your DoT" then found_mine = true elseif t == "Someone Else's DoT" then found_other = true end
+    end
+    check(found_mine and not found_other, "target shows only effects you cast")
+    -- team grid
+    roster({ data = { in_team = true, members = {
+      { own_team = true, character = { reference = "r1", name = "Ninnai", is_self = true } },
+      { own_team = true, character = { reference = "r2", name = "Bob" } } } } })
+    effects_subs.team({ sampled_at_ms = clock, data = {
+      { subject = "r1", known = true, effects = { fx(1, "Cyclic Coat of Barbs", 900, 1200), fx(5, "Essence of Behemoth", 3000, 3600) } },
+      { subject = "r2", known = true, effects = { fx(5, "Essence of Behemoth", 3000, 3600) } } } })
+    local member_names = texts("member_name")
+    check(member_names[1] == "Ninnai" and member_names[2] == "Bob  -1", "team grid rows, missing count: " .. table.concat(member_names, " | "))
+    local targeted = 0
+    for _, b in ipairs(binds) do if b[2] == "select:r2" then targeted = targeted + 1 end end
+    check(targeted == 1, "clicking a member targets them")
+    -- the menu turns the banner off
+    check(f("alert").visible == true, "banner on before")
+  end
+end
+
 -- Mission hub: one package provides Info, Missions and Mission Terminal; Info keeps the briefing
 -- of a mission page in ui.storage and the other two windows (other VMs) show it.
 do

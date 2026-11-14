@@ -1,0 +1,7 @@
+<?xml version="1.0"?>
+<root>
+  <View name="cell" view_layout="stacked" min_size="Point(42,20)" max_size="Point(42,20)">
+    <View name="cell_back" layout_borders="Rect(1,1,1,1)" />
+    <TextView name="cell_text" value="" color="E6EEF5" font_size="10" text_alignment="center" size_to_text="false" v_alignment="center" />
+  </View>
+</root>

@@ -1,0 +1,12 @@
+<?xml version="1.0"?>
+<root>
+  <!-- ndGUI Buff Watch: what is on you, and what you put on your target. Sizes are set from main.lua. -->
+  <View name="buffs_content" view_layout="vertical" layout_borders="Rect(3,3,3,3)">
+    <TextView name="you_head" value="ON YOU" color="7F9BB0" font_size="10" size_to_text="false" />
+    <View name="you_rows" view_layout="vertical" layout_borders="Rect(0,2,0,0)" />
+    <TextView name="you_empty" value="No buffs." color="5F7486" font_size="11" size_to_text="false" visible="false" />
+    <TextView name="target_head" value="ON TARGET" color="7F9BB0" font_size="10" size_to_text="false" layout_borders="Rect(0,8,0,0)" />
+    <View name="target_rows" view_layout="vertical" layout_borders="Rect(0,2,0,0)" />
+    <TextView name="target_empty" value="" color="5F7486" font_size="11" size_to_text="false" />
+  </View>
+</root>

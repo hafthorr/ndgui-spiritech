@@ -1,0 +1,7 @@
+<Package id="notum.ndgui-watch" name="Notum Dovvetech Buff Watch">
+  <Requires package="notum.ndgui-lib" />
+  <View id="buffs" name="Buff Watch" />
+  <View id="team_buffs" name="Team Buffs" />
+  <Script src="watch.lua" />
+  <Script src="main.lua" />
+</Package>
