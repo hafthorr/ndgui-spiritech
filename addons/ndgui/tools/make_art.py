@@ -80,14 +80,11 @@ def bar_fill(key, size, axis):
     img = gradient(size, [(0.0, shade(base, 0.18)), (0.5, rgb(base)), (1.0, shade(base, -0.35))], across)
     d = ImageDraw.Draw(img)
     w, h = size
+    # smooth fill with a lit leading edge (no segment ticks)
     if axis == "h":
         d.line([0, 0, w, 0], fill=shade(base, 0.35, 200))
-        for x in range(24, w, 24):
-            d.line([x, 0, x, h], fill=(0, 0, 0, 60))
     else:
         d.line([0, 0, 0, h], fill=shade(base, 0.35, 200))
-        for y in range(24, h, 24):
-            d.line([0, y, w, y], fill=(0, 0, 0, 60))
     return img
 
 
