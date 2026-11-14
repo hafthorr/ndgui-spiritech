@@ -42,4 +42,8 @@ jobs:
           awk -v v="$VERSION" '/^## /{ if (on) exit; on = ($2 == v); next } on' CHANGELOG.md > notes.md
           test -s notes.md || { echo "no '## ${VERSION}' section in CHANGELOG.md"; exit 1; }
           printf "\n**Download:** ndgui-spiritech-%s.zip below, unzip, double-click install.bat. Linux/Mac: see INSTALL.md.\n" "$VERSION" >> notes.md
-          gh release create "$TAG" "$ZIP" --title "ndGUI for Spiritech $VERSION" --notes-file notes.md
+          if gh release view "$TAG" >/dev/null 2>&1; then
+            gh release upload "$TAG" "$ZIP" --clobber   # already published by hand: just refresh the zip
+          else
+            gh release create "$TAG" "$ZIP" --title "ndGUI for Spiritech $VERSION" --notes-file notes.md
+          fi
