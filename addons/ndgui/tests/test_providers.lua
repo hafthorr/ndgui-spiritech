@@ -898,7 +898,7 @@ do
     local briefs, badges = {}, {}
     local function walk(v)
       if v.name == "offer_brief" and v.visible ~= false then briefs[#briefs + 1] = v.text end
-      if v.name == "offer_reward" and v.visible ~= false then briefs.reward = v.text end
+      if v.name == "offer_reward" and v.visible ~= false and (v.text or "") ~= "" then briefs.reward = v.text end
       if v.name == "offer_badge" and v.visible == true then badges[#badges + 1] = v.text end
       for _, k in ipairs(v.kids or {}) do walk(k) end
     end
