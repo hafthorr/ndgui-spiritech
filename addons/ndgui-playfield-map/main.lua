@@ -647,7 +647,13 @@ end
 function playfield_map_update(facts)
 	last_update_at = ui.time()
 	if not opened then
-		return
+		if not window_visible then
+			return
+		end
+		-- the window is on screen but the client never said "shown" (seen at login): open from here,
+		-- inside a normal native callback (never from the visibility observer)
+		note("update while on screen but not opened: opening")
+		playfield_map_visibility(true)
 	end
 	last_facts = facts
 	if facts.changed then
