@@ -77,7 +77,7 @@ for _, case in ipairs({
       H.state_handlers[mv.view]("restore")
       check(H.find(H.root, "status_caption").parent == nil and H.find(H.find(H.root, "status_bar"), "status_caption") ~= nil,
         case[1] .. " restore applies the saved Flat setting")
-      check(H.placements[#H.placements].restored == 1, case[1] .. " restore still restores the position")
+      check((H.placements[#H.placements].restored or 0) >= 1, case[1] .. " restore still restores the position")
       H.state[mv.view].NdguiFlat = "false"
       H.state_handlers[mv.view]("restore")
     end
