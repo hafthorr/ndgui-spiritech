@@ -35,17 +35,17 @@ ui.define("ndgui.meter", function()
 		local name = is_self and "You" or raw ~= "" and (raw .. (pet and " (pet)" or "")) or "Unknown"
 		local id = tonumber(e[side]) or 0
 		local key = is_self and "self" or id ~= 0 and ("#" .. id) or ("n:" .. raw)
-		return key, name, is_self == true, pet == true
+		return key, name, is_self == true, pet == true, raw
 	end
 
-	local function credit(self, seg, key, name, is_self, pet, kind, amount)
+	local function credit(self, seg, key, name, is_self, pet, raw, kind, amount)
 		local actor = seg.actors[key]
 		if not actor then
 			if seg.count >= MAX_ACTORS then
 				self.full = true
 				return
 			end
-			actor = { key = key, name = name, self = is_self, pet = pet, damage = 0, healing = 0, taken = 0 }
+			actor = { key = key, name = name, raw = raw, self = is_self, pet = pet, damage = 0, healing = 0, taken = 0 }
 			seg.actors[key] = actor
 			seg.count = seg.count + 1
 		end
@@ -65,14 +65,14 @@ ui.define("ndgui.meter", function()
 			local amount = tonumber(e.amount) or 0
 			if amount > 0 and (e.kind == "damage" or e.kind == "healing") then
 				local credits = {}
-				local key, name, is_self, pet = who(e, "source")
+				local key, name, is_self, pet, raw = who(e, "source")
 				if key then
-					credits[#credits + 1] = { key, name, is_self, pet, e.kind }
+					credits[#credits + 1] = { key, name, is_self, pet, raw, e.kind }
 				end
 				if e.kind == "damage" then
-					key, name, is_self, pet = who(e, "target")
+					key, name, is_self, pet, raw = who(e, "target")
 					if key then
-						credits[#credits + 1] = { key, name, is_self, pet, "taken" }
+						credits[#credits + 1] = { key, name, is_self, pet, raw, "taken" }
 					end
 				end
 				if #credits > 0 then
@@ -92,7 +92,7 @@ ui.define("ndgui.meter", function()
 							seg.last = t
 						end
 						for _, c in ipairs(credits) do
-							credit(self, seg, c[1], c[2], c[3], c[4], c[5], amount)
+							credit(self, seg, c[1], c[2], c[3], c[4], c[5], c[6], amount)
 						end
 					end
 				end
@@ -100,16 +100,18 @@ ui.define("ndgui.meter", function()
 		end
 	end
 
-	-- The segment for a scope ("fight" / "all") and its sources for one kind, biggest first.
-	function Meter:leaders(scope, kind)
+	-- The segment for a scope ("fight" / "all"), its sources for one kind (biggest first) that pass
+	-- keep(actor) when given, and their total.
+	function Meter:leaders(scope, kind, keep)
 		local seg = self[scope]
-		local list = {}
+		local list, total = {}, 0
 		if not seg then
-			return list, nil
+			return list, nil, 0
 		end
 		for _, actor in pairs(seg.actors) do
-			if actor[kind] > 0 then
+			if actor[kind] > 0 and (not keep or keep(actor)) then
 				list[#list + 1] = actor
+				total = total + actor[kind]
 			end
 		end
 		table.sort(list, function(a, b)
@@ -118,7 +120,7 @@ ui.define("ndgui.meter", function()
 			end
 			return a.key < b.key
 		end)
-		return list, seg
+		return list, seg, total
 	end
 
 	-- Seconds the segment spent fighting (never below 1, so one hit is not infinite DPS).

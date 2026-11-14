@@ -284,8 +284,9 @@ end
 -- Damage meter: standalone window (Control Center > Actions > Addons) over game.combat.
 do
   local H = Mock.new(addons, core, { width = W, height = Hh, loose = true })
-  local registered
+  local registered, roster
   H.env.ui.register_view = function(v, id) registered = id end
+  H.env.game.team = { subscribe = function(cb) roster = cb end }
   local ok, err = pcall(H.load_package, "ndgui-meter")
   check(ok, "ndgui-meter loads" .. (ok and "" or (": " .. tostring(err))))
   if ok then
@@ -303,12 +304,25 @@ do
       ev(3, "damage", 50, mob, me), ev(4, "healing", 80, bob, me), ev(9, "damage", 300, me, mob) })
     local rows = H.find(H.root, "meter_rows").kids
     local function r(i, name) return H.find(rows[i], name) end
-    check(r(1, "row_name").text == "1. You" and r(2, "row_name").text == "2. Fido (pet)" and r(3, "row_name").text == "3. Bob",
-      "damage ranks you, pet, Bob (mob not listed)")
-    -- 9 s of fighting (gaps <= 6 s count): you 600 / 9 s = 66.7/s, 67% of 900
-    check(r(1, "row_value").text == "600  66.7/s  67%", "you: amount, per second, share: " .. tostring(r(1, "row_value").text))
+    local filter = H.find(H.root, "meter_filter")
+    -- default: just you and your pets (9 s of fighting; you 600 of 800)
+    check(filter.text == "Me" and r(1, "row_name").text == "1. You" and r(2, "row_name").text == "2. Fido (pet)" and rows[3].visible == false,
+      "default filter Me: you and your pet only")
+    check(r(1, "row_value").text == "600  66.7/s  75%", "share is of what is shown: " .. tostring(r(1, "row_value").text))
+    -- Team: Bob joins your team; Raid adds Carl from another subgroup; All shows everyone
+    roster({ data = { members = { { own_team = true, character = { name = "Ninnai" } }, { own_team = true, character = { name = "Bob" } },
+      { own_team = false, character = { name = "Carl" } } } } })
+    H.combat({ ev(9, "damage", 50, { id = 4, name = "Carl", is_player = true }, mob), ev(9, "damage", 20, { id = 5, name = "Dave", is_player = true }, mob) })
+    filter.on_click()
+    check(filter.text == "Team" and r(3, "row_name").text == "3. Bob" and rows[4].visible == false, "Team adds Bob")
+    filter.on_click()
+    check(filter.text == "Raid" and r(4, "row_name").text == "4. Carl" and rows[5].visible == false, "Raid adds Carl")
+    filter.on_click()
+    check(filter.text == "All" and r(5, "row_name").text == "5. Dave", "All adds strangers")
+    -- 9 s of fighting: you 600 / 9 s = 66.7/s, 62% of 970
+    check(r(1, "row_value").text == "600  66.7/s  62%", "you: amount, per second, share: " .. tostring(r(1, "row_value").text))
     check(r(1, "row_fill").tint == "#4fb3e8" and r(2, "row_fill").tint == "#5fb8a8" and r(3, "row_fill").tint == "#b8743f", "you blue, pet teal, others amber")
-    check(rows[4].visible == false, "only sources with damage get a row")
+    check(rows[6].visible == false, "only sources with damage get a row")
     check(H.find(H.root, "meter_summary").text:find("Fight 0:09", 1, true) ~= nil, "summary: fight time " .. tostring(H.find(H.root, "meter_summary").text))
     H.find(H.root, "meter_taken").on_click()
     check(r(1, "row_name").text == "1. You" and r(1, "row_value").text:find("^50") ~= nil and rows[2].visible == false, "taken: only you took damage")

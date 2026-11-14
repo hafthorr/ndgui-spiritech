@@ -19,11 +19,12 @@ local buttons = {
 	taken = ui.find(content, "meter_taken"),
 }
 local scope_button = ui.find(content, "meter_scope")
+local filter_button = ui.find(content, "meter_filter")
 local reset_button = ui.find(content, "meter_reset")
 
 local MAX_ROWS, ROW_H = 15, 20 -- row.xml adds a 2px gap under each 18px bar
 local HEADER_H = 33 + 3 + 18 + 14 + 29 + 3 + 6 -- title, borders, summary, status, buttons, borders, frame
-local MIN_W, MAX_W = 300, 640
+local MIN_W, MAX_W = 360, 640
 local NOUN = { damage = "damage", healing = "healing", taken = "taken" }
 local RATE = { damage = "DPS", healing = "HPS", taken = "DTPS" }
 local COLOR = {
@@ -31,7 +32,26 @@ local COLOR = {
 	damage = "#b8743f", healing = "#4f9f5f", taken = "#a8434a",
 }
 
-local mode, scope = "damage", "fight"
+local FILTERS = { "me", "team", "raid", "all" }
+local FILTER_LABEL = { me = "Me", team = "Team", raid = "Raid", all = "All" }
+local FILTER_NOTE = {
+	me = "You and your pets", team = "You, your pets and your team",
+	raid = "You, your pets and your raid", all = "Everyone this client sees",
+}
+local mode, scope, filter = "damage", "fight", "me"
+local team_names, raid_names = {}, {} -- current roster by name (combat reports carry names)
+
+local function keep(actor)
+	if filter == "all" or actor.self or actor.pet then
+		return true
+	end
+	if filter == "team" then
+		return team_names[actor.raw] == true
+	elseif filter == "raid" then
+		return raid_names[actor.raw] == true
+	end
+	return false
+end
 local shown, fit, row_w = true, 10, 280
 local rows = {}
 
@@ -67,15 +87,15 @@ local function clock(seconds)
 end
 
 local function render()
-	local list, seg = meter:leaders(scope, mode)
+	local list, seg, total = meter:leaders(scope, mode, keep)
 	local seconds = Meter.seconds(seg)
-	local total = seg and seg.total[mode] or 0
 	local label = scope == "fight" and "Fight" or "Overall"
 	ui.text(summary, seg and string.format("%s %s  ·  %s %s  ·  %s %s", label, clock(seg.active), short(total), NOUN[mode],
 		rate(total / seconds), RATE[mode]) or "No combat yet")
 	ui.text(status, meter.incomplete and "Some combat reports were lost; numbers are low"
 		or meter.full and "Too many sources; the smallest are not listed"
-		or "You, your pets and players this client sees")
+		or FILTER_NOTE[filter])
+	ui.text(filter_button, FILTER_LABEL[filter])
 	for key, button in pairs(buttons) do
 		ui.selected(button, key == mode)
 	end
@@ -131,7 +151,7 @@ end
 
 local frame = Window.create({
 	template = "library://notum.ndgui-lib/window.xml",
-	title = "Damage Meter", content = content, width = 340, height = HEADER_H + 8 * ROW_H,
+	title = "Damage Meter", content = content, width = 380, height = HEADER_H + 8 * ROW_H,
 	horizontal = "end", vertical = "center", layout = layout,
 })
 ui.add(root, frame.root)
@@ -142,6 +162,7 @@ local function save()
 	if ui.preference and ui.preference.write then
 		pcall(ui.preference.write, "NdguiMeterMode", mode, "text")
 		pcall(ui.preference.write, "NdguiMeterScope", scope, "text")
+		pcall(ui.preference.write, "NdguiMeterFilter", filter, "text")
 	end
 end
 if ui.preference and ui.preference.read then
@@ -149,6 +170,8 @@ if ui.preference and ui.preference.read then
 	if ok and NOUN[saved] then mode = saved end
 	ok, saved = pcall(ui.preference.read, "NdguiMeterScope")
 	if ok and (saved == "fight" or saved == "all") then scope = saved end
+	ok, saved = pcall(ui.preference.read, "NdguiMeterFilter")
+	if ok and FILTER_LABEL[saved] then filter = saved end
 end
 
 for key, button in pairs(buttons) do
@@ -158,6 +181,16 @@ for key, button in pairs(buttons) do
 		render()
 	end)
 end
+ui.on_click(filter_button, function()
+	for i, f in ipairs(FILTERS) do
+		if f == filter then
+			filter = FILTERS[i % #FILTERS + 1]
+			break
+		end
+	end
+	save()
+	render()
+end)
 ui.on_click(scope_button, function()
 	scope = scope == "fight" and "all" or "fight"
 	save()
@@ -173,6 +206,26 @@ local function observe()
 	end)
 end
 local subscription = observe()
+
+-- who is in your team / raid right now (own_team = your raid subgroup or ordinary team)
+if game.team and game.team.subscribe then
+	pcall(game.team.subscribe, function(update)
+		team_names, raid_names = {}, {}
+		local data = update and update.data
+		for _, member in ipairs(data and data.members or {}) do
+			local name = member.character and member.character.name
+			if name then
+				raid_names[name] = true
+				if member.own_team then
+					team_names[name] = true
+				end
+			end
+		end
+		if shown then
+			render()
+		end
+	end)
+end
 ui.on_click(reset_button, function()
 	game.combat.unsubscribe(subscription)
 	subscription = observe()
