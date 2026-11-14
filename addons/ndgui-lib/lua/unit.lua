@@ -18,6 +18,8 @@ M.SIDES = { [0] = "Neutral", [1] = "Clan", [2] = "Omni" }
 local XML = "library://notum.ndgui-lib/unit.xml"
 local GHOST_HOLD_MS, GHOST_DRAIN = 450, 0.9 -- drain speed: fraction of the bar per second
 local LOW_HP = 0.25
+local MARQUEE_PAUSE_MS, MARQUEE_STEP_MS = 1500, 180 -- long names: rest at each end, then one letter a step
+local BRIGHT = 0.45 -- bar luminance above which its HP text turns black
 local FLOATERS, FLOAT_MS = 5, 1100
 local TOT_MS = 8000 -- how long "who it attacks" stays after the last observed attack
 local ACCENT_W, PORTRAIT_GAP, PAD_L, PAD_R = 3, 5, 6, 7 -- must match unit.xml borders
@@ -75,8 +77,36 @@ local function hex(color, default)
 	return color or default
 end
 
+-- 0..1 perceived brightness of "#rrggbb"
+local function luminance(color)
+	local r, g, b = tostring(color):match("^#?(%x%x)(%x%x)(%x%x)")
+	if not r then
+		return 0
+	end
+	return (0.299 * tonumber(r, 16) + 0.587 * tonumber(g, 16) + 0.114 * tonumber(b, 16)) / 255
+end
+M.luminance = luminance
+
 -- ---- ticker ----------------------------------------------------------------------------
 local ticking, extra = false, nil
+
+-- Long names scroll inside the name box: pause, slide to the end a letter at a time, pause, jump back.
+local function step_marquee(f, now)
+	local m = f.marquee
+	if not m then
+		return false
+	end
+	if now >= m.next_at then
+		if m.pos >= m.last then
+			m.pos, m.next_at = 1, now + MARQUEE_PAUSE_MS
+		else
+			m.pos = m.pos + 1
+			m.next_at = now + (m.pos >= m.last and MARQUEE_PAUSE_MS or MARQUEE_STEP_MS)
+		end
+		ui.text(f.v.name, m.full:sub(m.pos, m.pos + m.fit - 1))
+	end
+	return f.visible
+end
 
 local function place_float(f, fl, t)
 	local start = 4 + f.name_h + 2 -- top of the HP bar
@@ -147,6 +177,9 @@ local function tick(now)
 					active = true
 				end
 			end
+		end
+		if step_marquee(f, now) then
+			active = true
 		end
 		if f.tot_until then
 			if now >= f.tot_until then
@@ -259,13 +292,36 @@ function Frame:layout(width, k, compact)
 		ui.font_size(v[name], math.floor(10.5 * k))
 	end
 	self.inner, self.hp_h, self.np_h, self.name_h, self.info_h, self.portrait_h = inner, hp_h, np_h, name_h, info_h, portrait
+	self.name_w = inner - level_w
 	paint_tot(self)
 	paint_bar(self)
+	self:fit_name()
+end
+
+-- Show the whole name, or start it scrolling when it is wider than its box.
+function Frame:fit_name()
+	local name = self.char_name
+	self.marquee = nil
+	if not name then
+		return
+	end
+	ui.text(self.v.name, name)
+	local box = self.name_w or 0
+	local full = ui.text_width and ui.text_width(self.v.name)
+	full = type(full) == "number" and full or 0
+	if box <= 0 or full <= box or #name < 4 then
+		return
+	end
+	local fit = math.max(3, math.floor(#name * box / full) - 1)
+	self.marquee = { full = name, fit = fit, last = #name - fit + 1, pos = 1, next_at = ui.time() + MARQUEE_PAUSE_MS }
+	ui.text(self.v.name, name:sub(1, fit))
+	M.wake()
 end
 
 function Frame:hide()
 	ui.visible(self.v.frame, false)
 	self.visible = false
+	self.marquee = nil
 	self.fraction, self.ghost, self.low = 0, 0, false
 	self.char_name, self.char_id, self.is_self = nil, nil, nil
 	self.tot_until = nil
@@ -296,6 +352,7 @@ function Frame:show(s)
 	end
 	ui.visible(v.frame, true)
 	self.visible = true
+	local renamed = self.char_name ~= s.name
 	self.char_name, self.char_id, self.is_self = s.name, c and c.id, c and c.is_self or false
 
 	local fraction = s.fraction
@@ -306,7 +363,9 @@ function Frame:show(s)
 	local bar_color = hex(s.bar_color, "#c44747")
 
 	ui.fill_color(v.accent, hex(s.accent, "#3d6f9a"))
-	ui.text(v.name, s.name)
+	if renamed or not self.marquee then
+		self:fit_name()
+	end
 	ui.text_color(v.name, hex(s.name_color, "#c5d7e6"))
 	ui.tooltip(v.frame, s.header or "")
 	ui.opacity(v.body, s.dim and 0.55 or 1)
@@ -346,6 +405,11 @@ function Frame:show(s)
 	end
 	ui.text(v.hp_text, text)
 	ui.text(v.hp_shadow, text)
+	-- black text on a bright bar (green, yellow) when the fill is under it, white otherwise
+	local dark = luminance(bar_color) > BRIGHT and fraction >= 0.55
+	ui.text_color(v.hp_text, dark and "#000000" or "#FFFFFF")
+	ui.text_color(v.hp_shadow, dark and "#FFFFFF" or "#000000")
+	ui.opacity(v.hp_shadow, dark and 0.25 or 1)
 	paint_bar(self)
 	if self.ghost > self.fraction or self.low then
 		M.wake()
