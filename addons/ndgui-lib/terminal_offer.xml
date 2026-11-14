@@ -10,6 +10,7 @@
         <TextView name="offer_text" value="" font_size="11" color="C5D7E6" word_wrap="true" size_to_text="false" />
         <!-- pay, place and reward of an offer you looked at once (kept by Info in ndgui-mission-hub) -->
         <TextView name="offer_brief" value="" font_size="10" color="FFD84A" size_to_text="false" visible="false" />
+        <TextView name="offer_reward" value="" font_size="10" color="9CD69C" size_to_text="false" visible="false" />
       </View>
     </View>
     <!-- flat button on top: takes the click and carries the native choose action -->

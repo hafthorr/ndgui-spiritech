@@ -110,15 +110,13 @@ local function offer_terms(offer)
 	local brief = offer_brief(offer)
 	return matched_terms((offer.description or "") .. " " .. Briefs.haystack(brief)), brief
 end
-local function brief_line(brief)
-	if not brief then
-		return ""
+-- "Reward: <item>" shortened to the row (the tooltip has the whole briefing)
+local function fit_line(text, w)
+	local chars = math.max(12, math.floor(w / 5.6))
+	if #text > chars then
+		return text:sub(1, chars - 3) .. "..."
 	end
-	local line = Briefs.summary(brief)
-	if brief.item then
-		line = (line ~= "" and line .. "  ·  " or "") .. brief.item
-	end
-	return line
+	return text
 end
 
 -- ---- offer rows ------------------------------------------------------------------------
@@ -133,6 +131,7 @@ for index = 1, OFFERS do
 		badge = ui.find(root, "offer_badge"),
 		text = ui.find(root, "offer_text"),
 		brief = ui.find(root, "offer_brief"),
+		reward = ui.find(root, "offer_reward"),
 		hit = ui.find(root, "offer_hit"),
 	}
 	ui.visible(root, false)
@@ -155,18 +154,28 @@ local function show_offer(row, offer)
 	local inner = width - 11 - 10
 	local text_w = inner - TEXT_LEFT
 	local badge_h = hit and 13 or 0
-	local line = brief_line(brief)
-	local brief_h = line ~= "" and 13 or 0
-	local h = offer_height(offer.description) + badge_h + brief_h
+	local pay = brief and Briefs.summary(brief) or ""
+	local item = brief and brief.item and fit_line("Reward: " .. brief.item, text_w) or ""
+	local pay_h, item_h = pay ~= "" and 13 or 0, item ~= "" and 13 or 0
+	-- the title takes the lines it needs (one for the usual short title), then pay and reward
+	local chars_per_line = math.max(20, math.floor(text_w / 6.2))
+	local text_h = math.max(1, math.ceil(#(offer.description or "") / chars_per_line)) * 14 + 2
+	if pay_h + item_h == 0 then
+		text_h = offer_height(offer.description) - 6
+	end
+	local h = math.max(ICON + 6, text_h + badge_h + pay_h + item_h + 6)
 	ui.size(row.root, inner, h)
 	ui.size(row.back, inner, h)
 	ui.size(row.hit, inner, h)
 	ui.size(row.stripe, 3, h)
 	ui.size(row.badge, text_w, badge_h)
-	ui.size(row.text, text_w, h - 6 - badge_h - brief_h)
-	ui.size(row.brief, text_w, brief_h)
-	ui.visible(row.brief, brief_h > 0)
-	ui.text(row.brief, line)
+	ui.size(row.text, text_w, text_h)
+	ui.size(row.brief, text_w, pay_h)
+	ui.visible(row.brief, pay_h > 0)
+	ui.text(row.brief, pay)
+	ui.size(row.reward, text_w, item_h)
+	ui.visible(row.reward, item_h > 0)
+	ui.text(row.reward, item)
 	ui.fill_color(row.back, offer.selected and SELECTED_BACK or hit and MATCH_BACK or BACK)
 	ui.fill_color(row.stripe, hit and GOLD or offer.selected and "#4FB3E8" or STEEL)
 	ui.visible(row.badge, hit)

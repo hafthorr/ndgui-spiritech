@@ -898,11 +898,12 @@ do
     local briefs, badges = {}, {}
     local function walk(v)
       if v.name == "offer_brief" and v.visible ~= false then briefs[#briefs + 1] = v.text end
+      if v.name == "offer_reward" and v.visible ~= false then briefs.reward = v.text end
       if v.name == "offer_badge" and v.visible == true then badges[#badges + 1] = v.text end
       for _, k in ipairs(v.kids or {}) do walk(k) end
     end
     walk(T.root)
-    check(#briefs == 1 and briefs[1]:match("1,986 credits") and briefs[1]:match("Nano Crystal"), "terminal row shows a looked-at offer's pay: " .. tostring(briefs[1]))
+    check(#briefs == 1 and briefs[1]:match("1,986 credits") and (briefs.reward or ""):match("^Reward: Nano Crystal"), "terminal row shows a looked-at offer's pay and reward: " .. tostring(briefs[1]) .. " / " .. tostring(briefs.reward))
     check(#badges == 1 and badges[1]:match("fling"), "watch words match the kept briefing's reward: " .. table.concat(badges, "|"))
   end
 end
