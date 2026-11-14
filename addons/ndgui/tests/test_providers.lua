@@ -458,6 +458,9 @@ do
       local b, r = 0, 0
       for _, d in ipairs(draws) do
         if d[1] == "rect" and d[6] == 0x4FB3E8FF then b = b + 1 elseif d[1] == "rect" and d[6] == 0xE0503CFF then r = r + 1 end
+        if d[1] == "rect" and (d[2] < 0 or d[3] < 0 or d[2] + d[4] > size[1] + 0.01 or d[3] + d[5] > size[2] + 0.01) then
+          check(false, "ticks stay inside the measured plate")
+        end
       end
       return b, r
     end

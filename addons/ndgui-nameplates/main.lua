@@ -4,7 +4,7 @@
 -- instead of the stock bracket art; one dark panel behind the text when backing is enabled.
 -- The client reports one bracket state per plate, so a selected mob that is also attacking only says
 -- "attacking": the selected target is worked out here from game.character("target") and gets both
--- (blue outer ticks, red inner ones).
+-- (the plate grows by a few pixels: red ticks stay where they always sit, blue ones go outside them).
 -- Name tags (GM, PvP ** **, roleplay = =, blue/green names) and the distance scaling / screen-edge
 -- anchoring are the stock rules unchanged.
 ui.root(ui.load("root.xml"))
@@ -101,6 +101,7 @@ local function caption(plate)
 end
 
 local function measure(plate)
+	local margin = (plate.brackets == "attacking" and is_selected(plate)) and style.tick_width + 1 or 0
 	local name, color = caption(plate)
 	local widest = canvas.measure(name, style.font, "width")
 	local bottom = style.name_baseline - canvas.measure(name, style.font, "descent") + style.outline / 2
@@ -117,13 +118,14 @@ local function measure(plate)
 		bottom = organization_baseline - canvas.measure(plate.organization, style.organization_font, "descent")
 			+ style.outline / 2
 	end
-	local width = math.ceil(widest + style.padding * 2)
-	local height = math.ceil(bottom + 1)
+	local width = math.ceil(widest + style.padding * 2) + margin * 2
+	local height = math.ceil(bottom + 1) + margin * 2
 	canvas.layout(width, height)
 	layout.name, layout.color = name, color
 	layout.width, layout.height = width, height
+	layout.margin = margin -- everything inside is drawn this far in
 	layout.center = width / 2
-	layout.organization_baseline = organization_baseline
+	layout.organization_baseline = organization_baseline + margin
 	return layout
 end
 
@@ -214,26 +216,28 @@ function nameplate_draw(plate, frame)
 		return
 	end
 	if frame.backing then
-		canvas.backdrop(0, 0, l.width, l.height, style.backing_color, style.backing_radius)
+		canvas.backdrop(l.margin, l.margin, l.width - l.margin * 2, l.height - l.margin * 2, style.backing_color,
+			style.backing_radius)
 	end
-	local attacking, chosen = plate.brackets == "attacking", is_selected(plate)
-	if chosen then
-		ticks(l.width, l.height, style.selected_color)
+	local m = l.margin
+	if plate.brackets == "attacking" then
+		ticks(l.width, l.height, style.attacking_color, m)
 	end
-	if attacking then
-		ticks(l.width, l.height, style.attacking_color, chosen and style.tick_width + 1 or 0)
+	if is_selected(plate) then
+		ticks(l.width, l.height, style.selected_color) -- around the red ones when both
 	end
-	canvas.text(l.name, l.center, style.name_baseline, style.font, l.color, style.outline)
+	canvas.text(l.name, l.center, style.name_baseline + m, style.font, l.color, style.outline)
 	if plate.has_bar then
 		local left = math.floor(l.center - style.bar_width / 2)
 		local fraction = math.max(0, math.min(1, plate.health))
 		local filled = math.floor(style.bar_width * fraction + 0.5)
 		local f = style.frame
-		canvas.rectangle(left - f, style.bar_top - f, style.bar_width + f * 2, style.bar_height + f * 2, style.frame_color)
-		canvas.rectangle(left, style.bar_top, style.bar_width, style.bar_height, style.track_color)
+		local top = style.bar_top + m
+		canvas.rectangle(left - f, top - f, style.bar_width + f * 2, style.bar_height + f * 2, style.frame_color)
+		canvas.rectangle(left, top, style.bar_width, style.bar_height, style.track_color)
 		if filled > 0 then
-			canvas.rectangle(left, style.bar_top, filled, style.bar_height, health_color(plate))
-			canvas.rectangle(left, style.bar_top, filled, 1, style.shine_color)
+			canvas.rectangle(left, top, filled, style.bar_height, health_color(plate))
+			canvas.rectangle(left, top, filled, 1, style.shine_color)
 		end
 	end
 	if plate.organization ~= "" then
