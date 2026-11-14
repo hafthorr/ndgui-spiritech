@@ -2,6 +2,9 @@
 -- Name with a thin outline; a framed health bar in soft consider colours (green -> amber -> red);
 -- organization in muted steel under it; thin corner ticks for selected (blue) / attacking (red)
 -- instead of the stock bracket art; one dark panel behind the text when backing is enabled.
+-- The client reports one bracket state per plate, so a selected mob that is also attacking only says
+-- "attacking": the selected target is worked out here from game.character("target") and gets both
+-- (blue outer ticks, red inner ones).
 -- Name tags (GM, PvP ** **, roleplay = =, blue/green names) and the distance scaling / screen-edge
 -- anchoring are the stock rules unchanged.
 ui.root(ui.load("root.xml"))
@@ -41,6 +44,37 @@ local style = {
 local RAMP = { { 0.0, 0x5F, 0xC2, 0x5F }, { 0.5, 0xE0, 0xC0, 0x40 }, { 1.0, 0xD8, 0x48, 0x3C } }
 
 local layout = {}
+
+-- current selected target: name and health fraction, to recognise its plate
+local selected = { name = nil, health = nil }
+local HEALTH_SLACK = 0.06 -- plate and target health arrive at slightly different times
+
+local function on_target(_, character)
+	if character and character.name and not character.is_self then
+		selected.name = character.name
+		local maximum = character.max_health
+		selected.health = (maximum and maximum > 0 and character.health) and character.health / maximum or nil
+	else
+		selected.name, selected.health = nil, nil
+	end
+end
+if game and game.character and game.character.subscribe then
+	pcall(game.character.subscribe, "target", "", on_target)
+end
+
+local function is_selected(plate)
+	if plate.brackets == "selected" then
+		return true
+	end
+	if not selected.name or plate.name ~= selected.name then
+		return false
+	end
+	-- same-named mobs: the one whose health matches (when both are known)
+	if selected.health and plate.has_bar then
+		return math.abs(plate.health - selected.health) <= HEALTH_SLACK
+	end
+	return true
+end
 
 local function caption(plate)
 	local name = plate.name
@@ -158,10 +192,10 @@ local function health_color(plate)
 	return rgba(last[2], last[3], last[4])
 end
 
--- Four L-shaped corner ticks around the plate.
-local function ticks(width, height, color)
-	local t, w = style.tick, style.tick_width
-	for _, corner in ipairs({ { 0, 0, 1, 1 }, { width, 0, -1, 1 }, { 0, height, 1, -1 }, { width, height, -1, -1 } }) do
+-- Four L-shaped corner ticks around the plate (inset pixels in from its edge).
+local function ticks(width, height, color, inset)
+	local t, w, i = style.tick, style.tick_width, inset or 0
+	for _, corner in ipairs({ { i, i, 1, 1 }, { width - i, i, -1, 1 }, { i, height - i, 1, -1 }, { width - i, height - i, -1, -1 } }) do
 		local x, y, sx, sy = corner[1], corner[2], corner[3], corner[4]
 		local hx = sx > 0 and x or x - t
 		local vy = sy > 0 and y or y - t
@@ -182,10 +216,12 @@ function nameplate_draw(plate, frame)
 	if frame.backing then
 		canvas.backdrop(0, 0, l.width, l.height, style.backing_color, style.backing_radius)
 	end
-	if plate.brackets == "selected" then
+	local attacking, chosen = plate.brackets == "attacking", is_selected(plate)
+	if chosen then
 		ticks(l.width, l.height, style.selected_color)
-	elseif plate.brackets == "attacking" then
-		ticks(l.width, l.height, style.attacking_color)
+	end
+	if attacking then
+		ticks(l.width, l.height, style.attacking_color, chosen and style.tick_width + 1 or 0)
 	end
 	canvas.text(l.name, l.center, style.name_baseline, style.font, l.color, style.outline)
 	if plate.has_bar then

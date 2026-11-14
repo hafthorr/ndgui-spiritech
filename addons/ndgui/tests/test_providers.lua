@@ -422,6 +422,9 @@ do
     rectangle = function(x, y, w, h, c) assert(w >= 0 and h >= 0, "negative rectangle"); draws[#draws + 1] = { "rect", x, y, w, h, c } end,
     text = function(t, x, b, sz, c, o) draws[#draws + 1] = { "text", t, x, b, sz, c, o } end,
   }
+  local target_cb
+  H.env.game = H.env.game or {}
+  H.env.game.character = { subscribe = function(subject, _, cb) if subject == "target" then target_cb = cb end; return {} end }
   local ok, err = pcall(H.load_package, "ndgui-nameplates")
   check(ok, "ndgui-nameplates loads" .. (ok and "" or (": " .. tostring(err))))
   if ok then
@@ -448,6 +451,29 @@ do
       end
     end
     check(texts[2][4] > 16 + 5, "organization sits under the bar")
+    -- a selected mob that is also attacking: the client only says "attacking"; both sets of ticks drawn
+    local function colours(p)
+      draws = {}
+      H.env.nameplate_draw(p, { world = false, backing = false, distance = 10, cos_half_fov = 0.8, near = 0.1, mirror_y = false })
+      local b, r = 0, 0
+      for _, d in ipairs(draws) do
+        if d[1] == "rect" and d[6] == 0x4FB3E8FF then b = b + 1 elseif d[1] == "rect" and d[6] == 0xE0503CFF then r = r + 1 end
+      end
+      return b, r
+    end
+    local pet = { name = "Discarded Pet", organization = "", health = 0.6, has_bar = true, bar_rgb = 0, has_name_color = false,
+      name_rgba = 0, brackets = "attacking", has_character = true, npc = true, green_name = false, blue_name = false,
+      pvp_flagged = false, roleplay_tag = false, has_consider = true, consider = 0.3 }
+    local b0, r0 = colours(pet)
+    check(target_cb ~= nil and b0 == 0 and r0 == 8, "attacking, not selected: red ticks only (" .. b0 .. "/" .. r0 .. ")")
+    target_cb(nil, { name = "Discarded Pet", health = 61, max_health = 100 })
+    local b1, r1 = colours(pet)
+    check(b1 == 8 and r1 == 8, "attacking and selected: blue and red ticks (" .. b1 .. "/" .. r1 .. ")")
+    local other = setmetatable({ health = 0.2 }, { __index = pet })
+    local b2 = colours(other)
+    check(b2 == 0, "a same-named mob at other health is not the selected one")
+    target_cb(nil, nil)
+    check(select(1, colours(pet)) == 0, "no target: no blue ticks")
   end
 end
 
