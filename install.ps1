@@ -3,7 +3,8 @@
 
   Easiest: double-click install.bat.  Or from PowerShell in this folder:
     .\install.ps1                      menu
-    .\install.ps1 -Install             install / update, no questions
+    .\install.ps1 -Install             install / update from this folder, no questions
+    .\install.ps1 -Update              download the newest release from GitLab and install it
     .\install.ps1 -Install -StockScreens   keep the game's own screens (Options, login...) stock
     .\install.ps1 -Uninstall           back to the stock UI
     .\install.ps1 -Install -Client "D:\Games\PRK-AO-Native\client"
@@ -15,7 +16,8 @@ param(
     [string]$Client,
     [switch]$Install,
     [switch]$Uninstall,
-    [switch]$StockScreens
+    [switch]$StockScreens,
+    [switch]$Update
 )
 
 $ErrorActionPreference = 'Stop'
@@ -23,7 +25,8 @@ $Here = Split-Path -Parent $MyInvocation.MyCommand.Path
 $Game = Join-Path $Here 'game'
 $Latin1 = [System.Text.Encoding]::GetEncoding(28591)
 $Utf8 = New-Object System.Text.UTF8Encoding($false)
-$Interactive = -not ($Install -or $Uninstall)
+$Interactive = -not ($Install -or $Uninstall -or $Update)
+$Project = 'denis31/ndgui-spiritech'   # public GitLab project the updater reads releases from
 
 $Info = @{}
 $InfoFile = Join-Path $Game 'build-info.txt'
@@ -113,6 +116,7 @@ function Select-ClientDir {
 
 # ---- helpers ----------------------------------------------------------------------------
 function Wait-GameClosed {
+    if ($env:NDGUI_ASSUME_CLOSED) { return }   # tests: a fake client while the real game runs
     while (Get-Process -Name 'PRK.Client' -ErrorAction SilentlyContinue) {
         if (-not $Interactive) { throw 'The game (PRK.Client.exe) is running. Quit it first.' }
         Warn 'The game (PRK.Client.exe) is running.'
@@ -309,6 +313,9 @@ function Invoke-Install([string]$ClientDir, [bool]$KeepScreens) {
         Copy-Item -LiteralPath $dir.FullName -Destination (Join-Path $addons $dir.Name) -Recurse -Force
     }
     $count = (Get-ChildItem -LiteralPath (Join-Path $Game 'Addons') -Directory).Count
+    # remember what is installed, so -Update can tell whether a newer release exists
+    $marker = Join-Path $addons 'ndgui\installed-version.txt'
+    if (Test-Path -LiteralPath (Join-Path $addons 'ndgui')) { [System.IO.File]::WriteAllText($marker, $Version, $Utf8) }
     if ($old) { Say "  updated $count packages" } else { Say "  installed $count packages" }
     Say "`n[2/4] Square DarkTech buttons on the game's own screens"
     if ($KeepScreens) { Restore-Screens $ClientDir; Say '  kept stock (as asked)' } else { Install-Screens $ClientDir }
@@ -321,6 +328,57 @@ function Invoke-Install([string]$ClientDir, [bool]$KeepScreens) {
     Say 'If something still looks stock, log out to character select and back in once.'
     Say 'To undo everything, run install.bat again and pick Uninstall.'
     Write-Host "`nBugs, issues, ideas? Ask 'thedenis' on the Project Rubi-Ka Discord." -ForegroundColor Cyan
+}
+
+function Get-InstalledVersion([string]$ClientDir) {
+    $marker = Join-Path $ClientDir 'UI\Addons\ndgui\installed-version.txt'
+    if (Test-Path -LiteralPath $marker) { return ([System.IO.File]::ReadAllText($marker)).Trim() }
+    if (Test-Path -LiteralPath (Join-Path $ClientDir 'UI\Addons\ndgui')) { return 'an older version' }
+    return $null
+}
+
+function Test-Newer([string]$Candidate, [string]$Current) {
+    try { return [version]$Candidate -gt [version]$Current } catch { return $true }
+}
+
+function Invoke-Update([string]$ClientDir) {
+    # Read the newest release from GitLab, download its zip, run that version's installer.
+    [Net.ServicePointManager]::SecurityProtocol = [Net.ServicePointManager]::SecurityProtocol -bor [Net.SecurityProtocolType]::Tls12
+    $installed = Get-InstalledVersion $ClientDir
+    Say "`nInstalled: $(if ($installed) { $installed } else { 'nothing yet' })"
+    Say 'Checking GitLab for the newest release...'
+    $api = "https://gitlab.com/api/v4/projects/$([uri]::EscapeDataString($Project))/releases/permalink/latest"
+    try {
+        $release = Invoke-RestMethod -Uri $api -UseBasicParsing -Headers @{ 'User-Agent' = 'ndgui-installer' }
+    } catch {
+        throw "Could not reach GitLab ($($_.Exception.Message)). Check your internet connection, or download the zip by hand: https://gitlab.com/$Project/-/releases"
+    }
+    $latest = ([string]$release.tag_name).TrimStart('v')
+    $link = @($release.assets.links | Where-Object { $_.name -like '*.zip' -or $_.url -like '*.zip*' })[0]
+    if (-not $latest -or -not $link) { throw "The newest GitLab release has no download. Get it by hand: https://gitlab.com/$Project/-/releases" }
+    Say "Newest:    $latest"
+    if ($installed -and $installed -match '^\d' -and -not (Test-Newer $latest $installed)) {
+        Write-Host "`nYou already have the newest ndGUI ($installed)." -ForegroundColor Green
+        if ($Interactive) {
+            $again = (Read-Host 'Reinstall it anyway (e.g. after a game patch)? [y/N]').Trim()
+            if ($again -notmatch '^[yY]') { return }
+        } else { return }
+    }
+    Wait-GameClosed
+    $work = Join-Path ([System.IO.Path]::GetTempPath()) "ndgui-spiritech-update-$latest"
+    if (Test-Path -LiteralPath $work) { Remove-Item -LiteralPath $work -Recurse -Force }
+    New-Item -ItemType Directory -Force -Path $work | Out-Null
+    $zip = Join-Path $work 'ndgui-spiritech.zip'
+    Say "Downloading ndGUI $latest..."
+    $ProgressPreference = 'SilentlyContinue'   # the progress bar makes downloads in 5.1 very slow
+    Invoke-WebRequest -Uri $link.url -OutFile $zip -UseBasicParsing -Headers @{ 'User-Agent' = 'ndgui-installer' }
+    Expand-Archive -LiteralPath $zip -DestinationPath $work -Force
+    $next = @(Get-ChildItem -LiteralPath $work -Recurse -Filter 'install.ps1')[0]
+    if (-not $next) { throw 'The downloaded zip has no install.ps1.' }
+    Say "Installing ndGUI $latest...`n"
+    & powershell.exe -NoProfile -ExecutionPolicy Bypass -File $next.FullName -Install -Client $ClientDir
+    if ($LASTEXITCODE -ne 0) { throw "Installing $latest failed (see above)." }
+    Say "`nThe $latest installer (for Uninstall later) is in: $(Split-Path -Parent $next.FullName)"
 }
 
 function Invoke-Uninstall([string]$ClientDir) {
@@ -349,19 +407,24 @@ try {
     }
     Say "Game folder: $dir"
     if ($Install) { Invoke-Install $dir ([bool]$StockScreens) }
+    elseif ($Update) { Invoke-Update $dir }
     elseif ($Uninstall) { Invoke-Uninstall $dir }
     else {
+        $installed = Get-InstalledVersion $dir
+        if ($installed) { Say "Installed: ndGUI $installed" }
         Say ''
-        Say '  1) Install / update ndGUI'
-        Say "  2) Install, but keep the game's own screens stock (Options, login...)"
-        Say '  3) Uninstall (back to the stock UI)'
-        Say '  4) Quit'
-        $choice = (Read-Host "`nPick 1-4 [1]").Trim()
+        Say "  1) Install / update to $Version (this folder)"
+        Say '  2) Update to the newest version (downloads from GitLab)'
+        Say "  3) Install $Version, but keep the game's own screens stock (Options, login...)"
+        Say '  4) Uninstall (back to the stock UI)'
+        Say '  5) Quit'
+        $choice = (Read-Host "`nPick 1-5 [1]").Trim()
         if (-not $choice) { $choice = '1' }
         switch ($choice) {
             '1' { Invoke-Install $dir $false }
-            '2' { Invoke-Install $dir $true }
-            '3' { Invoke-Uninstall $dir }
+            '2' { Invoke-Update $dir }
+            '3' { Invoke-Install $dir $true }
+            '4' { Invoke-Uninstall $dir }
         }
     }
 } catch {

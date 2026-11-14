@@ -7,6 +7,12 @@ Versions follow Semantic Versioning 2.0.0: `MAJOR.MINOR.PATCH`.
 - PATCH bumps fix tokens, scale math, or docs without a config change.
 - While the major version is 0, the client view layer is still incomplete. The Lua model is safe to load offline.
 
+## 0.2.4
+
+- **Fix:** XP / AXP bars were replaced by the stock ones in 0.2.3 (the bar code looked for a shadow label only HP/NP have). The offline tests now treat a missing view as an error, like the game does.
+- **Installer: Update to the newest version** (menu option 2, or `install.ps1 -Update`). It asks GitLab for the latest release, downloads it and installs it when it's newer than what's installed. Menu numbers changed: Uninstall is now 4.
+- Docs: HP/NP Lock / Flat, the updater.
+
 ## 0.2.3
 
 - **HP/NP bars**: double-click one for a small **Lock / Flat** strip. Lock keeps it in place; Flat lays it horizontally with the number inside. Saved per bar.

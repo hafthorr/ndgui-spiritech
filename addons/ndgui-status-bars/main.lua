@@ -114,7 +114,8 @@ local function build()
 	bar = ui.find(content, "status_bar")
 	fill = ui.find(content, "status_fill")
 	caption = ui.find(content, "status_caption")
-	shadow = ui.find(content, "status_caption_shadow")
+	-- ui.find raises on a missing view: only HP/NP layouts carry the shadow text
+	shadow = spec.vital and ui.find(content, "status_caption_shadow") or nil
 	ui.text_color(caption, vertical() and D.color.text or "#FFFFFF")
 	if spec.vital then
 		edit = ui.load("edit.xml")

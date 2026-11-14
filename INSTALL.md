@@ -10,14 +10,15 @@ You don't need Python or an exe. The installer is a PowerShell script (`install.
 4. Double-click **`install.bat`**. A window opens:
 
    ```
-   ndGUI for Spiritech 0.2.3
+   ndGUI for Spiritech 0.2.4
 
    Game folder: C:\Games\PRK-AO-Native\client
 
-     1) Install / update ndGUI
-     2) Install, but keep the game's own screens stock (Options, login...)
-     3) Uninstall (back to the stock UI)
-     4) Quit
+     1) Install / update to 0.2.4 (this folder)
+     2) Update to the newest version (downloads from GitLab)
+     3) Install 0.2.4, but keep the game's own screens stock (Options, login...)
+     4) Uninstall (back to the stock UI)
+     5) Quit
    ```
 
    Press **Enter** to install.
@@ -35,6 +36,7 @@ From a PowerShell window you can also point it at the game directly:
 .\install.ps1 -Install -Client "D:\Games\PRK-AO-Native\client"
 .\install.ps1 -Install -StockScreens      # keep Options/login screens stock
 .\install.ps1 -Uninstall
+.\install.ps1 -Update                    # download the newest release from GitLab and install it
 ```
 
 ### "Windows protected your PC" / "Do you want to run this file?"
@@ -56,14 +58,14 @@ If step 4 says there are no game settings yet (it's your first-ever start), star
 
 ## Updating
 
-- **New ndGUI version:** unpack the new zip and run its `install.bat` → **1**.
+- **New ndGUI version:** run `install.bat` → **2**. It asks GitLab for the newest release, and if that's newer than what's installed, downloads the zip and installs it. With no window, from PowerShell: `.\install.ps1 -Update`. It tells you where it unpacked the new version, so you can use that copy's `install.bat` later. (Or download the zip by hand and run its `install.bat` → **1**.)
 - **After a game patch:** run `install.bat` again. A patch can put stock files back.
   - If the patch changed the game's UI a lot, the installer warns that the build was made for another game version. Pieces that no longer fit fall back to the stock UI by themselves (the game never shows a broken HUD), and a new ndGUI release will catch up.
   - If a patch replaced a game file the installer had backed up, delete that `*.stock` file before reinstalling. Otherwise uninstall would put the *old* file back.
 
 ## Uninstalling
 
-Run `install.bat` → **3**. It resets the providers to the built-ins, puts back the stock skin, screens and window file from the `*.stock` copies, and removes every `ndgui*` package. Window positions saved by ndGUI stay in the game settings, where they're harmless.
+Run `install.bat` → **4**. It resets the providers to the built-ins, puts back the stock skin, screens and window file from the `*.stock` copies, and removes every `ndgui*` package. Window positions saved by ndGUI stay in the game settings, where they're harmless.
 
 ## Linux / Mac / from source (Python)
 
@@ -87,4 +89,4 @@ Settings are looked for under `~/.local/share/ProjectRubiKa/prefs/Client.xml`. S
 - **The window flashes and closes:** run `install.bat` from an unpacked folder, not from inside the zip.
 - **Still looks stock in game:** log out to character select and back in. Check **Options → Interface & HUD → UI packages** lists the `Notum Dovvetech` providers.
 - **One HUD piece is stock again:** the game falls back to its built-in when a provider errors. Look in the newest file in `PRK-AO-Native\logs\` for `ndgui` and send that line and a screenshot to **thedenis** on the PRK Discord (or open an issue).
-- **Everything is broken:** `install.bat` → **3**. If even that fails, delete the `client\UI\Addons\ndgui*` folders, then rename each `*.stock` file back over its neighbour. You can also let the launcher repair the game.
+- **Everything is broken:** `install.bat` → **4** (Uninstall). If even that fails, delete the `client\UI\Addons\ndgui*` folders, then rename each `*.stock` file back over its neighbour. You can also let the launcher repair the game.

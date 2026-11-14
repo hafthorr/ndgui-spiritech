@@ -16,7 +16,7 @@ Near-black navy panels, steel-blue frames, a blue accent, square buttons. The cl
 
 **HUD**
 - Slim **control center** strip on the bottom edge: menus, target cycling, NCU, credits, DEF/AGG slider.
-- Vertical **health / nano** bars by your character, **XP / AXP** on the menubar.
+- **Health / nano** bars by your character, numbers on a dark plate so they stay readable. **Double-click** one for its **Lock** (stays put) and **Flat** (horizontal, number inside) buttons. **XP / AXP** sit on the menubar.
 - **Compass** top centre, **target panels** flanking it.
 - **Hotbars** with a DarkTech plate, recessed slots, `1`–`0` key labels on the active bar, and a spinner that doubles as the drag handle.
 - Restyled **NCU, target NCU, faction, chat, chat config, raid bars, timer bars, team invite, sneak indicator, logout countdown**.
@@ -52,8 +52,8 @@ There's nothing else to install: no Python, no exe. The installer is a plain Pow
    It finds the game by itself. If it can't, it opens a folder picker: choose the folder that holds `PRK.Client.exe`.
 4. Start the game. If something still looks stock, log out to character select and back in once.
 
-**Update:** grab the new zip and run its `install.bat`. Also re-run it after a game patch, which may put stock files back.
-**Undo everything:** run `install.bat` and pick **3) Uninstall**. Every game file it touches is backed up first.
+**Update:** run `install.bat` and pick **2) Update to the newest version**. It downloads the latest release from GitLab and installs it. Also re-run it after a game patch, which may put stock files back.
+**Undo everything:** run `install.bat` and pick **4) Uninstall**. Every game file it touches is backed up first.
 
 Linux/Mac, or building from source: `python install.py` (see [INSTALL.md](INSTALL.md)).
 
@@ -73,7 +73,7 @@ Spiritech loads Lua/XML UI packages from `client/UI/Addons`. This repo holds **9
 
 ## Status
 
-`0.2.3`: playable, in daily use, with rough edges.
+`0.2.4`: playable, in daily use, with rough edges.
 
 ## Bugs, issues, ideas
 
