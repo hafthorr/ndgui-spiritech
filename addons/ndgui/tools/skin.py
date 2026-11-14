@@ -160,10 +160,110 @@ MAP_SPRITES = {
 }
 
 
+
+# ---- compass (GFX_GUI_NDGUI_COMPASS_*): light ink, 1px black outline, so it reads on snow and night ----
+COMPASS_W, COMPASS_H = 720, 24   # 2 px per degree; x = 0 is north, east at a quarter
+COMPASS_INK = (0xBF, 0xE2, 0xFF)
+COMPASS_NORTH = (0xFF, 0xD8, 0x4A)
+
+
+def outlined(mask, ink, wrap=False):
+    """mask: 'L' image (255 = ink). Black outline one pixel around it; green key elsewhere."""
+    w, h = mask.size
+    m = mask.load()
+    img = Image.new("RGB", (w, h), KEY)
+    px = img.load()
+    for y in range(h):
+        for x in range(w):
+            if m[x, y]:
+                continue
+            for dx in (-1, 0, 1):
+                for dy in (-1, 0, 1):
+                    xx, yy = x + dx, y + dy
+                    if wrap:
+                        xx %= w
+                    if 0 <= xx < w and 0 <= yy < h and m[xx, yy]:
+                        px[x, y] = (0, 0, 0)
+    for y in range(h):
+        for x in range(w):
+            if m[x, y]:
+                px[x, y] = ink[m[x, y]] if isinstance(ink, dict) else ink
+    return img
+
+
+def compass_band():
+    from PIL import ImageDraw as D
+    w, h = COMPASS_W, COMPASS_H
+    mask = Image.new("L", (w, h), 0)   # 1 = ink, 2 = north gold
+    d = D.Draw(mask)
+    d.fontmode = "1"                    # no anti-aliasing against the green key
+    mid = h // 2
+    font = bold_font(14)
+    small = bold_font(10)
+
+    def at(x, fn):
+        for shift in (-w, 0, w):        # wrap around the seam
+            fn(x + shift)
+
+    for deg in range(0, 360, 5):
+        x = deg * w // 360
+        if deg % 90 == 0:
+            letter = "NESW"[deg // 90]
+            ink = 2 if letter == "N" else 1
+            box = d.textbbox((0, 0), letter, font=font)
+            tw, th = box[2] - box[0], box[3] - box[1]
+
+            def draw(xx, letter=letter, ink=ink, tw=tw, th=th, box=box):
+                d.text((xx - tw // 2 - box[0], mid - th // 2 - box[1]), letter, font=font, fill=ink)
+                gap = th // 2 + 3
+                d.line([(xx - tw // 2 - 4, mid - gap - 1), (xx - tw // 2 - 4, mid + gap)], fill=ink)
+                d.line([(xx + tw // 2 + 4, mid - gap - 1), (xx + tw // 2 + 4, mid + gap)], fill=ink)
+            at(x, draw)
+        elif deg % 45 == 0:
+            label = {45: "NE", 135: "SE", 225: "SW", 315: "NW"}[deg]
+            box = d.textbbox((0, 0), label, font=small)
+            tw, th = box[2] - box[0], box[3] - box[1]
+            at(x, lambda xx: d.text((xx - tw // 2 - box[0], mid - th // 2 - box[1]), label, font=small, fill=1))
+        elif deg % 15 == 0:
+            at(x, lambda xx: d.rectangle([xx, mid - 3, xx, mid + 3], fill=1))
+    # the line itself: fine dots between the marks
+    for x in range(0, w, 6):
+        near = min(min(abs(x - k * w // 8), abs(x - k * w // 8 + w), abs(x - k * w // 8 - w)) for k in range(8))
+        tick = min(abs(x - k * w // 24) for k in range(25))
+        if near > 14 and tick > 2:
+            d.point((x, mid), fill=1)
+    return outlined(mask, {1: COMPASS_INK, 2: COMPASS_NORTH}, wrap=True)
+
+
+def compass_marker():
+    """Waypoint: a green hexagon with a white bang (like a quest marker)."""
+    s = 17
+    mask = Image.new("L", (s, s + 4), 0)
+    d = ImageDraw.Draw(mask)
+    c = (s - 1) / 2
+    d.polygon([(c, 0), (s - 2, 4), (s - 2, 12), (c, 16), (1, 12), (1, 4)], fill=1)
+    d.rectangle([c - 1, 4, c + 1, 9], fill=2)
+    d.rectangle([c - 1, 11, c + 1, 12], fill=2)
+    d.polygon([(c - 3, s + 3), (c + 3, s + 3), (c, s)], fill=1)   # pointer onto the line
+    return outlined(mask, {1: (0x3D, 0xD6, 0x5A), 2: (0xFF, 0xFF, 0xFF)})
+
+
+def compass_caret():
+    """Where you face: a small caret under the line."""
+    mask = Image.new("L", (11, 7), 0)
+    d = ImageDraw.Draw(mask)
+    d.line([(1, 5), (5, 1), (9, 5)], fill=1, width=2)
+    return outlined(mask, {1: (0xFF, 0xFF, 0xFF)})
+
+
+COMPASS_SPRITES = {"BAND": compass_band, "WAYPOINT": compass_marker, "CARET": compass_caret}
+
 def generated():
     out = {}
     for key, (size, draw) in MAP_SPRITES.items():
         out["GFX_GUI_NDGUI_MAP_" + key] = map_sprite(size, draw)
+    for key, make in COMPASS_SPRITES.items():
+        out["GFX_GUI_NDGUI_COMPASS_" + key] = make()
     for h in HEIGHTS:
         for state in ("raised", "hover", "pressed", "selected"):
             for part in ("left", "middle", "right"):

@@ -30,6 +30,8 @@
         </View>
         <View name="window_tabs" view_layout="horizontal" selected_on_top="true" v_alignment="top" min_size="Point(-1,17)" max_size="Point(-1,17)" layout_borders="Rect(0,7,0,0)" />
         <HLayoutSpacer />
+        <!-- fold to the title bar: only windows that ask for it show this (ndgui-missions) -->
+        <Button name="window_fold" visible="false" alpha="0.8" active_alpha="1" min_size="Point(15,15)" max_size="Point(15,15)" v_alignment="center" layout_borders="Rect(0,0,3,1)" tooltip="Fold to the title bar" gfxid_raised="GFX_GUI_ROLLUP_COLLAPSE_STATE1" gfxid_hover="GFX_GUI_ROLLUP_COLLAPSE_STATE2" gfxid_pressed="GFX_GUI_ROLLUP_COLLAPSE_STATE3" gfxid_selected="GFX_GUI_ROLLUP_EXPAND_STATE1" />
         <Button name="window_pin" visible="false" alpha="0.6" active_alpha="1" min_size="Point(15,15)" max_size="Point(15,15)" v_alignment="center" layout_borders="Rect(0,0,3,1)" gfxid_raised="GFX_GUI_WINDOW_PIN" gfxid_hover="GFX_GUI_WINDOW_PIN_STATE2" gfxid_pressed="GFX_GUI_WINDOW_PIN_STATE3" gfxid_selected="GFX_NDGUI_PIN_ON" />
         <Button name="window_close" visible="false" alpha="0.9" active_alpha="1" min_size="Point(15,15)" max_size="Point(15,15)" v_alignment="center" layout_borders="Rect(0,0,4,1)" gfxid_raised="GFX_GUI_WINDOW_CLOSE_X" gfxid_hover="GFX_GUI_WINDOW_CLOSE_X_STATE2" gfxid_pressed="GFX_GUI_WINDOW_CLOSE_X_STATE3" />
       </View>

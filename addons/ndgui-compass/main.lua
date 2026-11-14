@@ -1,48 +1,81 @@
--- Dovvetech prk.compass provider: stock band math, centred on the top edge (classic ndGUI).
+-- Dovvetech prk.compass provider: a clean heading strip centred on the top edge.
+-- Our own art (skin.py GFX_GUI_NDGUI_COMPASS_*): a dotted line with N / E / S / W, NE..NW and 15-degree ticks,
+-- a green waypoint marker riding the line, a caret where you face, and the waypoint distance under it.
+-- Light ink with a black outline, no backing plate, so it reads on snow and at night.
+-- Falls back to the stock band if the ndGUI skin is not installed.
 local D = ui.require("notum.ndgui-lib/dovvetech")
 local root = ui.load("window.xml")
 ui.root(root)
 local placement = D.movable(root)
 
-local extent_width = 136
-local extent_height = 21
-local frame_inset = 4
-local width = extent_width + 1
-local height = extent_height + 1
-local view_width = width - frame_inset * 2
-local view_height = height - frame_inset * 2
 local band = ui.find(root, "compass_band")
-local band_graphic = "GFX_GUI_COMPASS_SCALE"
-local waypoint_graphic = "GFX_GUI_COMPASS_WAYPOINT"
-local band_width = 0
-local turn = math.pi * 2
+local label = ui.find(root, "compass_label")
+local distance = ui.find(root, "compass_distance")
+local distance_shadow = ui.find(root, "compass_distance_shadow")
 
-ui.size(root, width, height)
-ui.graphic_tint(ui.find(root, "ndgui_compass_frame"), D.color.border)
+local OURS = { band = "GFX_GUI_NDGUI_COMPASS_BAND", waypoint = "GFX_GUI_NDGUI_COMPASS_WAYPOINT",
+	caret = "GFX_GUI_NDGUI_COMPASS_CARET" }
+local STOCK = { band = "GFX_GUI_COMPASS_SCALE", waypoint = "GFX_GUI_COMPASS_WAYPOINT" }
+local VIEW_W, BAND_H, LABEL_H = 280, 40, 14
+local LINE_Y, MARKER_Y, CARET_Y = 20, 10, 33 -- band line, waypoint marker centre (its tip on the line), caret
+local turn = math.pi * 2
+local art, band_width, view_width, view_height
+
+local function choose_art()
+	local width = ui.compass.graphic_width(OURS.band)
+	if width > 0 then
+		art, band_width = OURS, width
+		view_width, view_height = VIEW_W, BAND_H
+	else
+		art, band_width = STOCK, ui.compass.graphic_width(STOCK.band)
+		view_width, view_height = 129, 14
+	end
+	ui.size(band, view_width, view_height)
+	ui.size(label, view_width, LABEL_H)
+	ui.size(distance, view_width, LABEL_H)
+	ui.size(distance_shadow, view_width - 1, LABEL_H - 1)
+	ui.size(root, view_width, view_height + LABEL_H)
+end
+
+local function metres(d)
+	if d >= 1000 then
+		return string.format("%.1f km", d / 1000)
+	end
+	return string.format("%d m", math.floor(d + 0.5))
+end
 
 function compass_place(screen_width)
-	D.place_default(placement, root, math.floor(screen_width * 0.5 - width / 2), D.TOP_Y)
+	if not art then choose_art() end
+	D.place_default(placement, root, math.floor(screen_width * 0.5 - view_width / 2), D.TOP_Y)
 end
 
 function compass_apply(reading)
-	if band_width == 0 then
-		band_width = ui.compass.graphic_width(band_graphic)
+	if not art or band_width <= 0 then
+		choose_art()
 	end
 	if band_width <= 0 or not reading.has_heading then
 		return
 	end
-
+	local ours = art == OURS
+	local line_y = ours and LINE_Y or view_height / 2
 	local offset = (band_width * (-(reading.heading - math.pi / 2) / turn) - view_width / 2) % band_width
-	local centre_y = view_height / 2
 	ui.compass.offset(band, offset, 0)
 	ui.compass.begin(band)
-	ui.compass.sprite(band, band_graphic, band_width / 2, centre_y)
-	ui.compass.sprite(band, band_graphic, band_width * 1.5, centre_y)
+	ui.compass.sprite(band, art.band, band_width / 2, line_y)
+	ui.compass.sprite(band, art.band, band_width * 1.5, line_y)
+	local text = ""
 	if reading.has_waypoint and reading.has_position and reading.waypoint_playfield == reading.playfield then
-		local bearing = math.atan(reading.waypoint_z - reading.z, reading.waypoint_x - reading.x) % turn
+		local dx, dz = reading.waypoint_x - reading.x, reading.waypoint_z - reading.z
+		local bearing = math.atan(dz, dx) % turn
 		local shift = (reading.heading - bearing) / turn * band_width
 		local column = view_width / 2 + shift - math.floor(shift / band_width + 0.5) * band_width
-		ui.compass.sprite(band, waypoint_graphic, offset + column, centre_y)
+		ui.compass.sprite(band, art.waypoint, offset + column, ours and MARKER_Y or line_y)
+		text = metres(math.sqrt(dx * dx + dz * dz))
+	end
+	if ours then
+		ui.compass.sprite(band, art.caret, offset + view_width / 2, CARET_Y)
 	end
 	ui.compass.finish(band)
+	ui.text(distance, text)
+	ui.text(distance_shadow, text)
 end

@@ -121,7 +121,9 @@ if C then
   check(math.abs((C.root.x + C.root.w / 2) - W / 2) <= 1 and C.root.y == 4, "compass centred on the top edge")
   C.env.compass_apply({ has_heading = true, heading = 1.0, has_waypoint = true, has_position = true,
     waypoint_playfield = 1, playfield = 1, x = 0, z = 0, waypoint_x = 10, waypoint_z = 10 })
-  check((C.calls["compass.sprite"] or 0) == 3 and C.calls["compass.finish"] == 1, "compass draws band twice plus waypoint")
+  check((C.calls["compass.sprite"] or 0) == 4 and C.calls["compass.finish"] == 1, "compass draws band twice, waypoint and caret")
+  check(C.find(C.root, "compass_distance").text == "14 m", "compass shows the waypoint distance: " .. tostring(C.find(C.root, "compass_distance").text))
+  check(C.root.w == 280, "compass is 280 wide with the ndGUI art")
 end
 
 -- Target panels: fixed-size unit frames fed by the native slot plus game.character facts.
@@ -214,7 +216,7 @@ for _, hostile in ipairs({ false, true }) do
 end
 if rects.friendly and rects.hostile then
   local f, h = rects.friendly, rects.hostile
-  check(f.x + f.w <= W / 2 - 68 and h.x >= W / 2 + 68, "panels clear the 137px compass")
+  check(f.x + f.w <= W / 2 - 140 and h.x >= W / 2 + 140, "panels clear the 280px compass")
   check(f.x >= 0 and h.x + h.w <= W, "panels stay on screen")
 end
 
@@ -770,9 +772,10 @@ do
     local b = { token = 12, icon = 6, name = "Find the Data Disk", timed = true, minutes = 120, selected = true }
     ok, err = pcall(env.missions_apply, { a, b })
     check(ok, "missions_apply runs" .. (ok and "" or (": " .. tostring(err))))
-    local title = H.find(H.root, "header_title")
-    check(title.text == "Missions (2)", "header counts missions: " .. tostring(title.text))
-    check(H.find(H.root, "header_map").text == "On map: Find the Data Disk", "header names the mission on the map")
+    local title = H.find(H.root, "window_title")
+    check(title.text == "Missions (2)", "title counts missions: " .. tostring(title.text))
+    local fold = H.find(H.root, "window_fold")
+    check(fold.visible == true, "fold button shows in the title bar")
     local dt = H.find(H.root, "detail_title")
     check(dt.text == "Find the Data Disk", "detail shows the mission on the map first: " .. tostring(dt.text))
     check(H.find(H.root, "detail_status").text == "On your map", "detail status on map")
@@ -790,7 +793,7 @@ do
     local clicked = false
     local function walk(v)
       if clicked then return end
-      if v.on_click and v ~= H.find(H.root, "header_hit") then
+      if v.on_click and v ~= fold then
         v.on_click()
         if dt.text == "Kill the Raider" then clicked = true; return end
       end
@@ -800,11 +803,11 @@ do
     check(clicked, "clicking a row shows that mission")
     check(H.find(H.root, "detail_status").text == "Not on your map", "chosen mission not on map")
     -- fold
-    H.find(H.root, "header_hit").on_click()
-    check(H.find(H.root, "missions_body").visible == false, "header folds the window")
-    check(H.find(H.root, "header_arrow").image:find("EXPAND", 1, true) ~= nil, "folded arrow points to expand")
-    H.find(H.root, "header_hit").on_click()
-    check(H.find(H.root, "missions_body").visible == true, "header unfolds the window")
+    fold.on_click()
+    check(H.find(H.root, "missions_body").visible == false and fold.selected == true, "fold folds the window to its title bar")
+    check(title.text == "Missions (2) - 1:30", "folded title shows time left: " .. tostring(title.text))
+    fold.on_click()
+    check(H.find(H.root, "missions_body").visible == true and title.text == "Missions (2)", "fold unfolds the window")
     -- no missions
     env.missions_apply({})
     check(H.find(H.root, "missions_empty").visible == true and title.text == "Missions", "empty state")

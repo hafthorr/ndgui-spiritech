@@ -77,7 +77,7 @@ local opened, available, buttons, areas = false, true, false, false
 local first_pending, centre_pending, follow_pending = false, false, false
 -- After a zone change the new map can arrive before your position does: keep centring on you
 -- for a few seconds (whatever Follow says) until the position settles.
-local SETTLE_MS = 4000
+local SETTLE_MS = 12000 -- after zoning, keep following you this long (zone loads can be slow)
 local settle_until, centred_x, centred_y = 0, nil, nil
 local previous_x, previous_y, previous_character
 local cap_width, cap_height
@@ -315,6 +315,19 @@ local function centre(facts)
 	local y = facts.has_character and facts.y or facts.height / 2
 	view.pan(x - num(view.read("width")) / 2, y - num(view.read("height")) / 2)
 	centred_x, centred_y = facts.has_character and x or nil, facts.has_character and y or nil
+end
+
+-- True when the viewport shows none of the map (panned onto the black void, e.g. after zoning).
+local function off_map(facts)
+	if not facts or (facts.width or 0) <= 0 or (facts.height or 0) <= 0 then
+		return false
+	end
+	local x, y = num(view.read("x")), num(view.read("y"))
+	local w, h = num(view.read("width")), num(view.read("height"))
+	if w <= 0 or h <= 0 then
+		return false
+	end
+	return x + w <= 0 or y + h <= 0 or x >= facts.width or y >= facts.height
 end
 
 local function apply_zoom(level, anchor_x, anchor_y)
@@ -582,8 +595,11 @@ function playfield_map_update(facts)
 		centre(facts)
 		-- no position yet right after zoning: try again on the next update
 		centre_pending = not facts.has_character and ui.time() < settle_until
+	elseif not resizing and off_map(facts) then
+		-- nothing of the map in view: come back to you (or the map's middle)
+		centre(facts)
 	elseif not resizing and facts.has_character and ui.time() < settle_until
-		and (facts.x ~= centred_x or facts.y ~= centred_y) then
+		and num(view.read("dragged")) == 0 and (facts.x ~= centred_x or facts.y ~= centred_y) then
 		centre(facts)
 	elseif not resizing and settings.follow then
 		follow_pending = follow_pending or facts.has_character and
