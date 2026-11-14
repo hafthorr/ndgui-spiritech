@@ -633,6 +633,12 @@ do
     local facts = { changed = true, accessible = true, land_control = false, has_areas = false, has_character = true, x = 100, y = 120, width = 800, height = 800 }
     calls = { pcall(env.playfield_map_update, facts) }
     check(calls[1], "playfield_map_update runs" .. (calls[1] and "" or (": " .. tostring(calls[2]))))
+    -- zoning: the new map arrives before your position, then the position follows
+    local zoned = { pcall(env.playfield_map_update, { changed = true, accessible = true, land_control = false, has_areas = false,
+      has_character = false, x = 0, y = 0, width = 600, height = 600 }) }
+    local placed = zoned[1] and { pcall(env.playfield_map_update, { changed = false, accessible = true, land_control = false, has_areas = false,
+      has_character = true, x = 300, y = 200, width = 600, height = 600 }) } or zoned
+    check(zoned[1] and placed[1], "zoning: map first, position later runs" .. (placed[1] and "" or (": " .. tostring(placed[2]))))
     calls = { pcall(env.playfield_map_markers, {
       { kind = "player", x = 100, y = 120, facing = 1, radius = 0, half_angle = 0 },
       { kind = "monster", x = 130, y = 140, facing = 0, radius = 0, half_angle = 0 },

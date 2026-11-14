@@ -75,6 +75,10 @@ end
 -- ---- state ------------------------------------------------------------------
 local opened, available, buttons, areas = false, true, false, false
 local first_pending, centre_pending, follow_pending = false, false, false
+-- After a zone change the new map can arrive before your position does: keep centring on you
+-- for a few seconds (whatever Follow says) until the position settles.
+local SETTLE_MS = 4000
+local settle_until, centred_x, centred_y = 0, nil, nil
 local previous_x, previous_y, previous_character
 local cap_width, cap_height
 local wheel = 0
@@ -310,6 +314,7 @@ local function centre(facts)
 	local x = facts.has_character and facts.x or facts.width / 2
 	local y = facts.has_character and facts.y or facts.height / 2
 	view.pan(x - num(view.read("width")) / 2, y - num(view.read("height")) / 2)
+	centred_x, centred_y = facts.has_character and x or nil, facts.has_character and y or nil
 end
 
 local function apply_zoom(level, anchor_x, anchor_y)
@@ -530,6 +535,11 @@ function playfield_map_update(facts)
 		if samples then
 			samples = { x = {}, z = {} }
 		end
+		-- the old zone's world position must not calibrate the new map
+		me.x, me.z = nil, nil
+		settle_until, centred_x, centred_y = ui.time() + SETTLE_MS, nil, nil
+		-- a new map view: put our zoom back on it
+		view.zoom(zoom_scale(), num(ui.x(surface)) + num(ui.width(surface)) / 2, num(ui.y(surface)) + num(ui.height(surface)) / 2)
 	end
 	track(facts)
 	local resizing = false
@@ -570,7 +580,11 @@ function playfield_map_update(facts)
 			return
 		end
 		centre(facts)
-		centre_pending = false
+		-- no position yet right after zoning: try again on the next update
+		centre_pending = not facts.has_character and ui.time() < settle_until
+	elseif not resizing and facts.has_character and ui.time() < settle_until
+		and (facts.x ~= centred_x or facts.y ~= centred_y) then
+		centre(facts)
 	elseif not resizing and settings.follow then
 		follow_pending = follow_pending or facts.has_character and
 			(not previous_character or facts.x ~= previous_x or facts.y ~= previous_y)
