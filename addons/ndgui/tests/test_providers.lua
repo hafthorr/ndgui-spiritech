@@ -123,7 +123,7 @@ if C then
     waypoint_playfield = 1, playfield = 1, x = 0, z = 0, waypoint_x = 10, waypoint_z = 10 })
   check((C.calls["compass.sprite"] or 0) == 4 and C.calls["compass.finish"] == 1, "compass draws band twice, waypoint and caret")
   check(C.find(C.root, "compass_distance").text == "14 m", "compass shows the waypoint distance: " .. tostring(C.find(C.root, "compass_distance").text))
-  check(C.root.w == 280, "compass is 280 wide with the ndGUI art")
+  check(C.root.w == 320, "compass is 320 wide with the ndGUI art")
   check(C.find(C.root, "ndgui_compass_frame").visible == false, "no plate or frame with the ndGUI art")
 end
 -- without the ndGUI skin installed: the old framed stock compass
@@ -225,7 +225,7 @@ for _, hostile in ipairs({ false, true }) do
 end
 if rects.friendly and rects.hostile then
   local f, h = rects.friendly, rects.hostile
-  check(f.x + f.w <= W / 2 - 140 and h.x >= W / 2 + 140, "panels clear the 280px compass")
+  check(f.x + f.w <= W / 2 - 160 and h.x >= W / 2 + 160, "panels clear the 320px compass")
   check(f.x >= 0 and h.x + h.w <= W, "panels stay on screen")
 end
 
@@ -820,6 +820,68 @@ do
     -- no missions
     env.missions_apply({})
     check(H.find(H.root, "missions_empty").visible == true and title.text == "Missions", "empty state")
+  end
+end
+
+-- Mission Terminal: offer rows, watch list matches, roll counter, presets, chosen-reward cost.
+do
+  local H = Mock.new(addons, core, { width = W, height = Hh, loose = true })
+  local store = {}
+  H.env.ui.storage = { read = function(k) return store[k] or "" end, write = function(k, v) store[k] = v end }
+  local ok, err = pcall(H.load_package, "ndgui-mission-terminal")
+  check(ok, "ndgui-mission-terminal loads" .. (ok and "" or (": " .. tostring(err))))
+  if ok then
+    check(role(H, "prk.mission-terminal"), "terminal declares prk.mission-terminal")
+    local env = H.env
+    local labels = {}
+    for i = 1, 7 do labels[i] = { minimum = "Lo" .. i, maximum = "Hi" .. i, progress = 0.5 } end
+    env.mission_terminal_configure("Request", "Accept", labels)
+    local staged = {}
+    env.game.mission_terminal = setmetatable({ slider = function(i, v) staged[i] = v; return true end }, { __index = function() return function() return false end end })
+    local reward = { pinned_mode = false, has_pin = false, icon = 0, name = "", ql = 0, cost = 0 }
+    local state = { request = 1, accept = 2, cancel = 3, selected = false }
+    local offers = {
+      { reference = 11, icon = 5, description = "Assassinate a target in Rome Blue. Reward: Ofab armor", selected = false },
+      { reference = 12, icon = 6, description = "Find an item in Newland City", selected = false },
+    }
+    -- watch for "rome blue"
+    local input = H.find(H.root, "watch")
+    check(input ~= nil, "watch input exists")
+    local changed
+    for _, v in ipairs({ input }) do changed = v.on_text_changed end
+    store.watch = "rome blue, ofab"
+    ok, err = pcall(function()
+      -- the text callback is registered via ui.on_text_changed (loose host: no-op), so re-load reads storage
+    end)
+    local H2 = Mock.new(addons, core, { width = W, height = Hh, loose = true })
+    H2.env.ui.storage = { read = function(k) return store[k] or "" end, write = function(k, v) store[k] = v end }
+    ok, err = pcall(H2.load_package, "ndgui-mission-terminal")
+    check(ok, "terminal reloads with a watch list" .. (ok and "" or (": " .. tostring(err))))
+    env = H2.env
+    env.mission_terminal_configure("Request", "Accept", labels)
+    env.mission_terminal_apply(state, offers, reward)
+    local badges = {}
+    local function walk(v) if v.name == "offer_badge" then badges[#badges + 1] = v end; for _, k in ipairs(v.kids or {}) do walk(k) end end
+    walk(H2.root)
+    check(#badges == 6, "six offer rows")
+    check(badges[1].visible == true and badges[1].text:find("rome blue", 1, true) and badges[1].text:find("ofab", 1, true),
+      "matching offer gets a badge: " .. tostring(badges[1].text))
+    check(badges[2].visible == false, "other offer has no badge")
+    check(H2.find(H2.root, "status").text:find("Roll 1", 1, true) and H2.find(H2.root, "status").text:find("1 match", 1, true),
+      "status counts the roll and the match: " .. tostring(H2.find(H2.root, "status").text))
+    check(H2.find(H2.root, "window_title").text:find("MATCH", 1, true) ~= nil, "title shouts MATCH")
+    check(H2.find(H2.root, "log").text:find("Rome Blue", 1, true) ~= nil, "match is logged for the session")
+    -- same offers again (e.g. selection change) is not a new roll
+    offers[1].selected = true
+    env.mission_terminal_apply(state, offers, reward)
+    check(H2.find(H2.root, "status").text:find("Roll 1", 1, true) ~= nil, "re-apply is not a roll")
+    -- new offers in chosen-reward mode cost credits
+    local pinned = { pinned_mode = true, has_pin = true, icon = 9, name = "Ofab Shark Mk 1", ql = 200, cost = 12500 }
+    env.mission_terminal_apply(state, { { reference = 21, icon = 5, description = "Repair a machine", selected = false } }, pinned)
+    check(H2.find(H2.root, "status").text:find("Roll 2", 1, true) and H2.find(H2.root, "status").text:find("12,500 credits spent", 1, true),
+      "chosen-reward rolls add up: " .. tostring(H2.find(H2.root, "status").text))
+    check(H2.find(H2.root, "reward_cost").text == "Each roll costs 12,500 credits", "cost per roll")
+    check(store.recent_rewards == "Ofab Shark Mk 1\t200", "chosen reward remembered")
   end
 end
 

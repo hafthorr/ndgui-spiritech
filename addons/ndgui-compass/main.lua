@@ -19,8 +19,9 @@ local distance_shadow = ui.find(root, "compass_distance_shadow")
 local OURS = { band = "GFX_GUI_NDGUI_COMPASS_BAND", waypoint = "GFX_GUI_NDGUI_COMPASS_WAYPOINT",
 	caret = "GFX_GUI_NDGUI_COMPASS_CARET" }
 local STOCK = { band = "GFX_GUI_COMPASS_SCALE", waypoint = "GFX_GUI_COMPASS_WAYPOINT" }
-local VIEW_W, BAND_H, LABEL_H = 280, 40, 14
-local LINE_Y, MARKER_Y, CARET_Y = 20, 10, 33 -- band line, waypoint marker centre (its tip on the line), caret
+local VIEW_W, BAND_H, LABEL_H = 320, 54, 14
+local LINE_Y, MARKER_Y, CARET_Y = 27, 14, 48 -- band line, waypoint marker centre (its tip on the line), caret
+local EDGE = 14 -- a waypoint outside the visible arc sticks to this far from the edge
 local turn = math.pi * 2
 local art, band_width, view_width, view_height
 
@@ -83,6 +84,9 @@ function compass_apply(reading)
 		local bearing = math.atan(dz, dx) % turn
 		local shift = (reading.heading - bearing) / turn * band_width
 		local column = view_width / 2 + shift - math.floor(shift / band_width + 0.5) * band_width
+		if ours then
+			column = math.max(EDGE, math.min(view_width - EDGE, column))
+		end
 		ui.compass.sprite(band, art.waypoint, offset + column, ours and MARKER_Y or line_y)
 		text = metres(math.sqrt(dx * dx + dz * dz))
 	end

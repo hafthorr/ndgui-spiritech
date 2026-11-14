@@ -162,98 +162,127 @@ MAP_SPRITES = {
 
 
 # ---- compass (GFX_GUI_NDGUI_COMPASS_*): light ink, 1px black outline, so it reads on snow and night ----
-COMPASS_W, COMPASS_H = 720, 24   # 2 px per degree; x = 0 is north, east at a quarter
-COMPASS_INK = (0xBF, 0xE2, 0xFF)
+# Drawn big (the UI scale magnifies it further) with anti-aliased ink: the soft edge blends into the
+# black outline, never into the green key, so letters stay smooth without green fringes.
+COMPASS_W, COMPASS_H = 1080, 34   # 3 px per degree; x = 0 is north, east at a quarter
+COMPASS_INK = (0xC8, 0xE6, 0xFF)
 COMPASS_NORTH = (0xFF, 0xD8, 0x4A)
 
 
-def outlined(mask, ink, wrap=False):
-    """mask: 'L' image (255 = ink). Black outline one pixel around it; green key elsewhere."""
-    w, h = mask.size
-    m = mask.load()
+def outlined(layers, size, wrap=False):
+    """layers: [(alpha 'L' image, ink rgb)] drawn in order. Every inked pixel gets ink blended over black;
+    a 1px black outline goes round all of them; green key elsewhere."""
+    w, h = size
     img = Image.new("RGB", (w, h), KEY)
     px = img.load()
+    cover = Image.new("L", (w, h), 0)
+    cp = cover.load()
+    for mask, _ in layers:
+        mp = mask.load()
+        for y in range(h):
+            for x in range(w):
+                if mp[x, y] > cp[x, y]:
+                    cp[x, y] = mp[x, y]
     for y in range(h):
         for x in range(w):
-            if m[x, y]:
+            if cp[x, y] >= 60:
                 continue
             for dx in (-1, 0, 1):
                 for dy in (-1, 0, 1):
                     xx, yy = x + dx, y + dy
                     if wrap:
                         xx %= w
-                    if 0 <= xx < w and 0 <= yy < h and m[xx, yy]:
+                    if 0 <= xx < w and 0 <= yy < h and cp[xx, yy] >= 60:
                         px[x, y] = (0, 0, 0)
-    for y in range(h):
-        for x in range(w):
-            if m[x, y]:
-                px[x, y] = ink[m[x, y]] if isinstance(ink, dict) else ink
+                        break
+                else:
+                    continue
+                break
+    for mask, ink in layers:
+        mp = mask.load()
+        for y in range(h):
+            for x in range(w):
+                a = mp[x, y]
+                if a >= 60:
+                    t = a / 255
+                    px[x, y] = tuple(int(c * t) for c in ink)
     return img
 
 
 def compass_band():
-    from PIL import ImageDraw as D
     w, h = COMPASS_W, COMPASS_H
-    mask = Image.new("L", (w, h), 0)   # 1 = ink, 2 = north gold
-    d = D.Draw(mask)
-    d.fontmode = "1"                    # no anti-aliasing against the green key
+    ink = Image.new("L", (w, h), 0)
+    gold = Image.new("L", (w, h), 0)
     mid = h // 2
-    font = bold_font(14)
-    small = bold_font(10)
+    big, small = bold_font(21), bold_font(14)
 
     def at(x, fn):
         for shift in (-w, 0, w):        # wrap around the seam
             fn(x + shift)
 
-    for deg in range(0, 360, 5):
+    def text(layer, xx, label, font):
+        d = ImageDraw.Draw(layer)
+        box = d.textbbox((0, 0), label, font=font)
+        tw, th = box[2] - box[0], box[3] - box[1]
+        d.text((xx - tw // 2 - box[0], mid - th // 2 - box[1]), label, font=font, fill=255)
+        return tw, th
+
+    marks = set()
+    for deg in range(0, 360, 15):
         x = deg * w // 360
         if deg % 90 == 0:
             letter = "NESW"[deg // 90]
-            ink = 2 if letter == "N" else 1
-            box = d.textbbox((0, 0), letter, font=font)
-            tw, th = box[2] - box[0], box[3] - box[1]
+            layer = gold if letter == "N" else ink
 
-            def draw(xx, letter=letter, ink=ink, tw=tw, th=th, box=box):
-                d.text((xx - tw // 2 - box[0], mid - th // 2 - box[1]), letter, font=font, fill=ink)
-                gap = th // 2 + 3
-                d.line([(xx - tw // 2 - 4, mid - gap - 1), (xx - tw // 2 - 4, mid + gap)], fill=ink)
-                d.line([(xx + tw // 2 + 4, mid - gap - 1), (xx + tw // 2 + 4, mid + gap)], fill=ink)
+            def draw(xx, letter=letter, layer=layer):
+                tw, th = text(layer, xx, letter, big)
+                d = ImageDraw.Draw(layer)
+                for bx in (xx - tw // 2 - 6, xx + tw // 2 + 5):
+                    d.rectangle([bx, mid - th // 2 - 3, bx + 1, mid + th // 2 + 3], fill=255)
             at(x, draw)
+            marks.add((x, 20))
         elif deg % 45 == 0:
             label = {45: "NE", 135: "SE", 225: "SW", 315: "NW"}[deg]
-            box = d.textbbox((0, 0), label, font=small)
-            tw, th = box[2] - box[0], box[3] - box[1]
-            at(x, lambda xx: d.text((xx - tw // 2 - box[0], mid - th // 2 - box[1]), label, font=small, fill=1))
-        elif deg % 15 == 0:
-            at(x, lambda xx: d.rectangle([xx, mid - 3, xx, mid + 3], fill=1))
-    # the line itself: fine dots between the marks
-    for x in range(0, w, 6):
-        near = min(min(abs(x - k * w // 8), abs(x - k * w // 8 + w), abs(x - k * w // 8 - w)) for k in range(8))
-        tick = min(abs(x - k * w // 24) for k in range(25))
-        if near > 14 and tick > 2:
-            d.point((x, mid), fill=1)
-    return outlined(mask, {1: COMPASS_INK, 2: COMPASS_NORTH}, wrap=True)
+            at(x, lambda xx, label=label: text(ink, xx, label, small))
+            marks.add((x, 18))
+        else:
+            at(x, lambda xx: ImageDraw.Draw(ink).rectangle([xx, mid - 5, xx + 1, mid + 5], fill=255))
+            marks.add((x, 4))
+    # the line itself: small square dots between the marks
+    for x in range(0, w, 9):
+        clear = all(min(abs(x - mx), abs(x - mx + w), abs(x - mx - w)) > room for mx, room in marks)
+        if clear:
+            ImageDraw.Draw(ink).rectangle([x, mid, x + 1, mid + 1], fill=255)
+    return outlined([(ink, COMPASS_INK), (gold, COMPASS_NORTH)], (w, h), wrap=True)
 
 
 def compass_marker():
-    """Waypoint: a green hexagon with a white bang (like a quest marker)."""
-    s = 17
-    mask = Image.new("L", (s, s + 4), 0)
-    d = ImageDraw.Draw(mask)
-    c = (s - 1) / 2
-    d.polygon([(c, 0), (s - 2, 4), (s - 2, 12), (c, 16), (1, 12), (1, 4)], fill=1)
-    d.rectangle([c - 1, 4, c + 1, 9], fill=2)
-    d.rectangle([c - 1, 11, c + 1, 12], fill=2)
-    d.polygon([(c - 3, s + 3), (c + 3, s + 3), (c, s)], fill=1)   # pointer onto the line
-    return outlined(mask, {1: (0x3D, 0xD6, 0x5A), 2: (0xFF, 0xFF, 0xFF)})
+    """Waypoint: a green hexagon with a white bang, pointing down onto the line."""
+    s = 4  # draw 4x, then shrink for smooth edges
+    W, H = 23, 29
+    big = Image.new("L", (W * s, H * s), 0)
+    bang = Image.new("L", (W * s, H * s), 0)
+    d, b = ImageDraw.Draw(big), ImageDraw.Draw(bang)
+    c = W * s / 2
+    r = 10.5 * s
+    hexagon = [(c, 1 * s), (c + r * 0.87, 1 * s + r * 0.5), (c + r * 0.87, 1 * s + r * 1.5), (c, 1 * s + r * 2),
+               (c - r * 0.87, 1 * s + r * 1.5), (c - r * 0.87, 1 * s + r * 0.5)]
+    d.polygon(hexagon, fill=255)
+    d.polygon([(c - 4 * s, 21 * s), (c + 4 * s, 21 * s), (c, 27.5 * s)], fill=255)
+    b.rounded_rectangle([c - 1.6 * s, 5 * s, c + 1.6 * s, 14 * s], radius=1.5 * s, fill=255)
+    b.ellipse([c - 1.8 * s, 15.5 * s, c + 1.8 * s, 19 * s], fill=255)
+    green = big.resize((W, H), Image.LANCZOS)
+    white = bang.resize((W, H), Image.LANCZOS)
+    return outlined([(green, (0x3D, 0xD6, 0x5A)), (white, (0xFF, 0xFF, 0xFF))], (W, H))
 
 
 def compass_caret():
-    """Where you face: a small caret under the line."""
-    mask = Image.new("L", (11, 7), 0)
-    d = ImageDraw.Draw(mask)
-    d.line([(1, 5), (5, 1), (9, 5)], fill=1, width=2)
-    return outlined(mask, {1: (0xFF, 0xFF, 0xFF)})
+    """Where you face: a caret under the line."""
+    s = 4
+    W, H = 15, 9
+    m = Image.new("L", (W * s, H * s), 0)
+    ImageDraw.Draw(m).line([(1.5 * s, 7 * s), (7.5 * s, 1.5 * s), (13.5 * s, 7 * s)], fill=255, width=int(2.4 * s))
+    return outlined([(m.resize((W, H), Image.LANCZOS), (0xFF, 0xFF, 0xFF))], (W, H))
 
 
 COMPASS_SPRITES = {"BAND": compass_band, "WAYPOINT": compass_marker, "CARET": compass_caret}

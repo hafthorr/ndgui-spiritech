@@ -197,6 +197,6 @@ end
 
 -- Top edge: compass centred, target panels either side.
 M.TOP_Y = 4
-M.COMPASS_CLEARANCE = 146 -- half the 280px compass + a gap
+M.COMPASS_CLEARANCE = 166 -- half the 320px compass + a gap
 
 return M

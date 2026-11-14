@@ -317,6 +317,25 @@ local function centre(facts)
 	centred_x, centred_y = facts.has_character and x or nil, facts.has_character and y or nil
 end
 
+-- Zoning trace (diagnostics): the first updates after a map change and every open/close go to this
+-- package's storage (addon-data/*.json) so a black map after zoning can be read back afterwards.
+local trace, trace_left = {}, 0
+local function note(text)
+	trace[#trace + 1] = string.format("%d %s", math.floor(ui.time() or 0), text)
+	while #trace > 60 do
+		table.remove(trace, 1)
+	end
+	if ui.storage and ui.storage.write then
+		pcall(ui.storage.write, "zone_trace", table.concat(trace, string.char(10)))
+	end
+end
+local function note_facts(tag, facts)
+	note(string.format("%s changed=%s acc=%s avail=%s char=%s pos=%.0f,%.0f map=%.0fx%.0f view=%.0f,%.0f %.0fx%.0f pending=%s",
+		tag, tostring(facts.changed), tostring(facts.accessible), tostring(available), tostring(facts.has_character),
+		num(facts.x), num(facts.y), num(facts.width), num(facts.height),
+		num(view.read("x")), num(view.read("y")), num(view.read("width")), num(view.read("height")), tostring(centre_pending)))
+end
+
 -- True when the viewport shows none of the map (panned onto the black void, e.g. after zoning).
 local function off_map(facts)
 	if not facts or (facts.width or 0) <= 0 or (facts.height or 0) <= 0 then
@@ -488,6 +507,7 @@ function playfield_map_restore(saved_buttons)
 end
 
 function playfield_map_visibility(shown)
+	note("visibility " .. tostring(shown))
 	opened = shown
 	centre_pending, follow_pending = shown, false
 	previous_x, previous_y, previous_character = nil, nil, nil
@@ -541,6 +561,13 @@ function playfield_map_update(facts)
 		return
 	end
 	last_facts = facts
+	if facts.changed then
+		trace_left = 15
+	end
+	if trace_left > 0 then
+		trace_left = trace_left - 1
+		note_facts("update", facts)
+	end
 	if facts.changed then
 		centre_pending, follow_pending = true, false
 		previous_x, previous_y, previous_character = nil, nil, nil
