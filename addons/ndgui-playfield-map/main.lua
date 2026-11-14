@@ -443,15 +443,11 @@ frame = Window.create({
 	width = wanted_width,
 	height = wanted_height,
 	layout = layout,
-	-- The window can be on screen without the native "shown" call (restored open at login, still open
-	-- across a zone): remember what the screen says so updates are never ignored while you can see it.
+	-- window visibility, for the trace only (no host calls may run from here: they cannot re-enter Lua)
 	on_visibility = function(visible)
 		window_visible = visible
 		note("window visible " .. tostring(visible))
 
-		if visible and not opened and playfield_map_visibility then
-			playfield_map_visibility(true)
-		end
 	end,
 	menu = {
 		{ label = "Show Buttons", checked = buttons, invoke = playfield_map_toggle_buttons },
@@ -651,13 +647,7 @@ end
 function playfield_map_update(facts)
 	last_update_at = ui.time()
 	if not opened then
-		if not window_visible then
-			note_facts("ignored (closed)", facts)
-			return
-		end
-		-- updates while the window is on screen but we were never told it opened: open now
-		note("update while visible but not opened: opening")
-		playfield_map_visibility(true)
+		return
 	end
 	last_facts = facts
 	if facts.changed then

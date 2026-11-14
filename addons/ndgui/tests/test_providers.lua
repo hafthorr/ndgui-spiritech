@@ -642,41 +642,6 @@ do
   end
 end
 
--- Local Map restored open at login (or still open across a zone) without the native "shown" call:
--- updates must still render once the window is on screen.
-do
-  local map_surface = { attach = function() end, pan = function() end, zoom = function() end,
-    read = function(f) return ({ width = 400, height = 400 })[f] or 0 end,
-    markers_begin = function() end, markers_end = function() end, sprite = function() end, fan = function() end }
-  local H = Mock.new(addons, core, { width = W, height = Hh, loose = true, map_surface = map_surface })
-  local seen = {}
-  H.env.ui.on_visibility = function(view, cb) seen[#seen + 1] = cb end
-  local ok, err = pcall(H.load_package, "ndgui-playfield-map")
-  check(ok, "local map loads for the login case" .. (ok and "" or (": " .. tostring(err))))
-  if ok then
-    local renders = 0
-    H.env.game.playfield_map = setmetatable({ render = function() renders = renders + 1 end },
-      { __index = function() return function() end end })
-    local facts = { changed = true, accessible = true, land_control = false, has_areas = false, has_character = true,
-      x = 100, y = 120, width = 800, height = 800 }
-    H.env.playfield_map_update(facts)
-    check(renders == 0, "hidden map ignores updates")
-    for _, cb in ipairs(seen) do cb(true) end
-    facts.changed = false
-    H.env.playfield_map_update(facts)
-    H.env.playfield_map_update(facts)
-    check(renders >= 1, "map on screen renders without the native shown call (" .. renders .. ")")
-    -- zone: native says hidden while the window stays on screen, then updates come again
-    H.env.playfield_map_visibility(false)
-    local before = renders
-    facts.changed = true
-    H.env.playfield_map_update(facts)
-    facts.changed = false
-    H.env.playfield_map_update(facts)
-    check(renders > before, "still-visible map keeps rendering after the native hide")
-  end
-end
-
 -- Local Map: hand-made provider runs the native callbacks end to end in the loose host.
 do
   local drawn = {}
