@@ -79,6 +79,7 @@ python install.py --install               # no questions
 python install.py --install --client "/path/to/PRK-AO-Native/client"
 python install.py --install --stock-screens
 python install.py --uninstall
+python install.py --update                # newest GitLab release: git pull in a checkout, else downloads the source
 python install.py --check                 # only check game folder + requirements
 ```
 

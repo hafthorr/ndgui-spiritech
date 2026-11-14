@@ -7,7 +7,9 @@ building everything on the spot. For developers, and for Linux/Mac.
 
 Needs Python 3.8+ and Pillow:
     python install.py                      interactive menu
-    python install.py --install            install or update (auto-detects the client)
+    python install.py --install            install or update from this folder (auto-detects the client)
+    python install.py --update             get the newest release from GitLab and install it
+                                           (git checkout: git pull; otherwise downloads the source)
     python install.py --install --client "D:/Games/PRK-AO-Native/client"
     python install.py --uninstall          put the stock UI back and remove ndGUI
     python install.py --check              only check the client and requirements
@@ -28,6 +30,8 @@ REPO = os.path.dirname(os.path.abspath(__file__))
 SOURCE = os.path.join(REPO, "addons")
 # Generated on the player's machine from their own client (never copied back by --pull).
 GENERATED_FILES = [os.path.join("ndgui-lib", "lua", "table.lua")]
+PROJECT = "denis31/ndgui-spiritech"  # public GitLab project the updater reads releases from
+MARKER = os.path.join("UI", "Addons", "ndgui", "installed-version.txt")  # same file install.ps1 writes
 
 
 def say(text=""):
@@ -231,9 +235,99 @@ def install(client, stock_screens=False):
     say("\n[5/5] Switching the HUD and windows to ndGUI")
     if not tool(client, "select_providers.py", optional=True):
         say("  Pick them by hand in the game: Options > Interface & HUD > UI packages.")
+    with open(os.path.join(client, MARKER), "w", encoding="utf-8", newline="\n") as marker:
+        marker.write(VERSION)
     say("\nDone! Start the game. If something still looks stock, log out to character select and back in once.")
     say("To undo everything: python install.py --uninstall")
     say("Bugs, issues, ideas? Ask 'thedenis' on the Project Rubi-Ka Discord.")
+
+
+def installed_version(client):
+    path = os.path.join(client, MARKER)
+    if os.path.exists(path):
+        return open(path, encoding="utf-8").read().strip()
+    if os.path.isdir(os.path.join(client, "UI", "Addons", "ndgui")):
+        return "an older version"
+    return None
+
+
+def version_key(text):
+    return tuple(int(part) for part in re.findall(r"\d+", text)[:3])
+
+
+def latest_release():
+    import urllib.parse, urllib.request
+    url = f"https://gitlab.com/api/v4/projects/{urllib.parse.quote(PROJECT, safe='')}/releases/permalink/latest"
+    request = urllib.request.Request(url, headers={"User-Agent": "ndgui-installer"})
+    try:
+        with urllib.request.urlopen(request, timeout=30) as reply:
+            return json.load(reply)["tag_name"]
+    except Exception as error:
+        raise SystemExit(f"Could not reach GitLab ({error}). Check your connection, or get it by hand: "
+                         f"https://gitlab.com/{PROJECT}/-/releases")
+
+
+def run_installer(folder, client):
+    """Run the install.py of the new copy: this process still has the old code loaded."""
+    command = [sys.executable, os.path.join(folder, "install.py"), "--install", "--client", client]
+    if subprocess.run(command).returncode != 0:
+        raise SystemExit("Installing the new version failed (see above).")
+
+
+def download_source(tag):
+    import tarfile, tempfile, urllib.request
+    work = os.path.join(tempfile.gettempdir(), f"ndgui-spiritech-update-{tag}")
+    shutil.rmtree(work, ignore_errors=True)
+    os.makedirs(work)
+    url = f"https://gitlab.com/{PROJECT}/-/archive/{tag}/ndgui-spiritech-{tag}.tar.gz"
+    archive = os.path.join(work, "source.tar.gz")
+    say(f"Downloading ndGUI {tag} (source)...")
+    request = urllib.request.Request(url, headers={"User-Agent": "ndgui-installer"})
+    with urllib.request.urlopen(request, timeout=120) as reply, open(archive, "wb") as out:
+        shutil.copyfileobj(reply, out)
+    with tarfile.open(archive) as tar:
+        root = os.path.realpath(work)
+        for member in tar.getmembers():
+            target = os.path.realpath(os.path.join(work, member.name))
+            if not target.startswith(root + os.sep) or member.issym() or member.islnk():
+                raise SystemExit(f"Refusing a suspicious path in the download: {member.name}")
+        if sys.version_info >= (3, 12):
+            tar.extractall(work, filter="data")
+        else:
+            tar.extractall(work)
+    found = glob.glob(os.path.join(work, "*", "install.py"))
+    if not found:
+        raise SystemExit("The download has no install.py.")
+    return os.path.dirname(found[0])
+
+
+def update(client):
+    installed = installed_version(client)
+    say(f"Installed: {installed or 'nothing yet'}")
+    say("Checking GitLab for the newest release...")
+    tag = latest_release()
+    latest = tag.lstrip("v")
+    say(f"Newest:    {latest}")
+    if installed and re.match(r"\d", installed) and version_key(latest) <= version_key(installed):
+        say(f"\nYou already have the newest ndGUI ({installed}).")
+        again = interactive and input("Reinstall it anyway (e.g. after a game patch)? [y/N]: ").strip().lower() == "y"
+        if not again:
+            return
+    while client_running():
+        if not interactive:
+            raise SystemExit("The game (PRK.Client.exe) is running. Quit it first.")
+        input("The game is running. Quit it, then press Enter... ")
+    if os.path.isdir(os.path.join(REPO, ".git")) and shutil.which("git"):
+        say("\nThis is a git checkout: updating it with git pull...")
+        pulled = subprocess.run(["git", "-C", REPO, "pull", "--ff-only"])
+        if pulled.returncode != 0:
+            raise SystemExit("git pull failed (local changes?). Fix the checkout, then run: python install.py --install")
+        run_installer(REPO, client)
+    else:
+        folder = download_source(tag)
+        run_installer(folder, client)
+        say(f"\nThe {latest} files are in: {folder}")
+        say("Use that folder (or a fresh download) for future installs and uninstalls.")
 
 
 def uninstall(client):
@@ -282,17 +376,23 @@ def menu(client):
     say(f"ndGUI for Spiritech {VERSION}\n")
     client = client or find_client() or ask_for_client()
     say(f"Game folder: {client}\n")
-    say("  1) Install / update ndGUI")
-    say("  2) Install, but keep the game's own screens stock (Options, login...)")
-    say("  3) Uninstall (back to the stock UI)")
-    say("  4) Quit")
-    choice = input("\nPick 1-4 [1]: ").strip() or "1"
+    installed = installed_version(client)
+    if installed:
+        say(f"Installed: ndGUI {installed}\n")
+    say(f"  1) Install / update to {VERSION} (this folder)")
+    say("  2) Update to the newest version (from GitLab)")
+    say(f"  3) Install {VERSION}, but keep the game's own screens stock (Options, login...)")
+    say("  4) Uninstall (back to the stock UI)")
+    say("  5) Quit")
+    choice = input("\nPick 1-5 [1]: ").strip() or "1"
     say()
     if choice == "1":
         install(client)
     elif choice == "2":
-        install(client, stock_screens=True)
+        update(client)
     elif choice == "3":
+        install(client, stock_screens=True)
+    elif choice == "4":
         uninstall(client)
 
 
@@ -302,11 +402,12 @@ def main():
     parser.add_argument("--client", help="game client folder (the one with PRK.Client.exe and UI/)")
     parser.add_argument("--install", action="store_true")
     parser.add_argument("--uninstall", action="store_true")
+    parser.add_argument("--update", action="store_true", help="install the newest GitLab release")
     parser.add_argument("--check", action="store_true")
     parser.add_argument("--pull", action="store_true", help=argparse.SUPPRESS)
     parser.add_argument("--stock-screens", action="store_true")
     args = parser.parse_args()
-    actions = args.install or args.uninstall or args.check or args.pull
+    actions = args.install or args.uninstall or args.check or args.pull or args.update
     if not actions:
         interactive = True
         try:
@@ -324,7 +425,9 @@ def main():
         raise SystemExit("Could not find the Spiritech client. Run again with --client \"<folder with PRK.Client.exe>\".")
     if args.check:
         sys.exit(0 if check(client) else 1)
-    if args.uninstall:
+    if args.update:
+        update(client)
+    elif args.uninstall:
         uninstall(client)
     elif args.pull:
         pull(client)
