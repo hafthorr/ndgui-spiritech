@@ -46,6 +46,8 @@ python install.py --pull             # copy the hand-made packages back into add
 git diff
 ```
 
+Don't use the player installer (`install.bat` / `install.ps1`) on your dev client: it replaces `ndgui` with the release copy, which has no `tools/`, `tests/`, `fixtures/` or `examples/`. Edits you made only there are lost. Use `install.py`, and `--pull` before reinstalling.
+
 Restart the game after every change. Package changes apply from the next character session.
 Logs: `PRK-AO-Native/logs/client-*.log`.
 
