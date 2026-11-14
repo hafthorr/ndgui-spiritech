@@ -6,13 +6,18 @@
 local Window = ui.require("core.window")
 local S = {}
 local TEMPLATE = "library://notum.ndgui-lib/window.xml"
-local frame, layout_fn, adopted
+local frame, layout_fn, adopted, fixed_size
 
 function S.mount()
 	local blank = ui.load("library://notum.ndgui-lib/hub_blank.xml")
 	frame = Window.create({
 		template = TEMPLATE, title = "", content = blank, width = 320, height = 200,
 		layout = function(window, width, height)
+			if fixed_size then
+				-- a window that sizes itself (Mission Terminal): drop the size the frame was asked for
+				-- before (placeholder, saved rectangle, a drag) so its height follows the content again
+				ui.request_size(window.root, -1, -1)
+			end
 			if layout_fn then
 				return layout_fn(window, width, height)
 			end
@@ -41,6 +46,7 @@ function S.window(options)
 		frame.placement.options.remember_open = options.remember_open ~= false
 	end
 	layout_fn = options.layout
+	fixed_size = options.resizable == false
 	local saved = frame.placement and frame.placement.intended
 	if saved then
 		frame:resize(saved.width, saved.height)
