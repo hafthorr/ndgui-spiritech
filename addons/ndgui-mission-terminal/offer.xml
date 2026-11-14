@@ -1,0 +1,16 @@
+<root>
+  <!-- one offer: icon, the server's summary, a gold stripe + badge when it matches the watch list -->
+  <View name="offer" view_layout="stacked" layout_borders="Rect(0,0,0,3)">
+    <View name="offer_back" />
+    <View name="offer_stripe" h_alignment="left" />
+    <View view_layout="horizontal" layout_borders="Rect(6,3,4,3)">
+      <ItemSlotView name="offer_icon" interactive="false" min_size="Point(40,40)" max_size="Point(40,40)" icon_fit="center" icon_inset="3" v_alignment="top" />
+      <View view_layout="vertical" layout_borders="Rect(7,0,0,0)">
+        <TextView name="offer_badge" value="" font_size="10" color="FFD84A" size_to_text="false" visible="false" />
+        <TextView name="offer_text" value="" font_size="11" color="C5D7E6" word_wrap="true" size_to_text="false" />
+      </View>
+    </View>
+    <!-- flat button on top: takes the click and carries the native choose action -->
+    <Button name="offer_hit" flat="true" label="" selection_color="0x40789FBF" />
+  </View>
+</root>

@@ -1,0 +1,6 @@
+<Package id="notum.ndgui-team" name="Notum Dovvetech Team">
+  <Requires package="notum.ndgui-lib" />
+  <Provides role="prk.team" />
+  <Script src="main.lua" />
+  <InteractionScript src="interaction.lua" />
+</Package>

@@ -1,0 +1,32 @@
+<?xml version="1.0" standalone="yes"?>
+<root>
+  <!-- ndGUI Missions: the mission list on the left, the chosen mission on the right (folds to its title bar).
+       Sizes are set from main.lua. -->
+  <View name="missions" view_layout="vertical" layout_borders="Rect(3,3,3,3)">
+    <View name="missions_body" view_layout="horizontal">
+      <View name="mission_list" view_layout="vertical" v_alignment="top" />
+      <!-- detail pane -->
+      <View name="mission_detail" view_layout="stacked" v_alignment="top" layout_borders="Rect(4,0,0,0)">
+        <View name="detail_back" />
+        <View view_layout="vertical" layout_borders="Rect(8,8,8,8)">
+          <View view_layout="horizontal">
+            <ItemSlotView name="detail_icon" icon_fit="center" min_size="Point(48,48)" max_size="Point(48,48)" v_alignment="top" />
+            <View view_layout="vertical" layout_borders="Rect(8,0,0,0)">
+              <TextView name="detail_title" value="" color="F2F25C" font_size="14" word_wrap="true" size_to_text="false" />
+              <TextView name="detail_status" value="" color="9AA8B4" font_size="11" size_to_text="false" layout_borders="Rect(0,3,0,0)" />
+            </View>
+          </View>
+          <TextView name="detail_time_label" value="Time left" color="7F9BB0" font_size="11" size_to_text="false" layout_borders="Rect(0,10,0,2)" />
+          <View name="detail_time" view_layout="stacked">
+            <BitmapView name="detail_time_track" image="library://notum.ndgui-lib/bars/track_h.png" />
+            <BitmapView name="detail_time_fill" image="library://notum.ndgui-lib/bars/target_h.png" graphic_mode="tinted" color="4FB3E8" h_alignment="left" />
+            <TextView name="detail_time_shadow" value="" color="000000" font_size="11" text_alignment="center" size_to_text="false" v_alignment="center" layout_borders="Rect(1,1,0,0)" />
+            <TextView name="detail_time_text" value="" color="FFFFFF" font_size="11" text_alignment="center" size_to_text="false" v_alignment="center" />
+          </View>
+          <TextView name="detail_hint" value="Right-click the mission (here or in the list) to look at its briefing, upload it to your map or delete it." color="7F9BB0" font_size="11" word_wrap="true" size_to_text="false" layout_borders="Rect(0,10,0,0)" />
+        </View>
+      </View>
+      <TextView name="missions_empty" value="No missions. Take one at a mission terminal." color="7F9BB0" font_size="12" text_alignment="center" size_to_text="false" visible="false" v_alignment="center" />
+    </View>
+  </View>
+</root>

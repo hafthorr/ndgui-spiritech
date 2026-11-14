@@ -1,0 +1,14 @@
+<?xml version="1.0" standalone="yes"?>
+<root>
+  <View name="team_content" view_layout="vertical" layout_borders="Rect(0,0,0,3)">
+    <TextView name="team_info" font_size="12" color="FFFFFF" text_alignment="center" min_size="Point(-1,18)" max_size="Point(-1,18)" layout_borders="Rect(3,3,3,0)" />
+    <View view_layout="horizontal" layout_borders="Rect(3,3,3,3)">
+      <HLayoutSpacer />
+      <Button name="compact_toggle" label="Compact" font_size="12" min_size="Point(68,24)" max_size="Point(68,24)" layout_borders="Rect(0,0,6,0)" tooltip="Just names and health bars" gfxid_raised_left="GFX_NDGUI_BTN24_RAISED_LEFT" gfxid_raised_middle="GFX_NDGUI_BTN24_RAISED_MIDDLE" gfxid_raised_right="GFX_NDGUI_BTN24_RAISED_RIGHT" gfxid_hover_left="GFX_NDGUI_BTN24_HOVER_LEFT" gfxid_hover_middle="GFX_NDGUI_BTN24_HOVER_MIDDLE" gfxid_hover_right="GFX_NDGUI_BTN24_HOVER_RIGHT" gfxid_pressed_left="GFX_NDGUI_BTN24_PRESSED_LEFT" gfxid_pressed_middle="GFX_NDGUI_BTN24_PRESSED_MIDDLE" gfxid_pressed_right="GFX_NDGUI_BTN24_PRESSED_RIGHT" />
+      <Button name="ncu_toggle" label="NCU" font_size="12" min_size="Point(52,24)" max_size="Point(52,24)" layout_borders="Rect(0,0,6,0)" tooltip="Show each member's NCU" gfxid_raised_left="GFX_NDGUI_BTN24_RAISED_LEFT" gfxid_raised_middle="GFX_NDGUI_BTN24_RAISED_MIDDLE" gfxid_raised_right="GFX_NDGUI_BTN24_RAISED_RIGHT" gfxid_hover_left="GFX_NDGUI_BTN24_HOVER_LEFT" gfxid_hover_middle="GFX_NDGUI_BTN24_HOVER_MIDDLE" gfxid_hover_right="GFX_NDGUI_BTN24_HOVER_RIGHT" gfxid_pressed_left="GFX_NDGUI_BTN24_PRESSED_LEFT" gfxid_pressed_middle="GFX_NDGUI_BTN24_PRESSED_MIDDLE" gfxid_pressed_right="GFX_NDGUI_BTN24_PRESSED_RIGHT" />
+      <Button name="leave_button" label="Leave" font_size="12" tooltip="Leave your team" gfxid_raised_left="GFX_NDGUI_BTN28_RAISED_LEFT" gfxid_raised_middle="GFX_NDGUI_BTN28_RAISED_MIDDLE" gfxid_raised_right="GFX_NDGUI_BTN28_RAISED_RIGHT" gfxid_hover_left="GFX_NDGUI_BTN28_HOVER_LEFT" gfxid_hover_middle="GFX_NDGUI_BTN28_HOVER_MIDDLE" gfxid_hover_right="GFX_NDGUI_BTN28_HOVER_RIGHT" gfxid_pressed_left="GFX_NDGUI_BTN28_PRESSED_LEFT" gfxid_pressed_middle="GFX_NDGUI_BTN28_PRESSED_MIDDLE" gfxid_pressed_right="GFX_NDGUI_BTN28_PRESSED_RIGHT" />
+      <Button name="invite_button" label="Recruit" font_size="12" layout_borders="Rect(6,0,0,0)" tooltip="Recruit the targeted player into your team" gfxid_raised_left="GFX_NDGUI_BTN28_RAISED_LEFT" gfxid_raised_middle="GFX_NDGUI_BTN28_RAISED_MIDDLE" gfxid_raised_right="GFX_NDGUI_BTN28_RAISED_RIGHT" gfxid_hover_left="GFX_NDGUI_BTN28_HOVER_LEFT" gfxid_hover_middle="GFX_NDGUI_BTN28_HOVER_MIDDLE" gfxid_hover_right="GFX_NDGUI_BTN28_HOVER_RIGHT" gfxid_pressed_left="GFX_NDGUI_BTN28_PRESSED_LEFT" gfxid_pressed_middle="GFX_NDGUI_BTN28_PRESSED_MIDDLE" gfxid_pressed_right="GFX_NDGUI_BTN28_PRESSED_RIGHT" />
+    </View>
+    <View name="team_rows" view_layout="vertical" />
+  </View>
+</root>

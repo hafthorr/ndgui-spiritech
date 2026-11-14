@@ -1,0 +1,8 @@
+<?xml version="1.0" standalone="yes"?>
+<root>
+  <!-- One team member: an ndGUI unit frame (built in main.lua) and the member's NCU strip. -->
+  <View name="team_row" view_layout="vertical" capture_input="true" interactive="true" layout_borders="Rect(3,0,3,0)">
+    <View name="unit_host" view_layout="vertical" />
+    <View name="ncu_strip" view_layout="grid" visible="false" min_columns="1" grid_columns="40" grid_spacing="1" h_alignment="right" layout_borders="Rect(4,0,4,4)" />
+  </View>
+</root>

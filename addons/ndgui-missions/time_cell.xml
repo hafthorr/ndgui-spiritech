@@ -1,0 +1,8 @@
+<root>
+  <!-- time left: a thin draining bar under the h:mm text -->
+  <View name="time_cell" view_layout="stacked" min_size="Point(70,19)" max_size="Point(70,19)">
+    <BitmapView name="time_track" image="library://notum.ndgui-lib/bars/track_thin.png" min_size="Point(62,3)" max_size="Point(62,3)" h_alignment="left" v_alignment="bottom" layout_borders="Rect(0,0,0,2)" />
+    <BitmapView name="time_fill" image="library://notum.ndgui-lib/bars/target_h.png" graphic_mode="tinted" color="4FB3E8" h_alignment="left" v_alignment="bottom" layout_borders="Rect(0,0,0,2)" />
+    <TextView name="time_text" value="" color="C5D7E6" font_size="11" size_to_text="false" min_size="Point(62,15)" max_size="Point(62,15)" h_alignment="left" v_alignment="top" />
+  </View>
+</root>
