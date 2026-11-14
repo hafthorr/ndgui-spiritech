@@ -144,10 +144,18 @@ function M.new(addons_dir, core_dir, opts)
   ui.on_pointer_release = function(v, button, cb) assert(v and type(cb) == "function")
     assert(button == "right", "Pointer release supports right; use on_click for left activation."); H.releases[#H.releases + 1] = { view = v, button = button, cb = cb } end
   -- ui.menu.add remembers its last callback so tests can invoke a menu entry
+  -- ui.docking (Nov 2026 patch): Core's dockable registers every window with the right-side column
+  H.docked_views = {}
+  ui.docking = { available = function() return true end,
+    register = function(view, floating_header, compact_header, preview, cb)
+      assert(view and floating_header and compact_header and preview and type(cb) == "function", "docking.register args")
+      assert(view.name == "window" or view.tag, "docking.register needs the window root")
+      H.docked_views[#H.docked_views + 1] = view end,
+    restore = function(view, docked, order) assert(view and type(docked) == "boolean" and type(order) == "number") end }
   H.menu_items = {}
   H.placements = {}
   ui.define("core.placement", function() return { attach = function(view, options)
-    local p = { view = view, field = options and options.field, moved = false, changed = function(self) self.moved = true end,
+    local p = { view = view, options = options or {}, field = options and options.field, moved = false, changed = function(self) self.moved = true end,
       defaults = function() end, restore = function(self) self.restored = (self.restored or 0) + 1 end, capture = function() end }
     H.placements[#H.placements + 1] = p; return p end } end)
 

@@ -11,7 +11,9 @@
     <BitmapView name="ndgui_corner_br" image="library://notum.ndgui-lib/window/corner_br.png" min_size="Point(7,7)" max_size="Point(7,7)" h_alignment="right" v_alignment="bottom" layout_borders="Rect(0,0,3,3)" />
     <View view_layout="vertical" layout_borders="Rect(3,3,3,3)">
       <View name="rollup_header" view_layout="horizontal" capture_input="true" min_size="Point(-1,19)" max_size="Point(-1,19)">
-        <BitmapView name="rollup_icon" interactive="true" image="gfx://GFX_GUI_WINDOW_ICON_I" min_size="Point(15,15)" max_size="Point(15,15)" v_alignment="center" layout_borders="Rect(2,0,0,0)" />
+        <View name="rollup_icon_slot" view_layout="stacked">
+          <BitmapView name="rollup_icon" interactive="true" image="gfx://GFX_GUI_WINDOW_ICON_I" min_size="Point(15,15)" max_size="Point(15,15)" v_alignment="center" layout_borders="Rect(2,0,0,0)" />
+        </View>
         <BitmapView name="ndgui_accent" image="library://notum.ndgui-lib/window/accent.png" min_size="Point(3,15)" max_size="Point(3,15)" v_alignment="center" layout_borders="Rect(5,0,0,0)" />
         <TextView name="rollup_title" font_size="12" color="C5D7E6" v_alignment="center" layout_borders="Rect(5,0,2,0)" />
         <HLayoutSpacer />

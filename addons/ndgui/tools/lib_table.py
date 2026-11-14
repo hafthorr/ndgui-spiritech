@@ -1,13 +1,15 @@
-"""Build ndgui-lib/lua/table.lua: Core's table.lua with hideable columns.
+"""Build ndgui-lib/lua/table.lua: Core's table.lua with movable columns, and hideable columns on every list.
 
 Run from the ndgui folder:  python tools/lib_table.py
-Right-click any column header -> Move left / Move right / Reset column order, then the
-columns (tick = shown) + "Show all columns". Order persists as <preference>.col_order; lists
-with native rows (Inventory list, NCU) apply a new order the next time the window loads.
-Hidden ids persist per table as <preference>.col_hidden (",id,id,"). At least one column
-always stays visible; toggling is refused in combat like resizing. Every ndgui-* package
-that used ui.require("core.table") is pointed at ui.require("notum.ndgui-lib/table")
-(fork_windows.py / fork_hud.py do the same on regeneration). Re-run after a client update.
+Since the Nov 2026 client, Core hides columns itself (<preference>.col_hidden, a Preferences array), but only
+for tables that pass column_menu (Inventory, bank, bags). This build turns that on for every table and swaps
+the stock header menu for ours: right-click any column header -> Move left / Move right / Reset column order,
+then the columns (tick = shown) + "Show all columns". Order persists as <preference>.col_order; lists with
+native rows (Inventory list, NCU) apply a new order the next time the window loads. At least one column always
+stays visible; changes are refused in combat like resizing. Hidden ids saved by older ndGUI (",id,id," text)
+are read once and rewritten in the stock format. Every ndgui-* package that used ui.require("core.table") is
+pointed at ui.require("notum.ndgui-lib/table") (fork_windows.py / fork_hud.py do the same on regeneration).
+Re-run after a client update.
 """
 import glob, os, re, sys
 
@@ -18,128 +20,77 @@ OUT = os.path.join(ADDONS, "ndgui-lib", "lua", "table.lua")
 OLD_REQ, NEW_REQ = 'ui.require("core.table")', 'ui.require("notum.ndgui-lib/table")'
 
 PATCHES = [
-    # hidden set, read with the other column preferences
-    ("""		local saved = {}
-		local ids = Preferences.read_array(self.preference .. ".col_id", "text")""",
-     """		self.hidden = {}
-		for id in (ui.preference.read(self.preference .. ".col_hidden") or ""):gmatch("[^,]+") do
-			self.hidden[id] = true
-		end
-		local shown = 0
-		for _, column in ipairs(self.columns) do
-			if not self.hidden[column.id] then
-				shown = shown + 1
-			end
-		end
-		if shown == 0 then
-			self.hidden = {}
-		end
-		local saved = {}
-		local ids = Preferences.read_array(self.preference .. ".col_id", "text")"""),
-    # fit_columns: hidden columns take no room
-    ("""		local overflow = 12 + #self.columns * self.style.gap - width
-		for _, preferred in ipairs(self.preferred_widths) do
-			overflow = overflow + preferred
-		end
-		for index, column in ipairs(self.columns) do
-			local preferred = self.preferred_widths[index]""",
-     """		local overflow = 12 - width
-		for index, preferred in ipairs(self.preferred_widths) do
-			if self:column_shown(index) then
-				overflow = overflow + preferred + self.style.gap
-			end
-		end
-		for index, column in ipairs(self.columns) do
-			local preferred = self:column_shown(index) and self.preferred_widths[index] or (column.minimum or 5)"""),
-    # cells of hidden columns are collapsed
-    ("""		local column, width, cell = self.columns[index], self.widths[index], row.cells[index]
-		ui.size(cell.root, width + self.style.gap, self.row_height)""",
-     """		local column, width, cell = self.columns[index], self.widths[index], row.cells[index]
-		if not cell or not cell.root then
-			return
-		end
-		local shown = self:column_shown(index)
-		if cell.shown ~= shown then
-			ui.visible(cell.root, shown)
-			cell.shown = shown
-		end
-		if not shown then
-			ui.size(cell.root, 0, self.row_height)
-			return
-		end
-		ui.size(cell.root, width + self.style.gap, self.row_height)"""),
-    ("""		local width, heading = self.widths[index], self.headers[index]
-		ui.size(heading.root, width + self.style.gap, self.style.header_height)
-		ui.size(heading.title, math.max(1, width - self.style.inset), self.style.header_height)""",
-     """		local width, heading = self.widths[index], self.headers[index]
-		ui.visible(heading.root, self:column_shown(index))
-		if self:column_shown(index) then
-			ui.size(heading.root, width + self.style.gap, self.style.header_height)
-			ui.size(heading.title, math.max(1, width - self.style.inset), self.style.header_height)
-		else
-			ui.size(heading.root, 0, self.style.header_height)
-		end"""),
-    ("""		local total = 0
-		for _, column_width in ipairs(self.widths) do
-			total = total + column_width + self.style.gap
-		end""",
-     """		local total = 0
-		for column_index, column_width in ipairs(self.widths) do
-			if self:column_shown(column_index) then
-				total = total + column_width + self.style.gap
-			end
-		end"""),
-    # native (collection) rows adopted in combat: keep hidden cells collapsed
-    ("""			self.rows[index] = row
-		end
-	end""",
-     """			self.rows[index] = row
-			for column_index = 1, #self.columns do
-				self:cell_width(row, column_index)
-			end
-		end
-	end"""),
-    # the column API
+    # every table loads its hidden columns (stock: only column_menu tables)
+    ("""		if options.column_menu then
+			local hidden = {}
+			for _, id in ipairs(Preferences.read_array(self.preference .. ".col_hidden", "text")) do""",
+     """		do
+			local hidden = {}
+			for _, id in ipairs(self:read_hidden()) do"""),
+    # the column API (order, our header menu, hide/show for every table)
     ("""	function Table:drop_target(binding)""",
-     """	function Table:column_shown(index)
-		local column = self.columns[index]
-		return not (column and self.hidden and self.hidden[column.id])
+     """	-- Hidden ids: the stock Preferences array; older ndGUI saved ",id,id," text under the same key.
+	function Table:read_hidden()
+		local key = self.preference .. ".col_hidden"
+		local ok, ids = pcall(Preferences.read_array, key, "text")
+		if ok and type(ids) == "table" then
+			return ids
+		end
+		local read_ok, text = pcall(ui.preference.read, key)
+		ids = {}
+		if read_ok and type(text) == "string" then
+			for id in text:gmatch("[^,]+") do
+				ids[#ids + 1] = id
+			end
+		end
+		self.migrate_hidden = true
+		return ids
 	end
 
-	function Table:apply_columns()
+	function Table:write_hidden()
+		local ids = {}
+		for index, column in ipairs(self.columns) do
+			if not self:shown(index) then
+				ids[#ids + 1] = column.id
+			end
+		end
+		pcall(Preferences.write_array, self.preference .. ".col_hidden", ids, "text")
+	end
+
+	function Table:apply_hidden()
+		for index = 1, #self.columns do
+			local shown = self:shown(index)
+			if self.headers[index] then
+				ui.visible(self.headers[index].root, shown)
+			end
+			for _, row in ipairs(self.rows) do
+				if row.cells[index] then
+					ui.visible(row.cells[index].root, shown)
+				end
+			end
+			if self.prototype and self.prototype.cells[index] then
+				ui.visible(self.prototype.cells[index].root, shown)
+			end
+		end
+		if self.options.fit_columns and self.width then
+			self:set_width(self.width)
+		end
 		for index = 1, #self.columns do
 			self:apply_width(index)
 		end
-		if self.width and self.options.fit_columns then
-			self:set_width(self.width)
-		end
-		local parts = { "," }
-		for _, column in ipairs(self.columns) do
-			if self.hidden[column.id] then
-				parts[#parts + 1] = column.id .. ","
-			end
-		end
-		ui.preference.write(self.preference .. ".col_hidden", #parts > 1 and table.concat(parts) or "", "text")
+		self:write_hidden()
 	end
 
-	function Table:toggle_column(index)
+	function Table:ndgui_toggle(index)
 		if ui.in_combat() then
 			return
 		end
-		local column = self.columns[index]
-		if not self.hidden[column.id] then
-			local shown = 0
-			for other = 1, #self.columns do
-				if self:column_shown(other) then
-					shown = shown + 1
-				end
-			end
-			if shown <= 1 then
-				return
-			end
+		local hiding = self:shown(index)
+		if hiding and self:shown_count() <= 1 then
+			return
 		end
-		self.hidden[column.id] = not self.hidden[column.id] or nil
-		self:apply_columns()
+		self.hidden[self.columns[index].id] = hiding or nil
+		self:apply_hidden()
 	end
 
 	-- Column order: saved ids first (in saved order), then any others in package order.
@@ -173,11 +124,12 @@ PATCHES = [
 				{ root = fragment, title = ui.find(fragment, "heading"), divider = ui.find(fragment, "divider") }
 			self.headers[index] = heading
 			ui.text_alignment(heading.title, column.alignment or "left")
+			ui.visible(fragment, self:shown(index))
 			ui.add(self.header, fragment)
 			local id = column.id
 			heading.id = id
 			ui.on_pointer_release(heading.title, "right", function()
-				self:column_menu(heading.title, id)
+				self:ndgui_column_menu(heading.title, id)
 			end)
 			if column.value then
 				ui.on_click(heading.title, function()
@@ -203,6 +155,10 @@ PATCHES = [
 			self:apply_width(index)
 		end
 		self:headings()
+		if self.migrate_hidden then
+			self.migrate_hidden = nil
+			self:write_hidden()
+		end
 	end
 
 	-- Rebuild header and rows in the current self.columns order (package-owned rows only;
@@ -299,7 +255,7 @@ PATCHES = [
 		self:rebuild()
 	end
 
-	function Table:column_menu(anchor, id)
+	function Table:ndgui_column_menu(anchor, id)
 		if ui.in_combat() then
 			return
 		end
@@ -326,17 +282,19 @@ PATCHES = [
 		end
 		ui.menu.add(anchor, "Reset column order" .. later, false, function() self:reset_order() end)
 		ui.menu.separator(anchor)
+		-- titled columns only: the stock loader ignores hidden untitled (icon) columns
 		for index, column in ipairs(self.columns) do
-			local title = column.title ~= "" and column.title or (column.kind == "icon" and "Icon" or column.id)
-			ui.menu.add(anchor, title, self:column_shown(index), function()
-				self:toggle_column(index)
-			end)
+			if column.title ~= "" then
+				ui.menu.add(anchor, column.title, self:shown(index), function()
+					self:ndgui_toggle(index)
+				end)
+			end
 		end
 		ui.menu.separator(anchor)
 		ui.menu.add(anchor, "Show all columns", false, function()
 			if not ui.in_combat() then
 				self.hidden = {}
-				self:apply_columns()
+				self:apply_hidden()
 			end
 		end)
 		ui.menu.show(anchor)
@@ -344,7 +302,6 @@ PATCHES = [
 
 	function Table:drop_target(binding)"""),
 ]
-
 
 def build():
     code = open(CORE, encoding="utf-8").read()
@@ -369,7 +326,7 @@ def build():
             raise SystemExit("Core/table.lua changed upstream; patch anchor not found:\n" + old.splitlines()[0])
         body = body.replace(old, new)
     head = ("-- ndGUI: generated by ndgui/tools/lib_table.py from UI/Packages/Core/table.lua. Do not hand-edit.\n"
-            "-- Adds hideable columns (right-click a header).\n")
+            "-- Movable columns, and hideable columns on every table (right-click a header).\n")
     os.makedirs(os.path.dirname(OUT), exist_ok=True)
     open(OUT, "w", encoding="utf-8", newline="\n").write(head + body + "\n")
 

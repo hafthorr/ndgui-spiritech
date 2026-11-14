@@ -620,9 +620,16 @@ do
   local ok, err = pcall(H.load_package, "ndgui-ncu")
   if ok then
     local env = H.env
-    local prefs = {}
-    env.ui.preference = { read = function(k) return prefs[k] or "" end, write = function(k, v) prefs[k] = v end,
-      read_array_encoded = function() return "" end, write_array_encoded = function() end }
+    -- text prefs and native arrays live apart; reading a key saved as text through the array reader fails
+    -- (stands in for the client refusing an old ndGUI ",id," value), which the lib table must survive
+    local prefs, arrays = {}, {}
+    env.ui.preference = { read = function(k) return prefs[k] or "" end, write = function(k, v) prefs[k] = v; arrays[k] = nil end,
+      read_array_encoded = function(k)
+        if arrays[k] then return arrays[k] end
+        if prefs[k] and prefs[k] ~= "" then error("not an array preference: " .. k) end
+        return ""
+      end,
+      write_array_encoded = function(k, v) arrays[k] = v; prefs[k] = nil end }
     local Table
     ok, err = pcall(function() Table = env.ui.require("notum.ndgui-lib/table") end)
     check(ok and Table and Table.create, "notum.ndgui-lib/table resolves" .. (ok and "" or (": " .. tostring(err))))
@@ -635,18 +642,22 @@ do
       check(ok, "lib table creates" .. (ok and "" or (": " .. tostring(err))))
       if ok then
         t:show({ "a", "b" })
-        t:toggle_column(2)
-        check(prefs["t.col_hidden"] == ",cost," and t.headers[2].root.visible == false and t.rows[1].cells[2].root.visible == false,
-          "hiding a column hides header + cells and saves it (" .. tostring(prefs["t.col_hidden"]) .. ")")
-        t:toggle_column(1)
-        check(t:column_shown(1), "the last visible column cannot be hidden")
-        t:toggle_column(2)
-        check(prefs["t.col_hidden"] == "" and t.rows[2].cells[2].root.visible == true, "showing it again restores it")
+        t:ndgui_toggle(2)
+        check(arrays["t.col_hidden"] == "4:cost" and t.headers[2].root.visible == false and t.rows[1].cells[2].root.visible == false,
+          "hiding a column hides header + cells and saves it in the stock format (" .. tostring(arrays["t.col_hidden"]) .. ")")
+        t:ndgui_toggle(1)
+        check(t:shown(1), "the last visible column cannot be hidden")
+        t:ndgui_toggle(2)
+        check(arrays["t.col_hidden"] == "" and t.rows[2].cells[2].root.visible == true, "showing it again restores it")
+        arrays["t.col_hidden"] = "4:cost"
         local t2 = Table.create({ host = host, columns = cols, binding = function(e) return 1 end, preference = "t" })
+        check(not t2:shown(2), "hidden columns are remembered")
+        -- a value saved by older ndGUI (",cost," text) still hides the column and is rewritten as an array
+        arrays["t.col_hidden"] = nil
         prefs["t.col_hidden"] = ",cost,"
-        t2 = Table.create({ host = host, columns = cols, binding = function(e) return 1 end, preference = "t" })
-        check(not t2:column_shown(2), "hidden columns are remembered")
-        prefs["t.col_hidden"] = ""
+        local old = Table.create({ host = host, columns = cols, binding = function(e) return 1 end, preference = "t" })
+        check(not old:shown(2) and arrays["t.col_hidden"] == "4:cost", "old ndGUI hidden columns migrate (" .. tostring(arrays["t.col_hidden"]) .. ")")
+        arrays["t.col_hidden"] = ""
         local t3 = Table.create({ host = host, columns = cols, binding = function(e) return 1 end, preference = "t" })
         t3:show({ "a", "b" })
         t3:move_column("cost", -1)
