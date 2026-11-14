@@ -535,8 +535,8 @@ function playfield_map_restore(saved_buttons)
 end
 
 -- Watchdog after each open: apply the deferred zoom once the view has a size, and if the client still
--- sends no updates a second later, attach the view again (what a manual close / reopen achieves).
-local watching = false
+-- sends no updates, note it in the trace (the client refuses a second attach).
+local watching, reshow_at = false, nil
 local function start_watchdog()
 	reattached = false
 	if watching or not ui.on_update then
@@ -556,11 +556,16 @@ local function start_watchdog()
 				note(string.format("watchdog: zoom at %.0fx%.0f", w, h))
 				view.zoom(zoom_scale(), num(ui.x(surface)) + w / 2, num(ui.y(surface)) + h / 2)
 			elseif not reattached and now - (shown_at or now) > 1000 then
+				-- what a manual close / reopen does: hide the window, show it again next frame
 				reattached = true
-				note("watchdog: no updates, attaching the view again")
-				view.attach(surface, true)
-				view.zoom(zoom_scale(), num(ui.x(surface)) + w / 2, num(ui.y(surface)) + h / 2)
-			elseif reattached and now - (shown_at or now) > 6000 then
+				note("watchdog: no updates, hiding the window for a frame")
+				ui.visible(frame.root, false)
+				reshow_at = now + 50
+			elseif reshow_at and now >= reshow_at then
+				reshow_at = nil
+				note("watchdog: showing the window again")
+				ui.visible(frame.root, true)
+			elseif now - (shown_at or now) > 6000 then
 				note("watchdog: still no updates, giving up")
 				watching = false
 				ui.stop_updates()
