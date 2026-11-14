@@ -305,21 +305,23 @@ do
       { id = 3, name = "Fido", is_my_pet = true }, { id = 9, name = "Snake" }
     H.combat({ ev(0, "damage", 300, me, mob, { critical = true }), ev(1, "damage", 100, bob, mob), ev(2, "damage", 200, pet, mob),
       ev(3, "damage", 50, mob, me), ev(4, "healing", 80, bob, me), ev(5, "miss", 0, me, mob),
-      ev(9, "damage", 350, me, mob, { origin = "special", ability = 777 }) })
+      ev(9, "damage", 350, me, mob, { origin = "special", ability = 777 }),
+      ev(9, "damage", 1, me, { id = 11, name = "Gnat" }, { origin = "special", ability = 150 }), ev(9, "damage", 1, me, { id = 11, name = "Gnat" }, { damage_type = 90 }) })
     local rows = f("meter_rows").kids
     local function r(i, name) return H.find(rows[i], name) end
     local function click_row(i) H.find(rows[i], "row_hit").on_click() end
     -- default: Me with pets folded into you (800 = 600 + pet 200)
     check(f("meter_filter").text == "Me" and r(1, "row_name").text == "1. You" and rows[2].visible == false, "default: Me, pets count as you")
-    check(r(1, "row_value").text == "850  94.4/s  100%", "you: amount, per second, share: " .. tostring(r(1, "row_value").text))
+    check(r(1, "row_value").text == "852  94.7/s  100%", "you: amount, per second, share: " .. tostring(r(1, "row_value").text))
     check(f("meter_summary").text:find("Snake", 1, true) and f("meter_summary").text:find("0:09", 1, true), "fight named after the enemy, 9 s: " .. f("meter_summary").text)
-    check(f("meter_stats").text:find("crit 33%", 1, true) and f("meter_stats").text:find("miss 25%", 1, true) and f("meter_stats").text:find("max 350", 1, true),
+    check(f("meter_stats").text:find("crit 20%", 1, true) and f("meter_stats").text:find("miss 17%", 1, true) and f("meter_stats").text:find("max 350", 1, true),
       "stat strip: crit, miss, max: " .. f("meter_stats").text)
     local graph_cols = f("meter_columns").kids
     check(graph_cols[1].visible == true and graph_cols[10].visible == true and graph_cols[11].visible == false, "graph: one column per second")
     -- click you: abilities incl. the pet's
     click_row(1)
-    check(f("meter_detail").visible == true and r(1, "row_name").text == "Special 777" and r(2, "row_name").text == "Weapon" and r(3, "row_name").text == "Fido: Weapon",
+    check(f("meter_detail").visible == true and r(1, "row_name").text == "Special 777" and r(2, "row_name").text == "Weapon" and r(3, "row_name").text == "Fido: Weapon"
+      and r(4, "row_name").text:find("Fling Shot", 1, true) and (r(5, "row_name").text == "Weapon · Projectile" or r(4, "row_name").text == "Weapon · Projectile"),
       "drill-down: your abilities and the pet's")
     f("meter_back").on_click()
     check(f("meter_detail").visible == false, "back to the list")
@@ -337,7 +339,7 @@ do
     check(f("meter_filter").text == "All" and r(5, "row_name").text == "5. Dave", "All adds strangers")
     -- Targets: Snake took everything; click for who hit it
     f("meter_targets").on_click()
-    check(r(1, "row_name").text == "1. Snake" and r(1, "row_value").text:find("^1,020") ~= nil and rows[2].visible == false, "targets: Snake took 1,020")
+    check(r(1, "row_name").text == "1. Snake" and r(1, "row_value").text:find("^1,020") ~= nil and r(2, "row_name").text == "2. Gnat" and rows[3].visible == false, "targets: Snake took 1,020")
     click_row(1)
     check(r(1, "row_name").text == "1. You" and r(4, "row_name").text == "4. Carl", "who hit Snake")
     f("meter_back").on_click()
@@ -360,7 +362,8 @@ do
     f("meter_prev").on_click()
     check(f("meter_summary").text:find("Snake", 1, true) and f("meter_fight").text == "Fight 1/2", "< shows the earlier fight")
     f("meter_overall").on_click()
-    check(f("meter_fight").text == "All fights" and f("meter_peak").text == "overall: no graph", "overall")
+    check(f("meter_fight").text == "All fights" and f("meter_peak").text:find("one bar per fight", 1, true) ~= nil
+      and f("meter_columns").kids[2].visible == true and f("meter_columns").kids[3].visible == false, "overall graph: one bar per fight")
     f("meter_reset").on_click()
     check(rows[1].visible == false and f("meter_summary").text == "No combat yet", "reset clears")
     H.combat({ ev(100, "damage", 50, me, mob), ev(101, "damage", 5000, me, { id = 0, name = "" }) })

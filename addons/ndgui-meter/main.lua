@@ -169,7 +169,8 @@ local function paint_row(row, entry, top)
 end
 
 local function paint_graph(seg, kind)
-	local series = Meter.series(seg, kind, keep)
+	local per_fight = seg ~= nil and seg == meter.all
+	local series = per_fight and meter:per_fight(kind, keep, merge) or Meter.series(seg, kind, keep)
 	local count = #series
 	local first = math.max(1, count - GRAPH_COLUMNS + 1)
 	local top = 0
@@ -187,7 +188,11 @@ local function paint_graph(seg, kind)
 			ui.graphic_tint(col, COLOR[mode])
 		end
 	end
-	ui.text(peak, top > 0 and ("peak " .. rate(top) .. "/s") or (seg and not seg.buckets and "overall: no graph" or ""))
+	if per_fight then
+		ui.text(peak, top > 0 and ("one bar per fight · best " .. rate(top) .. "/s") or "")
+	else
+		ui.text(peak, top > 0 and ("peak " .. rate(top) .. "/s") or "")
+	end
 end
 
 -- crit / miss / biggest hit / best 5 s for one actor in one kind
@@ -396,7 +401,7 @@ local function layout(window, width, height)
 	ui.size(graph, row_w, GRAPH_H)
 	ui.size(graph_back, row_w, GRAPH_H)
 	ui.size(columns_host, row_w - 4, GRAPH_H - 3)
-	ui.size(peak, 120, 12)
+	ui.size(peak, 220, 12)
 	ui.size(fight_label, math.max(40, row_w - FIXED_ROW2), 22)
 	ui.size(detail_title, row_w - 52, 22)
 	ui.limits(window.root, MIN_W, minimum, MAX_W, maximum)

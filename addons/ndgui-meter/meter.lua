@@ -14,8 +14,16 @@ ui.define("ndgui.meter", function()
 	local MAX_ACTORS, MAX_TARGETS, MAX_ABILITIES, MAX_DEATHS, MAX_SECONDS = 128, 64, 40, 20, 900
 	Meter.IDLE, Meter.HISTORY, Meter.RECAP = IDLE, HISTORY, RECAP
 
-	-- ---- names for damage types and special attacks (stat ids are the client's own) ----
-	local damage_types, specials = {}, {}
+	-- ---- names for damage types and special attacks ----
+	-- Classic AO stat ids first; the client's own lookup (when this package may use it) adds to them.
+	local damage_types = {
+		[90] = "Projectile", [91] = "Melee", [92] = "Energy", [93] = "Chemical", [94] = "Radiation",
+		[95] = "Cold", [96] = "Poison", [97] = "Fire",
+	}
+	local specials = {
+		[121] = "Bow Special", [142] = "Brawl", [143] = "Riposte", [144] = "Dimach", [146] = "Sneak Attack",
+		[147] = "Fast Attack", [148] = "Burst", [150] = "Fling Shot", [151] = "Aimed Shot", [167] = "Full Auto",
+	}
 	local function stat_id(name)
 		if not (ui.combat and ui.combat.stat) then
 			return 0
@@ -462,6 +470,16 @@ ui.define("ndgui.meter", function()
 				end
 			end
 			out[#out + 1] = sum
+		end
+		return out
+	end
+
+	-- Overall: one value per kept fight (its rate of one kind), oldest first.
+	function Meter:per_fight(kind, keep, merge)
+		local out = {}
+		for _, fight in ipairs(self.fights) do
+			local _, total = Meter.leaders(fight, kind, keep, merge)
+			out[#out + 1] = total / self:seconds(fight)
 		end
 		return out
 	end
