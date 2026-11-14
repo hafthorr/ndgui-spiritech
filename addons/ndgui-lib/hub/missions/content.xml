@@ -23,7 +23,17 @@
             <TextView name="detail_time_shadow" value="" color="000000" font_size="11" text_alignment="center" size_to_text="false" v_alignment="center" layout_borders="Rect(1,1,0,0)" />
             <TextView name="detail_time_text" value="" color="FFFFFF" font_size="11" text_alignment="center" size_to_text="false" v_alignment="center" />
           </View>
-          <TextView name="detail_hint" value="Right-click the mission (here or in the list) to look at its briefing, upload it to your map or delete it." color="7F9BB0" font_size="11" word_wrap="true" size_to_text="false" layout_borders="Rect(0,10,0,0)" />
+          <!-- the briefing, once Info has shown it (Right-click > Look at mission) -->
+          <View name="detail_brief" view_layout="vertical" visible="false" layout_borders="Rect(0,10,0,0)">
+            <TextView name="detail_pay" value="" color="FFD84A" font_size="12" size_to_text="false" />
+            <TextView name="detail_where" value="" color="3DE33D" font_size="11" size_to_text="false" layout_borders="Rect(0,3,0,0)" />
+            <View name="detail_reward" view_layout="horizontal" layout_borders="Rect(0,6,0,0)">
+              <ItemSlotView name="detail_reward_icon" interactive="false" icon_fit="center" min_size="Point(32,32)" max_size="Point(32,32)" v_alignment="center" />
+              <TextView name="detail_reward_name" value="" color="C5D7E6" font_size="11" word_wrap="true" size_to_text="false" v_alignment="center" layout_borders="Rect(6,0,0,0)" />
+            </View>
+            <TextView name="detail_text" value="" color="AFC2D2" font_size="11" word_wrap="true" size_to_text="false" layout_borders="Rect(0,8,0,0)" />
+          </View>
+          <TextView name="detail_hint" value="" color="7F9BB0" font_size="11" word_wrap="true" size_to_text="false" layout_borders="Rect(0,10,0,0)" />
         </View>
       </View>
       <TextView name="missions_empty" value="No missions. Take one at a mission terminal." color="7F9BB0" font_size="12" text_alignment="center" size_to_text="false" visible="false" v_alignment="center" />

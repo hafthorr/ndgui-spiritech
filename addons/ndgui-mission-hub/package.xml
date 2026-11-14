@@ -1,0 +1,8 @@
+<Package id="notum.ndgui-mission-hub" name="Notum Dovvetech Mission Hub">
+  <Requires package="notum.ndgui-lib" />
+  <Provides role="prk.info" />
+  <Provides role="prk.missions" />
+  <Provides role="prk.mission-terminal" />
+  <Script src="main.lua" />
+  <InteractionScript src="interaction.lua" />
+</Package>

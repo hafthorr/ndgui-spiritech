@@ -823,6 +823,83 @@ do
   end
 end
 
+-- Mission hub: one package provides Info, Missions and Mission Terminal; Info keeps the briefing
+-- of a mission page in ui.storage and the other two windows (other VMs) show it.
+do
+  local store = {}
+  local function hub()
+    local H = Mock.new(addons, core, { width = W, height = Hh, loose = true })
+    H.env.ui.storage = { read = function(k) return store[k] or "" end, write = function(k, v) store[k] = v end }
+    local ok, err = pcall(H.load_package, "ndgui-mission-hub")
+    check(ok, "ndgui-mission-hub loads" .. (ok and "" or (": " .. tostring(err))))
+    return ok and H or nil
+  end
+  local page = {
+    { text = "Mission Assignment MXIL: The Rome house", tone = "title", indent = 0 },
+    { text = "Description:", tone = "heading", indent = 0 },
+    { text = "A gang has holed up in RomeBlue, in a place called the Rome house. Clear them out.", tone = "detail", indent = 0, document = true },
+    { text = "Realtime left: 3 minutes.", tone = "detail", indent = 0 },
+    { text = "Reward:", tone = "heading", indent = 0 },
+    { text = "Cash: 1986 credits", tone = "detail", indent = 0 },
+    { text = "Experience: (Up to) 365 XP.", tone = "detail", indent = 0 },
+    { text = "Item reward:", tone = "heading", indent = 0 },
+    { text = "Nano Crystal (Fling Shot)", tone = "detail", indent = 1, item = true, icon = 4242 },
+  }
+  for _, line in ipairs(page) do line.rgb = -1 end
+  local I = hub()
+  if I then
+    for _, r in ipairs({ "prk.info", "prk.missions", "prk.mission-terminal" }) do
+      check(role(I, r), "mission hub declares " .. r)
+    end
+    check(I.root == nil, "hub builds no window before its first callback")
+    local ok, err = pcall(I.env.info_show, 1, page, {}, false)
+    check(ok, "hub info_show runs" .. (ok and "" or (": " .. tostring(err))))
+    check(I.root ~= nil, "hub builds the Info window on info_show")
+    check((store["brief:Mission Assignment MXIL: The Rome house"] or "") ~= "", "Info keeps the mission briefing")
+    check(store.brief_seq == "1", "brief revision bumps: " .. tostring(store.brief_seq))
+    I.env.info_show(2, { { text = "Fling Shot", tone = "title", indent = 0, rgb = -1 }, { text = "Quality level: 10", tone = "detail", indent = 0, rgb = -1 } }, {}, false)
+    check(store.brief_seq == "1", "non-mission pages are not kept")
+    I.env.missions_apply({})
+    check(I.root and I.find(I.root, "info_lines") ~= nil, "a VM keeps the first role it was given")
+  end
+  local M = hub()
+  if M then
+    local m = { token = 7, icon = 5, name = "The Rome house", timed = true, minutes = 50, selected = true }
+    local ok, err = pcall(M.env.missions_apply, { m })
+    check(ok, "hub missions_apply runs" .. (ok and "" or (": " .. tostring(err))))
+    check(M.find(M.root, "detail_brief").visible == true, "Missions shows the kept briefing (loose title match)")
+    check(M.find(M.root, "detail_pay").text == "1,986 credits  ·  365 XP", "brief pay: " .. tostring(M.find(M.root, "detail_pay").text))
+    check(M.find(M.root, "detail_where").text == "Where: RomeBlue", "brief zone: " .. tostring(M.find(M.root, "detail_where").text))
+    check(M.find(M.root, "detail_reward_name").text == "Nano Crystal (Fling Shot)", "brief item reward")
+    check(M.find(M.root, "detail_text").text:match("^A gang has holed up") ~= nil, "brief text")
+    M.env.missions_apply({ { token = 8, icon = 5, name = "Unknown Job", timed = false, selected = true } })
+    check(M.find(M.root, "detail_brief").visible == false and M.find(M.root, "detail_hint").text:match("Look at mission once") ~= nil,
+      "no brief: hint to look once")
+  end
+  local T = hub()
+  if T then
+    store.watch = "fling"
+    local ok, err = pcall(T.env.mission_terminal_configure, "Request", "Accept", (function() local l = {} for i = 1, 7 do l[i] = { minimum = "Lo", maximum = "Hi", progress = 0.5 } end return l end)())
+    check(ok, "hub terminal configure runs" .. (ok and "" or (": " .. tostring(err))))
+    local state = { request = 1, accept = 2, cancel = 3, selected = false }
+    local reward = { pinned_mode = false, has_pin = false, icon = 0, name = "", ql = 0, cost = 0 }
+    ok, err = pcall(T.env.mission_terminal_apply, state, {
+      { reference = 1, icon = 3, description = "The Rome house", selected = false },
+      { reference = 2, icon = 3, description = "Find the Data Disk", selected = false },
+    }, reward)
+    check(ok, "hub terminal apply runs" .. (ok and "" or (": " .. tostring(err))))
+    local briefs, badges = {}, {}
+    local function walk(v)
+      if v.name == "offer_brief" and v.visible ~= false then briefs[#briefs + 1] = v.text end
+      if v.name == "offer_badge" and v.visible == true then badges[#badges + 1] = v.text end
+      for _, k in ipairs(v.kids or {}) do walk(k) end
+    end
+    walk(T.root)
+    check(#briefs == 1 and briefs[1]:match("1,986 credits") and briefs[1]:match("Nano Crystal"), "terminal row shows a looked-at offer's pay: " .. tostring(briefs[1]))
+    check(#badges == 1 and badges[1]:match("fling"), "watch words match the kept briefing's reward: " .. table.concat(badges, "|"))
+  end
+end
+
 -- Mission Terminal: offer rows, watch list matches, roll counter, presets, chosen-reward cost.
 do
   local H = Mock.new(addons, core, { width = W, height = Hh, loose = true })

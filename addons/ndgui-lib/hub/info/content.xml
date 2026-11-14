@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <View name="info" view_layout="vertical" weight="1">
+    <ScrollView name="info_scroll" capture_input="true" v_scrollbar_mode="auto" scrollbar_width="11" weight="1">
+      <ScrollViewChild name="info_lines" view_layout="vertical" capture_input="true" layout_borders="Rect(8,8,8,8)" />
+    </ScrollView>
+    <View view_layout="horizontal" min_size="Point(-1,28)" max_size="Point(-1,28)" layout_borders="Rect(8,8,8,8)">
+      <HLayoutSpacer />
+      <Button name="info_back" label="Back" font_size="13" min_size="Point(76,28)" max_size="Point(76,28)" v_alignment="center" layout_borders="Rect(0,0,8,0)" gfxid_raised_left="GFX_NDGUI_BTN28_RAISED_LEFT" gfxid_raised_middle="GFX_NDGUI_BTN28_RAISED_MIDDLE" gfxid_raised_right="GFX_NDGUI_BTN28_RAISED_RIGHT" gfxid_hover_left="GFX_NDGUI_BTN28_HOVER_LEFT" gfxid_hover_middle="GFX_NDGUI_BTN28_HOVER_MIDDLE" gfxid_hover_right="GFX_NDGUI_BTN28_HOVER_RIGHT" gfxid_pressed_left="GFX_NDGUI_BTN28_PRESSED_LEFT" gfxid_pressed_middle="GFX_NDGUI_BTN28_PRESSED_MIDDLE" gfxid_pressed_right="GFX_NDGUI_BTN28_PRESSED_RIGHT" />
+      <Button name="info_forward" label="Forward" font_size="13" min_size="Point(76,28)" max_size="Point(76,28)" v_alignment="center" gfxid_raised_left="GFX_NDGUI_BTN28_RAISED_LEFT" gfxid_raised_middle="GFX_NDGUI_BTN28_RAISED_MIDDLE" gfxid_raised_right="GFX_NDGUI_BTN28_RAISED_RIGHT" gfxid_hover_left="GFX_NDGUI_BTN28_HOVER_LEFT" gfxid_hover_middle="GFX_NDGUI_BTN28_HOVER_MIDDLE" gfxid_hover_right="GFX_NDGUI_BTN28_HOVER_RIGHT" gfxid_pressed_left="GFX_NDGUI_BTN28_PRESSED_LEFT" gfxid_pressed_middle="GFX_NDGUI_BTN28_PRESSED_MIDDLE" gfxid_pressed_right="GFX_NDGUI_BTN28_PRESSED_RIGHT" />
+    </View>
+  </View>
+</root>
