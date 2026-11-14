@@ -75,8 +75,7 @@ end
 -- ---- state ------------------------------------------------------------------
 local opened, available, buttons, areas = false, true, false, false
 local window_visible, native_shown = false, nil
-local zoom_pending, last_update_at, shown_at, reattached = false, nil, nil, false
-local reshow_at -- set while the watchdog has hidden the window for a moment
+local zoom_pending, last_update_at, shown_at = false, nil, nil
 local first_pending, centre_pending, follow_pending = false, false, false
 -- After a zone change the new map can arrive before your position does: keep centring on you
 -- for a few seconds (whatever Follow says) until the position settles.
@@ -283,43 +282,7 @@ local function chrome_height()
 	return (buttons and 152 or 0) + (settings.compact and 0 or TOOLBAR_H + STATUS_H)
 end
 
--- Zoning trace (diagnostics): the first updates after a map change and every open/close go to this
--- package's storage (addon-data/*.json) so a black map after zoning can be read back afterwards.
--- One short record per open ("trace_1" = the first open this session, ...), so a black first open
--- and a working reopen can be compared. Each record keeps its first 30 lines.
-local trace, trace_left, trace_open, trace_start = {}, 0, 0, nil
-local function note(text)
-	if #trace >= 30 or trace_open > 6 then
-		return
-	end
-	local now = math.floor(ui.time() or 0)
-	trace_start = trace_start or now
-	trace[#trace + 1] = string.format("+%d %s", now - trace_start, text)
-	if ui.storage and ui.storage.write then
-		pcall(ui.storage.write, "trace_" .. trace_open, table.concat(trace, string.char(10)))
-	end
-end
-local function new_trace()
-	trace_open, trace = trace_open + 1, {}
-end
--- a new client session starts clean
-if ui.storage and ui.storage.write then
-	for k = 0, 6 do
-		pcall(ui.storage.write, "trace_" .. k, "")
-	end
-	pcall(ui.storage.write, "zone_trace", "")
-end
-local function note_facts(tag, facts)
-	note(string.format("%s changed=%s acc=%s avail=%s char=%s pos=%.0f,%.0f map=%.0fx%.0f view=%.0f,%.0f %.0fx%.0f pending=%s",
-		tag, tostring(facts.changed), tostring(facts.accessible), tostring(available), tostring(facts.has_character),
-		num(facts.x), num(facts.y), num(facts.width), num(facts.height),
-		num(view.read("x")), num(view.read("y")), num(view.read("width")), num(view.read("height")), tostring(centre_pending)))
-end
-
 local function layout(window, width, height)
-	if trace_left > 0 then
-		note(string.format("layout %.0fx%.0f surface=%.0fx%.0f", num(width), num(height), num(ui.width(surface)), num(ui.height(surface))))
-	end
 	if width ~= shown_width then
 		wanted_width = width
 	end
@@ -443,10 +406,9 @@ frame = Window.create({
 	width = wanted_width,
 	height = wanted_height,
 	layout = layout,
-	-- window visibility, for the trace only (no host calls may run from here: they cannot re-enter Lua)
+	-- window visibility (no host calls may run from here: they cannot re-enter Lua)
 	on_visibility = function(visible)
 		window_visible = visible
-		note("window visible " .. tostring(visible))
 
 	end,
 	menu = {
@@ -532,60 +494,30 @@ function playfield_map_restore(saved_buttons)
 	show_buttons(saved_buttons)
 end
 
--- Watchdog after each open: apply the deferred zoom once the view has a size, and if the client still
--- sends no updates, note it in the trace (the client refuses a second attach).
+-- After each open: apply the deferred zoom once the view has a size (at login the client shows the
+-- map while its view is still 0x0), then stop ticking.
 local watching = false
 local function start_watchdog()
-	reattached = false
 	if watching or not ui.on_update then
 		return
 	end
 	watching = true
 	ui.on_update(function(now)
-		if reshow_at and now >= reshow_at then
-			reshow_at = nil
-			note("watchdog: showing the map view again")
-			ui.visible(surface, true)
-		end
-		if not opened or last_update_at then
-			if not reshow_at then
-				watching = false
-				ui.stop_updates()
-			end
-			return
-		end
 		local w, h = num(ui.width(surface)), num(ui.height(surface))
-		if w > 0 and h > 0 then
-			if zoom_pending then
-				zoom_pending = false
-				note(string.format("watchdog: zoom at %.0fx%.0f", w, h))
-				view.zoom(zoom_scale(), num(ui.x(surface)) + w / 2, num(ui.y(surface)) + h / 2)
-			elseif not reattached and now - (shown_at or now) > 1000 then
-				-- what a manual close / reopen does: hide the window, show it again next frame
-				reattached = true
-				-- hide only the map view (the window stays up, so this ticker keeps running)
-				note("watchdog: no updates, hiding the map view for a moment")
-				ui.visible(surface, false)
-				reshow_at = now + 50
-			elseif reshow_at and now >= reshow_at then
-				reshow_at = nil
-				note("watchdog: showing the map view again")
-				ui.visible(surface, true)
-			elseif now - (shown_at or now) > 6000 then
-				note("watchdog: still no updates, giving up")
-				watching = false
-				ui.stop_updates()
-			end
+		if opened and zoom_pending and w > 0 and h > 0 then
+			zoom_pending = false
+			view.zoom(zoom_scale(), num(ui.x(surface)) + w / 2, num(ui.y(surface)) + h / 2)
+		end
+		if not opened or not zoom_pending then
+			watching = false
+			ui.stop_updates()
 		end
 	end)
 end
 
 function playfield_map_visibility(shown)
 	if shown then
-		new_trace()
-		trace_left = 8
 	end
-	note("visibility " .. tostring(shown) .. " opened_before=" .. tostring(opened))
 	native_shown = shown
 	opened = shown
 	centre_pending, follow_pending = shown, false
@@ -652,17 +584,9 @@ function playfield_map_update(facts)
 		end
 		-- the window is on screen but the client never said "shown" (seen at login): open from here,
 		-- inside a normal native callback (never from the visibility observer)
-		note("update while on screen but not opened: opening")
 		playfield_map_visibility(true)
 	end
 	last_facts = facts
-	if facts.changed then
-		trace_left = math.max(trace_left, 15)
-	end
-	if trace_left > 0 then
-		trace_left = trace_left - 1
-		note_facts("update", facts)
-	end
 	if facts.changed then
 		centre_pending, follow_pending = true, false
 		previous_x, previous_y, previous_character = nil, nil, nil
@@ -733,9 +657,6 @@ function playfield_map_update(facts)
 		end
 	end
 	game.playfield_map.render(show_areas)
-	if trace_left > 0 then
-		note("render areas=" .. tostring(show_areas))
-	end
 	refresh_status()
 end
 
