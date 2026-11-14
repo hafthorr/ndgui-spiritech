@@ -174,6 +174,24 @@ for _, hostile in ipairs({ false, true }) do
       tag .. " player portrait = profession icon, Lv 42")
     check(v(frame2, "np").visible == true and v(frame2, "np_fill").w == math.floor(inner * 0.5 + 0.5), tag .. " nano bar at 50%")
     check(v(frame2, "info").text == "Doctor · Omni" and v(frame2, "distance").text == "", tag .. " info: Doctor · Omni, no distance to self")
+    -- contrast: black HP text on a bright (yellow) bar, white on red
+    check(v(frame2, "hp_text").color == "#000000" and v(frame2, "hp_shadow").color == "#FFFFFF", tag .. " black HP text on yellow")
+    check(v(frame1, "hp_text").color == "#FFFFFF", tag .. " white HP text on red")
+    -- a name wider than its box scrolls
+    T.env.ui.text_width = function(view) return #(view.text or "") * 9 end
+    local long = "Deathless Legionnaire of the Northern Reach"
+    T.env.target_panel_apply({ name = long, has_bar = true, fraction = 0.9, bar_color = 0x40d020, name_color = 0xffffff }, { name = "" }, W)
+    local shown = v(frame1, "name").text
+    check(#shown < #long and long:sub(1, #shown) == shown and #shown * 9 <= v(frame1, "name").w,
+      tag .. " long name is cut to its box: " .. shown)
+    check(v(frame1, "hp_text").color == "#000000", tag .. " black HP text on green")
+    local tk = T.updates[#T.updates]
+    tk(T.now + 1600)
+    check(v(frame1, "name").text == long:sub(2, #shown + 1), tag .. " name scrolls after a pause: " .. v(frame1, "name").text)
+    tk(T.now + 60000); tk(T.now + 61600); tk(T.now + 63300)
+    T.env.target_panel_apply({ name = "Surf Lizard", has_bar = true, fraction = 0.9, bar_color = 0x40d020, name_color = 0xffffff }, { name = "" }, W)
+    check(v(frame1, "name").text == "Surf Lizard", tag .. " short name shows whole again")
+    T.env.ui.text_width = nil
     rects[tag] = { x = T.root.x, w = T.root.w }
     -- saved Size comes back at the restore phase
     local view = T.moves[#T.moves].view
@@ -737,6 +755,59 @@ do
       if not skin:find('"' .. g .. '": %(') then missing[#missing + 1] = g end
     end
     check(#missing == 0, "planet sprites exist in skin.py" .. (#missing > 0 and (": " .. table.concat(missing, ",")) or ""))
+  end
+end
+
+-- Missions: collapsible header, list + detail pane, binding kept on rows and the detail icon.
+do
+  local H = Mock.new(addons, core, { width = W, height = Hh, loose = true })
+  local ok, err = pcall(H.load_package, "ndgui-missions")
+  check(ok, "ndgui-missions loads" .. (ok and "" or (": " .. tostring(err))))
+  if ok then
+    check(role(H, "prk.missions"), "ndgui-missions declares prk.missions")
+    local env = H.env
+    local a = { token = 11, icon = 5, name = "Kill the Raider", timed = true, minutes = 90, selected = false }
+    local b = { token = 12, icon = 6, name = "Find the Data Disk", timed = true, minutes = 120, selected = true }
+    ok, err = pcall(env.missions_apply, { a, b })
+    check(ok, "missions_apply runs" .. (ok and "" or (": " .. tostring(err))))
+    local title = H.find(H.root, "header_title")
+    check(title.text == "Missions (2)", "header counts missions: " .. tostring(title.text))
+    check(H.find(H.root, "header_map").text == "On map: Find the Data Disk", "header names the mission on the map")
+    local dt = H.find(H.root, "detail_title")
+    check(dt.text == "Find the Data Disk", "detail shows the mission on the map first: " .. tostring(dt.text))
+    check(H.find(H.root, "detail_status").text == "On your map", "detail status on map")
+    check(H.find(H.root, "detail_time_text").text == "2:00 left", "detail time left")
+    -- time drains from where it started
+    b.minutes = 60
+    env.missions_apply({ a, b })
+    local fill = H.find(H.root, "detail_time_fill")
+    check(fill.w and fill.w > 0 and fill.w < 120, "time bar drains: " .. tostring(fill.w))
+    check(fill.tint == "#4FB3E8", "plenty of time is blue")
+    b.minutes = 5
+    env.missions_apply({ a, b })
+    check(fill.tint == "#E0503C", "last minutes are red")
+    -- left-click a row chooses the detail
+    local clicked = false
+    local function walk(v)
+      if clicked then return end
+      if v.on_click and v ~= H.find(H.root, "header_hit") then
+        v.on_click()
+        if dt.text == "Kill the Raider" then clicked = true; return end
+      end
+      for _, k in ipairs(v.kids or {}) do walk(k) end
+    end
+    walk(H.root)
+    check(clicked, "clicking a row shows that mission")
+    check(H.find(H.root, "detail_status").text == "Not on your map", "chosen mission not on map")
+    -- fold
+    H.find(H.root, "header_hit").on_click()
+    check(H.find(H.root, "missions_body").visible == false, "header folds the window")
+    check(H.find(H.root, "header_arrow").image:find("EXPAND", 1, true) ~= nil, "folded arrow points to expand")
+    H.find(H.root, "header_hit").on_click()
+    check(H.find(H.root, "missions_body").visible == true, "header unfolds the window")
+    -- no missions
+    env.missions_apply({})
+    check(H.find(H.root, "missions_empty").visible == true and title.text == "Missions", "empty state")
   end
 end
 
