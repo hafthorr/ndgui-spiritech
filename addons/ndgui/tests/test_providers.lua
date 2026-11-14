@@ -851,10 +851,11 @@ do
     for _, r in ipairs({ "prk.info", "prk.missions", "prk.mission-terminal" }) do
       check(role(I, r), "mission hub declares " .. r)
     end
-    check(I.root == nil, "hub builds no window before its first callback")
+    check(I.root ~= nil and I.find(I.root, "hub_blank") ~= nil, "hub mounts an empty frame at load")
     local ok, err = pcall(I.env.info_show, 1, page, {}, false)
     check(ok, "hub info_show runs" .. (ok and "" or (": " .. tostring(err))))
-    check(I.root ~= nil, "hub builds the Info window on info_show")
+    check(I.find(I.root, "info_lines") ~= nil and I.find(I.root, "window_title").text == "Info", "hub fills the frame with Info on info_show")
+    check(I.find(I.root, "hub_blank") == nil or I.find(I.root, "hub_blank").visible == false, "placeholder removed")
     check((store["brief:Mission Assignment MXIL: The Rome house"] or "") ~= "", "Info keeps the mission briefing")
     check(store.brief_seq == "1", "brief revision bumps: " .. tostring(store.brief_seq))
     I.env.info_show(2, { { text = "Fling Shot", tone = "title", indent = 0, rgb = -1 }, { text = "Quality level: 10", tone = "detail", indent = 0, rgb = -1 } }, {}, false)

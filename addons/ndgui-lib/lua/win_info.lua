@@ -4,6 +4,7 @@
 local M = {}
 local BASE = "library://notum.ndgui-lib/hub/info/"
 local Window = ui.require("core.window")
+local Shell = ui.require("notum.ndgui-lib/shell")
 local Briefs = ui.require("notum.ndgui-lib/briefs")
 local content = ui.load(BASE .. "content.xml")
 local lines = ui.find(content, "info_lines")
@@ -23,7 +24,7 @@ local colors = {
 	detail = "#9CD69C",
 	link = "#7FD4FF",
 }
-local frame = Window.create({
+local frame = Shell.window({
 	template = "library://notum.ndgui-lib/window.xml",
 	content = content,
 	title = "Info",
@@ -40,7 +41,6 @@ local frame = Window.create({
 		window:fit_content(chosen_width, chosen_height)
 	end,
 })
-ui.root(frame.root)
 game.info.surface(lines, scroll)
 ui.enabled(back, false)
 ui.enabled(forward, false)

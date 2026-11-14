@@ -1,8 +1,10 @@
 -- ndGUI Mission Hub: Info, Missions and Mission Terminal from one package, so Info can keep each
 -- mission briefing it shows (ndgui-lib briefs.lua, in this package's ui.storage) and the Missions
 -- side pane and terminal offers can show it. The client runs each role in its own VM and every VM
--- sees every game.* domain, so a VM only learns its role from the first callback it receives; the
--- window is built then.
+-- sees every game.* domain, so a VM only learns its role from the first callback it receives. The
+-- client still wants a root widget mounted at load: an empty frame (ndgui-lib shell.lua) that the
+-- window module fills on that first callback.
+ui.require("notum.ndgui-lib/shell").mount()
 local kind, impl
 
 local function get(wanted)

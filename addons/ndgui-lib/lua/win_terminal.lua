@@ -11,6 +11,7 @@ local BASE = "library://notum.ndgui-lib/hub/terminal/"
 --   * the chosen-reward panel shows the cost per roll and what this session's rolls cost
 --   * recent chosen rewards are remembered (shared by all characters)
 local Window = ui.require("core.window")
+local Shell = ui.require("notum.ndgui-lib/shell")
 local Briefs = ui.require("notum.ndgui-lib/briefs")
 local content = ui.load(BASE .. "content.xml")
 local status = ui.find(content, "status")
@@ -354,7 +355,7 @@ ui.on_click(watch_clear, function()
 end)
 
 -- ---- window -----------------------------------------------------------------------------
-frame = Window.create({
+frame = Shell.window({
 	template = "library://notum.ndgui-lib/window.xml",
 	title = "Mission Terminal",
 	content = content,
@@ -370,7 +371,6 @@ frame = Window.create({
 		window:fit_title(width, true)
 	end,
 })
-ui.root(frame.root)
 ui.fill_color(reward_back, BACK)
 
 local current_offers = {}

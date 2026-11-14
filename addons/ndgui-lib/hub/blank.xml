@@ -1,0 +1,5 @@
+<?xml version="1.0" standalone="yes"?>
+<root>
+  <!-- placeholder content of the mission hub window until the first callback says which window it is -->
+  <View name="hub_blank" />
+</root>

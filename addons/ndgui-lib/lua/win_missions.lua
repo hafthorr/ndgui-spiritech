@@ -11,6 +11,7 @@ local BASE = "library://notum.ndgui-lib/hub/missions/"
 -- location reach the Info window alone (right-click > Look at mission). In ndgui-mission-hub Info keeps
 -- each briefing it shows (briefs.lua) and the right pane shows it from then on.
 local Window = ui.require("core.window")
+local Shell = ui.require("notum.ndgui-lib/shell")
 local Table = ui.require("notum.ndgui-lib/table")
 local Briefs = ui.require("notum.ndgui-lib/briefs")
 local content = ui.load(BASE .. "content.xml")
@@ -268,11 +269,10 @@ local function layout(window, width, height)
 	if populate then populate() end
 end
 
-frame = Window.create({
+frame = Shell.window({
 	template = "library://notum.ndgui-lib/window.xml",
 	title = "Missions", content = content, width = 520, height = 220, layout = layout,
 })
-ui.root(frame.root)
 title = ui.find(frame.root, "window_title")
 fold = ui.find(frame.root, "window_fold")
 ui.visible(fold, true)
