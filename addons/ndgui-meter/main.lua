@@ -177,14 +177,15 @@ local function paint_graph(seg, kind)
 	for i = first, count do
 		if series[i] > top then top = series[i] end
 	end
-	local col_w = math.max(2, math.floor((row_w - 4) / GRAPH_COLUMNS))
+	-- seconds are thin columns; per-fight bars (at most HISTORY) get a tenth of the width each
+	local col_w = math.max(2, math.floor((row_w - 4) / (per_fight and Meter.HISTORY or GRAPH_COLUMNS)))
 	local height = GRAPH_H - 3
 	for index, col in ipairs(cols) do
 		local value = series[first + index - 1]
 		local h = value and top > 0 and math.max(value > 0 and 1 or 0, math.floor(height * value / top + 0.5)) or 0
 		ui.visible(col, h > 0)
 		if h > 0 then
-			ui.size(col, col_w - 1, h)
+			ui.size(col, col_w - (per_fight and 3 or 1), h)
 			ui.graphic_tint(col, COLOR[mode])
 		end
 	end
