@@ -308,7 +308,7 @@ do
       ev(9, "damage", 350, me, mob, { origin = "special", ability = 777 }) })
     local rows = f("meter_rows").kids
     local function r(i, name) return H.find(rows[i], name) end
-    local function click_row(i) local rel; for _, x in ipairs(H.releases) do if x.view == H.find(rows[i], "row_name") then rel = x end end; rel.cb() end
+    local function click_row(i) rows[i].on_click() end
     -- default: Me with pets folded into you (800 = 600 + pet 200)
     check(f("meter_filter").text == "Me" and r(1, "row_name").text == "1. You" and rows[2].visible == false, "default: Me, pets count as you")
     check(r(1, "row_value").text == "850  94.4/s  100%", "you: amount, per second, share: " .. tostring(r(1, "row_value").text))

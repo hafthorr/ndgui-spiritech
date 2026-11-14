@@ -75,15 +75,13 @@ for index = 1, MAX_ROWS do
 		row[name] = ui.find(view, name)
 	end
 	row.parts = { row.root, row.row_track, row.row_fill, row.row_name, row.row_name_shadow, row.row_value, row.row_value_shadow }
-	-- the innermost pressed view gets the release, so every part listens
-	for _, part in ipairs(row.parts) do
-		ui.on_pointer_release(part, "left", function()
-			if row.click then
-				row.click()
-				render()
-			end
-		end)
-	end
+	-- the row captures input for its parts; left activation is on_click (pointer release is right-only)
+	ui.on_click(row.root, function()
+		if row.click then
+			row.click()
+			render()
+		end
+	end)
 	ui.visible(row.root, false)
 	rows[index] = row
 end
