@@ -283,14 +283,27 @@ end
 
 -- Zoning trace (diagnostics): the first updates after a map change and every open/close go to this
 -- package's storage (addon-data/*.json) so a black map after zoning can be read back afterwards.
-local trace, trace_left = {}, 0
+-- One short record per open ("trace_1" = the first open this session, ...), so a black first open
+-- and a working reopen can be compared. Each record keeps its first 30 lines.
+local trace, trace_left, trace_open, trace_start = {}, 0, 0, nil
 local function note(text)
-	trace[#trace + 1] = string.format("%d %s", math.floor(ui.time() or 0), text)
-	while #trace > 60 do
-		table.remove(trace, 1)
+	if #trace >= 30 or trace_open > 6 then
+		return
 	end
+	local now = math.floor(ui.time() or 0)
+	trace_start = trace_start or now
+	trace[#trace + 1] = string.format("+%d %s", now - trace_start, text)
 	if ui.storage and ui.storage.write then
-		pcall(ui.storage.write, "zone_trace", table.concat(trace, string.char(10)))
+		pcall(ui.storage.write, "trace_" .. trace_open, table.concat(trace, string.char(10)))
+	end
+end
+local function new_trace()
+	trace_open, trace = trace_open + 1, {}
+	if trace_open == 1 then
+		for k = 0, 6 do
+			pcall(ui.storage.write, "trace_" .. k, "")
+		end
+		pcall(ui.storage.write, "zone_trace", "")
 	end
 end
 local function note_facts(tag, facts)
@@ -520,10 +533,11 @@ function playfield_map_restore(saved_buttons)
 end
 
 function playfield_map_visibility(shown)
-	note("visibility " .. tostring(shown))
 	if shown then
-		trace_left = 25
+		new_trace()
+		trace_left = 8
 	end
+	note("visibility " .. tostring(shown) .. " opened_before=" .. tostring(opened))
 	native_shown = shown
 	opened = shown
 	centre_pending, follow_pending = shown, false
@@ -576,6 +590,7 @@ end
 function playfield_map_update(facts)
 	if not opened then
 		if not window_visible then
+			note_facts("ignored (closed)", facts)
 			return
 		end
 		-- updates while the window is on screen but we were never told it opened: open now
