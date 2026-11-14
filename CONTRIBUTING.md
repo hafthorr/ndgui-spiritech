@@ -3,7 +3,7 @@
 ## Layout of the repo
 
 ```
-addons/                     the 13 hand-made packages, copied into client/UI/Addons as-is
+addons/                     the 14 hand-made packages, copied into client/UI/Addons as-is
   ndgui/                    settings host + all the tools and tests
     tools/                  generators (Python 3.8+, Pillow)
     tests/                  offline Lua 5.4 tests against a mock client host

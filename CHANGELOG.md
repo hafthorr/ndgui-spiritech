@@ -7,6 +7,14 @@ Versions follow Semantic Versioning 2.0.0: `MAJOR.MINOR.PATCH`.
 - PATCH bumps fix tokens, scale math, or docs without a config change.
 - While the major version is 0, the client view layer is still incomplete. The Lua model is safe to load offline.
 
+## 0.2.9
+
+- **Buff Watch** (new package; Control Center > Actions > Addons):
+  - **Buff Watch**: your buffs and debuffs with icon, time left and a draining bar. Debuffs first in red, then soonest to end; amber under 1 minute, red under 15 s, the time blinks in the last 10 s. Under it, what you put on your target (your DoTs and debuffs, or your buffs on a friend). Targeting yourself says so instead of listing it twice.
+  - **Team Buffs**: one row per member, one column per buff anyone on the team has (most common first). Each cell shows the time left; red means missing, and the name shows how many (`Bob  -1`). Click a member to target them.
+  - **Alerts** under the compass: low health (under 30%), a debuff landing on you, low nano (under 20%), a buff of 1 minute or more ending within 15 s. Toggle from the Buff Watch title icon menu.
+- **Nameplates**: the client reports one bracket state per plate, so a mob that was attacking you lost its "selected" look when you targeted it again. Your target now always gets the blue ticks, and a target that is also attacking shows blue outside the red.
+
 ## 0.2.8
 
 - The project moved to **GitHub: https://github.com/hafthorr/ndgui-spiritech**. The installer's updater and its download links now read releases from there. Installers from 0.2.7 and older still look on GitLab, which is gone: download this release by hand once (Releases on the GitHub page), and the updater works from then on.

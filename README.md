@@ -20,7 +20,7 @@ Near-black navy panels, steel-blue frames, a blue accent, square buttons. The cl
 - **Compass** top centre: an outlined dotted strip with N / E / S / W that reads on light and dark ground, a green waypoint marker pinned to the edge when it's behind you, and the distance (`312 m`, `1.2 km`).
 - **Target panels**: unit frames with profession portrait, level, exact HP (`941 / 941 (100%)`), a pale "damage just taken" ghost, low-HP pulse, nano, profession / side, distance and a reach dot. **Double-click** for **Lock**, **Size** (S / M / L) and **Compact**.
 - **Floating combat numbers** over target panels and team frames (damage, bigger yellow crits, healing, misses), and **who your target is attacking** (`» You` in orange).
-- **Nameplates**: clean names, a framed health bar in soft level colours (green, amber, red), corner ticks for selected / attacking.
+- **Nameplates**: clean names, a framed health bar in soft level colours (green, amber, red), corner ticks for selected (blue) / attacking (red), both when your target is attacking.
 - Smooth bar fills everywhere (no segment blocks).
 - **Hotbars** with a DarkTech plate, recessed slots, `1`–`0` key labels on the active bar, and a spinner that doubles as the drag handle.
 - Restyled **NCU, target NCU, faction, chat, chat config, raid bars, timer bars, team invite, sneak indicator, logout countdown**.
@@ -40,6 +40,11 @@ Inventory, Wear, Stats, Skills, Nano Programs, Team, Raid, Friends, Pets, Perks,
 - **Damage / Healing / Taken / Targets / Deaths** as bars: amount, per second, share. **Me / Team / Raid / All**.
 - **Click a row**: abilities (weapon by damage type, Fling Shot, Burst..., nanos) with hits and biggest hit; who hit a target; the last 10 hits before a death.
 - Live per-second graph, crit / miss / biggest hit / best 5 s, fight history (`<` `>`, last 10) and Overall, pets counted as you.
+
+**Buff Watch** (AI-hand-made; Control Center > Actions > **Addons** > Buff Watch / Team Buffs)
+- **Buff Watch**: your buffs and debuffs with icons, time left and draining bars (debuffs first in red, then soonest to end; amber under 1 min, red and blinking at the end), and what *you* put on your target (your DoTs, debuffs, or buffs on a friend).
+- **Team Buffs**: one row per member, one column per buff anyone has; red cells are missing buffs (`Bob  -1`). Click a member to target them, then cast as usual (addons can't cast).
+- **Alerts** under the compass: low health, a debuff landing, low nano, a long buff about to end. Toggle it from Buff Watch's title icon menu.
 
 **Local Map** (AI-hand-made)
 - Toolbar: zoom −/+ (and the mouse wheel), Me, Follow, Trail, Rings, Show (marker filters), Mini.
@@ -78,7 +83,7 @@ Full guide, options, updating after a client patch, and troubleshooting: **[INST
 
 ## How it works (one paragraph)
 
-Spiritech loads Lua/XML UI packages from `client/UI/Addons`. This repo holds **13 totally AI-hand-made packages** ([`addons/`](addons)) and the Python tools that derive the other **26** from the game's own UI. They also square every button and paint the DarkTech skin. `build_release.py` runs all of that once, on a developer's machine, and zips the result. The player's `install.ps1` then only copies the packages, swaps in the patched screen layouts, merges the finished skin images into the game's graphics file (`cd_image/gui/Default`), and selects the ndGUI providers. It keeps `*.stock` backups of everything it touches. Details are in [CONTRIBUTING.md](CONTRIBUTING.md).
+Spiritech loads Lua/XML UI packages from `client/UI/Addons`. This repo holds **14 totally AI-hand-made packages** ([`addons/`](addons)) and the Python tools that derive the other **26** from the game's own UI. They also square every button and paint the DarkTech skin. `build_release.py` runs all of that once, on a developer's machine, and zips the result. The player's `install.ps1` then only copies the packages, swaps in the patched screen layouts, merges the finished skin images into the game's graphics file (`cd_image/gui/Default`), and selects the ndGUI providers. It keeps `*.stock` backups of everything it touches. Details are in [CONTRIBUTING.md](CONTRIBUTING.md).
 
 ## Known limits
 
@@ -90,7 +95,7 @@ Spiritech loads Lua/XML UI packages from `client/UI/Addons`. This repo holds **1
 
 ## Status
 
-`0.2.8`: playable, in daily use, with rough edges.
+`0.2.9`: playable, in daily use, with rough edges.
 
 ## Bugs, issues, ideas
 
