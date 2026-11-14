@@ -287,6 +287,19 @@ do
     team_cb({ data = { in_team = true, can_invite = true, side = 1, context = 2, members = {
       member("me", "Ninnai", 10, 900, 1000, true, true, true) } } })
     check(rows[2].visible == false and unsubscribed >= 1, "leaving member hidden and unwatched")
+    -- docked in the right-side column: fits 190 px, buttons narrowed, height follows the content
+    check(H.dock_callbacks and H.dock_callbacks[1], "team registers with the docking column")
+    if H.dock_callbacks and H.dock_callbacks[1] then
+      local ok_dock, err_dock = xpcall(H.dock_callbacks[1], debug.traceback, "dock", 0, 0, 190, 0)
+      check(ok_dock, "team docks" .. (ok_dock and "" or (": " .. tostring(err_dock))))
+      ok_dock, err_dock = pcall(function() H.find(H.root, "ncu_toggle").on_click() end) -- re-lays out the docked page
+      check(ok_dock, "docked team lays out" .. (ok_dock and "" or (": " .. tostring(err_dock))))
+      local compact_b, invite_b = H.find(H.root, "compact_toggle"), H.find(H.root, "invite_button")
+      check(compact_b.max_w == 56, "docked: Compact narrowed (" .. tostring(compact_b.max_w) .. ")")
+      check(invite_b.w and invite_b.w >= 40 and 6 + 56 + 40 + 9 + invite_b.w + (H.find(H.root, "leave_button").w or 0) <= 190,
+        "docked: the button row fits 190 px (Recruit " .. tostring(invite_b.w) .. ")")
+      H.find(H.root, "ncu_toggle").on_click()
+    end
   end
 end
 
@@ -522,6 +535,17 @@ if ok_cc then
     has_pets = false, perks_available = false, minibar_shown = true, rollup_shown = true, rollup_background_opacity = 0.5 }, {})
   check(cc_find("minibar").visible == true and cc_find("rollup_panel").visible == true, "Options toggles show the minibar and the column")
   check(cc_find("rollup_background").opacity == 0.5, "column backdrop follows the opacity slider")
+  check(cc_find("rollup_panel").w == 190 + 12, "column = 190 px of pages + a scroll-bar lane (" .. tostring(cc_find("rollup_panel").w) .. ")")
+  -- live titles reach the docked page too (Core writes rollup_title only once)
+  local Title = CC.env.ui.require("notum.ndgui-lib/title")
+  local page = CC.env.ui.load("library://notum.ndgui-lib/window.xml")
+  local compact = CC.env.ui.load("library://notum.ndgui-lib/rollup.xml")
+  CC.env.ui.add(page, compact)
+  Title.set(page, "NCU (2/10)")
+  check(CC.find(page, "window_title").text == "NCU (2/10)" and CC.find(page, "rollup_title").text == "NCU (2/10)",
+    "a title change reaches both the floating and the docked title")
+  local plain = CC.env.ui.load("library://notum.ndgui-lib/window.xml")
+  check(pcall(Title.set, plain, "Skills"), "windows without a docked page still take a title")
   local minibar_buttons = 0
   for _, name in ipairs({ "wear", "actions", "missions", "team", "playfield_map", "friends", "programs", "stats", "ncu" }) do
     if cc_find("minibar_" .. name).bound then minibar_buttons = minibar_buttons + 1 end

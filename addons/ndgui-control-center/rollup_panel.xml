@@ -9,7 +9,7 @@
       <BitmapView name="ndgui_column_edge" image="library://notum.ndgui-lib/window/edge_v.png" min_size="Point(3,1)" max_size="Point(3,-1)" h_alignment="left" />
     </View>
     <ScrollView name="rollup_scroll" capture_input="true" interactive="true" view_layout="vertical"
-                v_scrollbar_mode="auto" scrollbar_width="11" scrollbar_right_inset="1" layout_borders="Rect(3,0,0,0)">
+                v_scrollbar_mode="auto" scrollbar_width="11" scrollbar_right_inset="1">
       <ScrollViewChild name="rollup_pages" view_layout="vertical" />
     </ScrollView>
   </View>

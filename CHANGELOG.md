@@ -11,6 +11,7 @@ Versions follow Semantic Versioning 2.0.0: `MAJOR.MINOR.PATCH`.
 
 - **Docking column** in ndGUI's Control Center (Options > Interface & HUD > Show rollup panel): a solid dark column down the right edge. **Right-click** a window's title, move the mouse to the column (no button held), **left-click** to dock it; the same undocks it or moves it in the stack. The game lets these dock: Actions, Team, Local Map, Friends, Missions, Inventory, NCU, Nano Programs, Planet Map, Stats, Wear, Tradeskills, Faction (not addon windows like Buff Watch). Wide windows are cut to the 190 px column. The opacity slider fades the column.
 - **Minibar** (Show minibar): the nine small window buttons top right; the column starts under it.
+- Docked pages: the scroll bar of a tall stack gets its own lane instead of covering the pages, and pages are no longer shifted (cut off on the right). Titles that change (NCU (2/10), Inventory, Missions...) also update on the docked page. **Team** docked fits the column: narrower Compact / NCU buttons, Leave and Recruit share the rest, and the page is as tall as its members (no empty floating height).
 
 ## 0.2.10
 

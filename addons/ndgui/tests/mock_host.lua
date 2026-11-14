@@ -78,6 +78,14 @@ function M.new(addons_dir, core_dir, opts)
     v.progress = f
   end
   function ui.size(v, w, h) assert(v, "size nil"); v.w, v.h = w, h end
+  function ui.limits(v, a, b, c, d) assert(v, "limits nil"); v.min_w, v.min_h, v.max_w, v.max_h = a, b, c, d end
+  -- size / placement queries Core's docking reads (numbers, like the client)
+  for _, k in ipairs({ "desired_width", "desired_height", "minimum_width", "minimum_height", "maximum_width", "maximum_height",
+    "offset_x", "offset_y" }) do
+    ui[k] = ui[k] or function(v) assert(v, k .. " nil view"); return (k:find("height") and v.h) or (k:find("width") and v.w) or 0 end
+  end
+  ui.horizontal_alignment = ui.horizontal_alignment or function() return "start" end
+  ui.vertical_alignment = ui.vertical_alignment or function() return "start" end
   function ui.place(v, x, y) assert(v, "place nil"); v.x, v.y = x, y end
   function ui.visible(v, b) assert(v, "visible nil"); v.visible = b end
   function ui.text_color(v, c) assert(v, "text_color nil"); v.color = c end
@@ -155,7 +163,7 @@ function M.new(addons_dir, core_dir, opts)
     register = function(view, floating_header, compact_header, preview, cb)
       assert(view and floating_header and compact_header and preview and type(cb) == "function", "docking.register args")
       assert(view.name == "window" or view.tag, "docking.register needs the window root")
-      H.docked_views[#H.docked_views + 1] = view end,
+      H.docked_views[#H.docked_views + 1] = view; H.dock_callbacks = H.dock_callbacks or {}; H.dock_callbacks[#H.docked_views] = cb end,
     restore = function(view, docked, order) assert(view and type(docked) == "boolean" and type(order) == "number") end }
   -- docking host calls (Nov 2026 patch), checked like the client documents them
   H.rollup_hosts = {}

@@ -221,6 +221,7 @@ local function show_header()
 		text = text .. " - " .. remaining(lead)
 	end
 	ui.text(title, text)
+	pcall(function() ui.text(ui.find(frame.root, "rollup_title"), text) end) -- the docked page (Missions can dock)
 	if fold then
 		ui.selected(fold, collapsed)
 		ui.tooltip(fold, collapsed and "Unfold the mission list" or "Fold to the title bar")

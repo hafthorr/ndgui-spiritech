@@ -61,8 +61,14 @@ end
 
 local laid_compact
 local show_rows -- defined below; re-shows members after a compact switch
+local DOCKED_COMPACT_W, DOCKED_NCU_W, DOCKED_GAP = 56, 40, 3
+local compact_button_w, ncu_button_w -- floating sizes, from content.xml
 local function layout(window, width, height)
-	width = math.max(Window.MINIMUM_WIDTH, math.min(640, width))
+	local docked = window.docking and window.docking.docked
+	if docked then
+		width = window.docking.width or width -- the column, not the saved floating width
+	end
+	width = math.max(docked and 1 or Window.MINIMUM_WIDTH, math.min(640, width))
 	local w = width - Window.CONTENT_SIDES - ROW_SIDES
 	if w ~= unit_width or compact ~= laid_compact then
 		unit_width, laid_compact = w, compact
@@ -70,11 +76,35 @@ local function layout(window, width, height)
 			row.unit:layout(unit_width, scale(), compact)
 		end
 	end
-	local fixed = Window.CONTENT_SIDES + BUTTON_ROW_BORDERS + NCU_BUTTON_WITH_GAPS
-	local button_width = math.min(BUTTON_WIDTH, (width - fixed) / 2)
+	local button_width, invite_width
+	if docked then
+		-- narrow Compact / NCU; Leave and Recruit share the rest (Recruit alone when not in a team)
+		ui.limits(compact_toggle, DOCKED_COMPACT_W, BUTTON_HEIGHT, DOCKED_COMPACT_W, BUTTON_HEIGHT)
+		ui.limits(toggle, DOCKED_NCU_W, BUTTON_HEIGHT, DOCKED_NCU_W, BUTTON_HEIGHT)
+		local room = width - BUTTON_ROW_BORDERS - DOCKED_COMPACT_W - DOCKED_NCU_W - DOCKED_GAP * 3
+		if ui.requested_visible(leave) then
+			button_width = math.floor(room / 2)
+			invite_width = room - button_width
+		else
+			button_width, invite_width = 1, room
+		end
+	else
+		ui.limits(compact_toggle, compact_button_w, BUTTON_HEIGHT, compact_button_w, BUTTON_HEIGHT)
+		ui.limits(toggle, ncu_button_w, BUTTON_HEIGHT, ncu_button_w, BUTTON_HEIGHT)
+		local fixed = Window.CONTENT_SIDES + BUTTON_ROW_BORDERS + NCU_BUTTON_WITH_GAPS
+		button_width = math.min(BUTTON_WIDTH, (width - fixed) / 2)
+		invite_width = button_width
+	end
 	ui.size(leave, button_width, BUTTON_HEIGHT)
-	ui.size(invite, button_width, BUTTON_HEIGHT)
+	ui.size(invite, invite_width, BUTTON_HEIGHT)
 	local minimum_height = HEADER_H + rows_height() + fit_strips(width)
+	if docked then
+		-- the docked page follows its content (no empty floating height below the members)
+		window.content_driven = true
+		window:fit_content(width, minimum_height)
+		return
+	end
+	window.content_driven = nil
 	height = math.max(minimum_height, math.min(640, height))
 	ui.limits(window.root, Window.MINIMUM_WIDTH, minimum_height, 640, math.max(640, minimum_height))
 	ui.request_size(window.root, width, height)
@@ -99,6 +129,7 @@ for index = 1, 6 do
 	rows[index] = row
 end
 
+compact_button_w, ncu_button_w = 68, 52 -- content.xml
 frame = Window.create({
 	template = "library://notum.ndgui-lib/window.xml",
 	title = "Team", content = content, width = 300, height = 260,

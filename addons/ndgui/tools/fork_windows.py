@@ -47,6 +47,15 @@ def slug(name):
     return re.sub(r"(?<!^)(?=[A-Z])", "-", name).lower()
 
 
+# Live title updates also reach the docked page (ndgui-lib/lua/title.lua): Core writes the compact
+# rollup_title only once. ui.text(ui.find(X, "window_title"), Y) -> Title.set(X, Y).
+TITLE_FIND = re.compile(r'ui\.text\(ui\.find\(([^,()]+), "window_title"\), ')
+
+
+def titles(code):
+    return TITLE_FIND.sub(r'ui.require("notum.ndgui-lib/title").set(\1, ', code)
+
+
 def fork(src, role, title):
     sdir = os.path.join(STOCK, src)
     dest_name = "ndgui-" + slug(src)
@@ -67,6 +76,7 @@ def fork(src, role, title):
         path = os.path.join(ddir, fn)
         code = open(path, encoding="utf-8").read()
         code = code.replace('ui.require("core.table")', 'ui.require("notum.ndgui-lib/table")')  # hideable columns (lib_table.py)
+        code = titles(code)
         n = code.count("Window.create({")
         if n:
             code = code.replace("Window.create({", 'Window.create({\n\ttemplate = "%s",' % TEMPLATE)

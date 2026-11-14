@@ -41,7 +41,7 @@ function S.window(options)
 	if not pcall(ui.destroy, blank) then
 		ui.visible(blank, false)
 	end
-	ui.text(ui.find(frame.root, "window_title"), options.title or "")
+	ui.require("notum.ndgui-lib/title").set(frame.root, options.title or "") -- the docked page too
 	if frame.placement and frame.placement.options then
 		frame.placement.options.remember_open = options.remember_open ~= false
 	end

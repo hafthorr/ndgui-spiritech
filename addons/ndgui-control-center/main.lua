@@ -266,7 +266,9 @@ for _, entry in ipairs({
 end
 
 -- Right-side docking column (Options > Show rollup panel): windows dragged onto it by their title bar dock
--- here. It runs from under the minibar (when shown) down to the ndGUI strip.
+-- here. It runs from under the minibar (when shown) down to the ndGUI strip. Pages are Column.WIDTH wide;
+-- the column adds a lane for the scroll bar so a tall stack scrolls without the bar covering the pages.
+local SCROLL_LANE = 12
 local column = nil
 if ui.docking and ui.docking.available() then
 	column = { root = ui.load("rollup_panel.xml") }
@@ -278,7 +280,7 @@ if ui.docking and ui.docking.available() then
 			return
 		end
 		self.height, self.top = height, top
-		ui.size(self.root, Column.WIDTH, height)
+		ui.size(self.root, Column.WIDTH + SCROLL_LANE, height)
 		ui.place(self.root, 0, top)
 		ui.align(self.root, "end", "start")
 	end

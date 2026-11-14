@@ -66,12 +66,22 @@ def recolor(xml):
     return COLOR_ATTR.sub(lambda m: f'{m.group(1)}="{RECOLOR.get(m.group(2), m.group(2))}"', xml)
 
 
+# Live title updates also reach the docked page (ndgui-lib/lua/title.lua): Core writes the compact
+# rollup_title only once. ui.text(ui.find(X, "window_title"), Y) -> Title.set(X, Y).
+TITLE_FIND = re.compile(r'ui\.text\(ui\.find\(([^,()]+), "window_title"\), ')
+
+
+def titles(code):
+    return TITLE_FIND.sub(r'ui.require("notum.ndgui-lib/title").set(\1, ', code)
+
+
 def vendor(ddir, core_file, old_define, new_define, patches, what):
     code = open(os.path.join(STOCK, "Core", core_file), encoding="utf-8").read()
     code = must(code, f'ui.define("{old_define}"', f'ui.define("{new_define}"', what)
     for old, new in patches:
         code = must(code, old, new, what)
     code = code.replace('ui.require("core.table")', 'ui.require("notum.ndgui-lib/table")')  # hideable columns (lib_table.py)
+    code = titles(code)
     open(os.path.join(ddir, "ndgui_" + core_file), "w", encoding="utf-8", newline="\n").write(MARK.format(src="Core/" + core_file) + code)
     return "ndgui_" + core_file
 
@@ -136,6 +146,7 @@ def fork(src, role, title):
             path = os.path.join(ddir, fn)
             code = open(path, encoding="utf-8").read()
             code = code.replace('ui.require("core.table")', 'ui.require("notum.ndgui-lib/table")')  # hideable columns
+            code = titles(code)
             open(path, "w", encoding="utf-8", newline="\n").write(MARK.format(src=src) + code)
     lines = [f'<Package id="notum.{dest}" name="Notum Dovvetech {title}">',
              '  <Requires package="notum.ndgui-lib" />',
