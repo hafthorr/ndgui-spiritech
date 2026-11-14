@@ -7,7 +7,7 @@ Versions follow Semantic Versioning 2.0.0: `MAJOR.MINOR.PATCH`.
 - PATCH bumps fix tokens, scale math, or docs without a config change.
 - While the major version is 0, the client view layer is still incomplete. The Lua model is safe to load offline.
 
-## Unreleased (branch combat-frames)
+## 0.2.6
 
 - **Team window**: every member is a unit frame like the target panels: profession portrait, name and level, exact HP with the damage ghost and low-HP pulse, nano, profession / side and distance. The leader gets a green name and stripe; absent members are greyed. Click to target, right-click menu, NCU strips, Leave and Recruit work as before.
 - **Floating combat numbers** on target panels and team frames: damage, bigger yellow crits, healing, misses (from the game's combat feed).
@@ -18,6 +18,8 @@ Versions follow Semantic Versioning 2.0.0: `MAJOR.MINOR.PATCH`.
   - **Live per-second graph**, a stat strip (crit, miss, biggest hit, best 5 s burst) and a fight clock that ticks while you fight.
   - **Me / Team / Raid / All** (default Me), **fight history** (`<` `>`, last 10, named after the main enemy), **Overall**, **Pets** folded into you, players tinted by profession.
 - **Nameplates** (new provider, `prk.nameplates`): clean overhead names with a thin outline, a framed health bar in soft consider colours (green, amber, red), organization in muted steel, thin corner ticks for selected (blue) / attacking (red), one dark panel when backing is on. GM / PvP / roleplay tags and distance scaling as stock.
+- XP / AXP (and HP / NP) numbers get thousands separators like the credits counter: `1,396 / 4,500`.
+- Changing any ndGUI file needs a full game restart (the client reads addons only at launch).
 - The unit frame lives in ndgui-lib (`unit.xml`, `lua/unit.lua`); Team is now a hand-made package instead of a generated fork.
 
 ## 0.2.5
