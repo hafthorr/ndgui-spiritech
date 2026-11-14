@@ -98,6 +98,13 @@ function M.new(addons_dir, core_dir, opts)
   end
   ui.local_x = function(v) assert(v, "local_x nil"); return v.x or 0 end
   ui.local_y = function(v) assert(v, "local_y nil"); return v.y or 0 end
+  -- remember presentation calls the target panels assert on
+  ui.image = function(v, src) assert(v, "image nil view"); v.image = src end
+  ui.fill_color = function(v, c) assert(v, "fill_color nil view"); v.fill = c end
+  ui.font_size = function(v, n) assert(v and type(n) == "number" and n >= 1 and n <= 256, "font_size"); v.font = n end
+  ui.opacity = function(v, a) assert(v and a >= 0 and a <= 1, "opacity"); v.opacity = a end
+  H.stopped = 0
+  ui.stop_updates = function() H.stopped = H.stopped + 1 end
   -- keep click handlers so tests can press buttons
   ui.on_click = function(v, cb) assert(v and type(cb) == "function", "on_click"); H.calls.on_click = (H.calls.on_click or 0) + 1; v.on_click = cb end
   ui.in_combat = function() return false end

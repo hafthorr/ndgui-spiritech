@@ -115,23 +115,66 @@ if C then
   check((C.calls["compass.sprite"] or 0) == 3 and C.calls["compass.finish"] == 1, "compass draws band twice plus waypoint")
 end
 
--- Target panels: friendly and hostile flank the compass without overlapping it.
+-- Target panels: fixed-size unit frames fed by the native slot plus game.character facts.
 local rects = {}
 for _, hostile in ipairs({ false, true }) do
   local T = load_pkg("ndgui-target-panels")
   if T then
+    local tag = hostile and "hostile" or "friendly"
     check(role(T, "prk.target-panels"), "target panels declare prk.target-panels")
+    local frame1, frame2 = T.root.kids[1], T.root.kids[2]
+    local function v(frame, name) return T.find(frame, name) end
+    check(#T.subs == 3, tag .. " subscribes to target, fight and self (" .. #T.subs .. ")")
+    -- subs in order: target, fight, self
+    T.subs[3]({ reset = true }, { name = "Ninnai", is_self = true, is_npc = false, x = 0, y = 0, z = 0, profession = 10, level = 42,
+      health = 900, max_health = 1000, nano = 300, max_nano = 600, side = 2 })
+    T.subs[1]({ reset = true }, { name = "Surf Lizard", is_npc = true, level = 12, health = 400, max_health = 1000, x = 30, y = 0, z = 40 })
     T.env.target_panel_place(W, hostile)
     local slot = { name = "Surf Lizard", has_bar = true, length = 0.5, fraction = 0.4, bar_color = 0xd24b4b,
       in_reach = true, header = "Lizard", name_color = 0xffffff }
     T.env.target_panel_apply(slot, { name = "" }, W)
-    check(T.find(T.root, "target_upper_name").text == "Surf Lizard", (hostile and "hostile" or "friendly") .. " shows target name")
-    check(T.find(T.root, "target_lower").visible == false, "empty lower slot hides")
-    local fill = T.find(T.root, "target_upper_fill")
-    local bar = T.find(T.root, "target_upper_bar")
-    check(fill.w == math.floor(bar.w * 0.4 + 0.5) and fill.tint == "#d24b4b", "target fill sized to 40% and tinted by con colour")
-    check(T.find(T.root, "target_upper_pct").text == "40%", "target shows health percent")
-    rects[hostile and "hostile" or "friendly"] = T.root
+    local w = T.root.w
+    check(w == 300, tag .. " frame is a fixed 300 wide at size M (" .. tostring(w) .. ")")
+    check(v(frame1, "name").text == "Surf Lizard", tag .. " shows target name")
+    check(v(frame2, "frame").visible == false, tag .. " empty lower slot hides")
+    local inner = v(frame1, "hp").w
+    check(v(frame1, "hp_fill").w == math.floor(inner * 0.4 + 0.5) and v(frame1, "hp_fill").tint == "#d24b4b", tag .. " fill 40% in con colour")
+    check(v(frame1, "hp_text").text == "400 / 1,000   40%", tag .. " exact HP inside the bar: " .. tostring(v(frame1, "hp_text").text))
+    check(v(frame1, "portrait_level").text == "12" and v(frame1, "portrait_icon").visible == false, tag .. " NPC portrait shows level")
+    check(v(frame1, "distance").text == "50 m" and v(frame1, "reach").fill == "#6fd46f", tag .. " distance 50 m, reach lit")
+    check(v(frame1, "info").text == "NPC" and v(frame1, "np").visible == false, tag .. " NPC info, no nano bar")
+    check(v(frame1, "accent").fill == "#d24b4b", tag .. " accent stripe in con colour")
+    -- damage: ghost holds the old 40%, then drains; under 25% the fill pulses
+    local updates = #T.updates
+    T.subs[1]({}, { name = "Surf Lizard", is_npc = true, level = 12, health = 200, max_health = 1000, x = 30, y = 0, z = 40 })
+    T.env.target_panel_apply({ name = "Surf Lizard", has_bar = true, fraction = 0.2, bar_color = 0xd24b4b, in_reach = false, name_color = 0xffffff }, { name = "" }, W)
+    check(v(frame1, "hp_ghost").visible ~= false and v(frame1, "hp_ghost").w == math.floor(inner * 0.4 + 0.5), tag .. " ghost marks the lost 20%")
+    check(#T.updates > updates, tag .. " animation starts")
+    local tick = T.updates[#T.updates]
+    local t0 = T.now
+    tick(t0 + 100); check(v(frame1, "hp_ghost").w == math.floor(inner * 0.4 + 0.5), tag .. " ghost holds briefly")
+    tick(t0 + 550)
+    local mid = v(frame1, "hp_ghost").w
+    check(mid < math.floor(inner * 0.4 + 0.5) and mid > math.floor(inner * 0.2 + 0.5), tag .. " ghost drains (" .. tostring(mid) .. ")")
+    tick(t0 + 1200)
+    check(v(frame1, "hp_ghost").visible == false, tag .. " ghost gone once drained")
+    check(v(frame1, "hp_fill").opacity ~= nil and v(frame1, "reach").fill == "#33424f", tag .. " low HP pulses; reach dims")
+    -- a player (you) in the lower slot: profession portrait, level, nano, side
+    T.env.target_panel_apply(slot, { name = "Ninnai", has_bar = true, fraction = 0.9, bar_color = 0xe0d040, name_color = 0xffffff }, W)
+    check(v(frame2, "portrait_icon").image == "gfx://GFX_GUI_ICON_PROFESSION_LARGE_10" and v(frame2, "level").text == "Lv 42",
+      tag .. " player portrait = profession icon, Lv 42")
+    check(v(frame2, "np").visible == true and v(frame2, "np_fill").w == math.floor(inner * 0.5 + 0.5), tag .. " nano bar at 50%")
+    check(v(frame2, "info").text == "Doctor · Omni" and v(frame2, "distance").text == "", tag .. " info: Doctor · Omni, no distance to self")
+    rects[tag] = { x = T.root.x, w = T.root.w }
+    -- options: double-click -> Size cycles M -> L, Compact hides portrait and info
+    local mv = T.moves[#T.moves].options
+    mv.enabled(5, 5); mv.finished(true, 5, 5); T.now = T.now + 100; mv.enabled(5, 5); mv.finished(true, 5, 5); T.now = T.now + 1000
+    check(T.find(T.root, "target_edit").visible == true, tag .. " double-click opens Lock / Size / Compact")
+    T.find(T.root, "target_size").on_click()
+    check(T.root.w == 363 and T.find(T.root, "target_size").text == "Size L", tag .. " Size L = 363 wide (" .. tostring(T.root.w) .. ")")
+    T.find(T.root, "target_compact").on_click()
+    check(v(frame1, "portrait").visible == false and v(frame1, "row_info").visible == false and v(frame1, "level").text == "Lv 12",
+      tag .. " compact: name + bar (+ level)")
   end
 end
 if rects.friendly and rects.hostile then

@@ -1,0 +1,36 @@
+<root>
+  <!-- One target unit frame. Every size is set from main.lua (S/M/L, compact). -->
+  <View name="frame" view_layout="stacked" h_alignment="left" layout_borders="Rect(0,0,0,4)">
+    <BitmapView name="plate" image="library://notum.ndgui-lib/chrome/plate.png" />
+    <View view_layout="horizontal">
+      <View name="accent" />
+      <View name="portrait" view_layout="stacked" v_alignment="top" layout_borders="Rect(5,4,0,4)">
+        <View name="portrait_back" />
+        <BitmapView name="portrait_icon" h_alignment="center" v_alignment="center" />
+        <TextView name="portrait_level" value="" color="C5D7E6" text_alignment="center" size_to_text="false" h_alignment="center" v_alignment="center" />
+      </View>
+      <View name="body" view_layout="vertical" layout_borders="Rect(6,4,7,5)">
+        <View name="row_name" view_layout="horizontal">
+          <TextView name="name" value="" color="C5D7E6" v_alignment="center" size_to_text="false" />
+          <TextView name="level" value="" color="7F9BB0" text_alignment="right" v_alignment="center" size_to_text="false" />
+        </View>
+        <View name="hp" view_layout="stacked" layout_borders="Rect(0,2,0,0)">
+          <BitmapView name="hp_track" image="library://notum.ndgui-lib/bars/track_h.png" />
+          <BitmapView name="hp_ghost" image="library://notum.ndgui-lib/bars/target_h.png" graphic_mode="tinted" color="FFE9A8" h_alignment="left" />
+          <BitmapView name="hp_fill" image="library://notum.ndgui-lib/bars/target_h.png" graphic_mode="tinted" color="C44747" h_alignment="left" />
+          <TextView name="hp_shadow" value="" color="000000" text_alignment="center" size_to_text="false" layout_borders="Rect(1,1,0,0)" />
+          <TextView name="hp_text" value="" color="FFFFFF" text_alignment="center" size_to_text="false" />
+        </View>
+        <View name="np" view_layout="stacked" layout_borders="Rect(0,2,0,0)">
+          <BitmapView name="np_track" image="library://notum.ndgui-lib/bars/track_thin.png" />
+          <BitmapView name="np_fill" image="library://notum.ndgui-lib/bars/np_h.png" h_alignment="left" />
+        </View>
+        <View name="row_info" view_layout="horizontal" layout_borders="Rect(0,2,0,0)">
+          <TextView name="info" value="" color="7F9BB0" v_alignment="center" size_to_text="false" />
+          <TextView name="distance" value="" color="C5D7E6" text_alignment="right" v_alignment="center" size_to_text="false" />
+          <View name="reach" v_alignment="center" layout_borders="Rect(4,0,0,0)" />
+        </View>
+      </View>
+    </View>
+  </View>
+</root>
