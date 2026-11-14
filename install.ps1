@@ -124,11 +124,37 @@ function Wait-GameClosed {
     }
 }
 
-function Save-Stock([string]$Path) {
-    # keep the untouched game file once; every later install starts from it
-    if ((Test-Path -LiteralPath $Path) -and -not (Test-Path -LiteralPath "$Path.stock")) {
-        Copy-Item -LiteralPath $Path -Destination "$Path.stock"
+function Test-Ours([string]$Path) {
+    # every file ndGUI changes carries an NDGUI graphic id; the game's own files never do
+    return $Latin1.GetString([System.IO.File]::ReadAllBytes($Path)).Contains('NDGUI')
+}
+
+function Save-Stock([string]$Path, [string]$Probe = $Path) {
+    # Keep the untouched game file; every later install starts from it. When the live file is no longer
+    # ours ($Probe has no NDGUI mark), a game patch replaced it: that copy is the new stock.
+    if (-not (Test-Path -LiteralPath $Path)) { return }
+    if (-not (Test-Path -LiteralPath "$Path.stock") -or -not (Test-Ours $Probe)) {
+        Copy-Item -LiteralPath $Path -Destination "$Path.stock" -Force
     }
+}
+
+function Get-BuiltFrom {
+    # the original game screens this release was built from: relative path -> SHA-256
+    $map = @{}
+    $file = Join-Path $Game 'built-from.txt'
+    if (Test-Path -LiteralPath $file) {
+        foreach ($line in [System.IO.File]::ReadAllLines($file)) {
+            $parts = $line.Trim() -split '\s+'
+            if ($parts.Count -eq 2) { $map[$parts[0]] = $parts[1] }
+        }
+    }
+    return $map
+}
+
+function Test-SameGame([hashtable]$BuiltFrom, [string]$Key, [string]$Path) {
+    # true when the game's original of this screen is the one the release was built from
+    if (-not $BuiltFrom.ContainsKey($Key)) { return $false }
+    return (Get-FileHash -LiteralPath "$Path.stock" -Algorithm SHA256).Hash -eq $BuiltFrom[$Key]
 }
 
 function Get-Stock([string]$Path) {
@@ -194,7 +220,9 @@ function Install-Skin([string]$ClientDir) {
     $uvgi = Join-Path $dir 'Graphics.uvgi'; $uvga = Join-Path $dir 'Graphics.uvga'; $colors = Join-Path $dir 'GUIColors.xml'
     foreach ($f in @($uvgi, $uvga, $colors)) {
         if (-not (Test-Path -LiteralPath $f)) { throw "Game skin file missing: $f" }
-        Save-Stock $f
+    }
+    foreach ($f in @($uvgi, $uvga, $colors)) {
+        Save-Stock $f $uvgi   # only Graphics.uvgi carries the NDGUI mark for all three
     }
     # Graphics.uvgi = count line, then "NAME offset length"; Graphics.uvga = the PNGs back to back.
     $index = $Latin1.GetString([System.IO.File]::ReadAllBytes("$uvgi.stock")) -split "`r?`n"
@@ -242,33 +270,52 @@ function Install-Skin([string]$ClientDir) {
 
 function Install-Screens([string]$ClientDir) {
     $count = 0
+    $stale = 0
+    $builtFrom = Get-BuiltFrom
     foreach ($file in Get-ChildItem -LiteralPath (Join-Path $Game 'Layouts') -Filter '*.xml') {
         $target = Join-Path $ClientDir ('UI\Layouts\' + $file.Name)
         if (-not (Test-Path -LiteralPath $target)) { Warn "  skipped $($file.Name) (not in this game version)"; continue }
         Save-Stock $target
+        if (-not (Test-SameGame $builtFrom "Layouts/$($file.Name)" $target)) {
+            # the game changed this screen since the release was built: an older copy can crash the client
+            Copy-Item -LiteralPath "$target.stock" -Destination $target -Force
+            $stale++
+            continue
+        }
         Copy-Item -LiteralPath $file.FullName -Destination $target -Force
         $count++
     }
     $window = Join-Path $ClientDir 'UI\Packages\Core\window.xml'
     Save-Stock $window
-    Copy-Item -LiteralPath (Join-Path $Game 'Packages\Core\window.xml') -Destination $window -Force
+    if (Test-SameGame $builtFrom 'Packages/Core/window.xml' $window) {
+        Copy-Item -LiteralPath (Join-Path $Game 'Packages\Core\window.xml') -Destination $window -Force
+    } else {
+        Copy-Item -LiteralPath "$window.stock" -Destination $window -Force
+        $stale++
+    }
+    if ($stale) { Warn "  kept $stale game screen(s) stock: this ndGUI was built for another game version. Update ndGUI (menu 2)." }
     Say "  square buttons on $count game screens + window pins"
 }
 
 function Restore-Screens([string]$ClientDir) {
     $restored = 0
     foreach ($stock in Get-ChildItem -LiteralPath (Join-Path $ClientDir 'UI\Layouts') -Filter '*.xml.stock' -ErrorAction SilentlyContinue) {
-        Copy-Item -LiteralPath $stock.FullName -Destination ($stock.FullName.Substring(0, $stock.FullName.Length - 6)) -Force
+        $live = $stock.FullName.Substring(0, $stock.FullName.Length - 6)
+        # only put the backup back over our own file: if a game patch replaced it, the live file is newer
+        if ((Test-Path -LiteralPath $live) -and -not (Test-Ours $live)) { continue }
+        Copy-Item -LiteralPath $stock.FullName -Destination $live -Force
         $restored++
     }
     $window = Join-Path $ClientDir 'UI\Packages\Core\window.xml'
-    if (Test-Path -LiteralPath "$window.stock") { Copy-Item -LiteralPath "$window.stock" -Destination $window -Force; $restored++ }
+    if ((Test-Path -LiteralPath "$window.stock") -and (Test-Ours $window)) { Copy-Item -LiteralPath "$window.stock" -Destination $window -Force; $restored++ }
     Say "  restored $restored stock game screens"
 }
 
 function Restore-Skin([string]$ClientDir) {
     $dir = Join-Path $ClientDir 'cd_image\gui\Default'
     $restored = 0
+    $uvgi = Join-Path $dir 'Graphics.uvgi'
+    if ((Test-Path -LiteralPath $uvgi) -and -not (Test-Ours $uvgi)) { Say '  skin is already the game''s own'; return }
     foreach ($name in @('Graphics.uvgi', 'Graphics.uvga', 'GUIColors.xml')) {
         $path = Join-Path $dir $name
         if (Test-Path -LiteralPath "$path.stock") { Copy-Item -LiteralPath "$path.stock" -Destination $path -Force; $restored++ }

@@ -7,6 +7,16 @@ Versions follow Semantic Versioning 2.0.0: `MAJOR.MINOR.PATCH`.
 - PATCH bumps fix tokens, scale math, or docs without a config change.
 - While the major version is 0, the client view layer is still incomplete. The Lua model is safe to load offline.
 
+## 0.2.10
+
+For the Spiritech client update of 14 November (window snapping, right-side docking, Control Center minibar, 1-10 hotbars, column hiding).
+
+- **The game crashed at start after the client update if you re-ran the ndGUI installer.** The installer patched the game's screens from backups taken before the update, so the game got old versions of screens it had just replaced. Backups now follow game updates (a file that isn't ndGUI's own is the new original), and the installer only swaps in screens built from the same game version; any other screen stays stock, with a warning. Uninstall no longer puts back outdated backups either.
+- **ndGUI windows fell back to stock after the client update.** The window and panel frames have the parts the new docking code needs.
+- **List columns**: the game now hides columns itself; ndGUI uses that on every list (not just inventory, bank and bags) and keeps its own column moving. Right-click a header: Move left / right, Reset column order, the columns, Show all columns. Columns you had hidden stay hidden.
+- **Hotbar**: no more 1-0 labels. The client doesn't tell addons your key bindings, so they were a guess.
+- Not yet in ndGUI's Control Center: the new minibar and the right-side docking column (they belong to the stock Control Center).
+
 ## 0.2.9
 
 - **Buff Watch** (new package; Control Center > Actions > Addons):

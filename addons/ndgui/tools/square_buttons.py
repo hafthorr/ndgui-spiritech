@@ -77,6 +77,11 @@ def patch_text(text):
     return TAG.sub(one, text), count
 
 
+# Every file we patch carries an NDGUI graphic id; the game's own files never do. A *.stock backup is
+# only trusted while the live file still has it: after a game patch the live file is the new stock.
+MARKER = "NDGUI"
+
+
 def patch(path, source=None):
     text = open(source or path, encoding="utf-8").read()
     new, n = patch_text(text)
@@ -90,7 +95,8 @@ def main(argv):
     if "--restore" in argv:
         core_window = os.path.normpath(os.path.join(LAYOUTS, "..", "Packages", "Core", "window.xml"))
         for path in layouts + [core_window]:
-            if os.path.exists(path + ".stock"):
+            # only over our own file: if a game patch replaced it, the live file is the newer stock
+            if os.path.exists(path + ".stock") and MARKER in open(path, encoding="utf-8").read():
                 shutil.copyfile(path + ".stock", path)
         print("stock layouts restored")
         return
@@ -104,13 +110,15 @@ def main(argv):
         text = open(path, encoding="utf-8").read()
         if not os.path.exists(path + ".stock") and patch_text(text)[1]:
             shutil.copyfile(path, path + ".stock")
+        elif os.path.exists(path + ".stock") and MARKER not in text:
+            shutil.copyfile(path, path + ".stock")  # a game patch replaced it: that is the new stock
         if os.path.exists(path + ".stock"):
             total += patch(path, path + ".stock")
     # Stock windows we do not replace (Find Team, reward picker...) use Core/window.xml:
     # give their pin the same lit "pinned" key (GFX_NDGUI_PIN_ON from skin.py).
     core_window = os.path.normpath(os.path.join(LAYOUTS, "..", "Packages", "Core", "window.xml"))
-    if not os.path.exists(core_window + ".stock"):
-        shutil.copyfile(core_window, core_window + ".stock")
+    if not os.path.exists(core_window + ".stock") or MARKER not in open(core_window, encoding="utf-8").read():
+        shutil.copyfile(core_window, core_window + ".stock")  # first run, or a game patch replaced it
     text = open(core_window + ".stock", encoding="utf-8").read()
     pin = 'gfxid_pressed="GFX_GUI_WINDOW_PIN_STATE3"'
     if text.count(pin) == 1:

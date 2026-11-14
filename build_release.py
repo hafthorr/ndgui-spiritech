@@ -14,7 +14,7 @@ ndGUI is already installed), so your live game is never touched:
 
 Rebuild after a game patch so the shipped windows match the new client version.
 """
-import argparse, filecmp, glob, os, shutil, subprocess, sys, zipfile
+import argparse, filecmp, glob, hashlib, os, shutil, subprocess, sys, zipfile
 
 REPO = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, REPO)
@@ -24,7 +24,16 @@ DEV_ONLY = ("tools", "tests", "examples", "fixtures")  # not shipped inside the 
 
 
 def stock(path):
-    return path + ".stock" if os.path.exists(path + ".stock") else path
+    # a *.stock backup is only current while the live file is still ours (carries NDGUI);
+    # after a game patch the live file is the stock. The skin trusts Graphics.uvgi for all three.
+    if not os.path.exists(path + ".stock"):
+        return path
+    probe = path
+    if os.path.basename(path) in ("Graphics.uvga", "GUIColors.xml"):
+        probe = os.path.join(os.path.dirname(path), "Graphics.uvgi")
+    if b"NDGUI" not in open(probe, "rb").read():
+        return path
+    return path + ".stock"
 
 
 def stage_client(client, stage):
@@ -94,13 +103,22 @@ def main():
     # patched game screens: only files that differ from stock
     os.makedirs(os.path.join(game, "Layouts"))
     shipped = 0
-    for path in glob.glob(os.path.join(ui, "Layouts", "*.xml")):
+    # built-from.txt: "<path> <sha256 of the game's original>" so install.ps1 only replaces a screen
+    # that is still the version this release was made from (a game patch may change any of them)
+    def sha(path):
+        return hashlib.sha256(open(path, "rb").read()).hexdigest().upper()
+    built_from = []
+    for path in sorted(glob.glob(os.path.join(ui, "Layouts", "*.xml"))):
         original = stock(os.path.join(client, "UI", "Layouts", os.path.basename(path)))
         if not filecmp.cmp(path, original, shallow=False):
             shutil.copyfile(path, os.path.join(game, "Layouts", os.path.basename(path)))
+            built_from.append(f"Layouts/{os.path.basename(path)} {sha(original)}")
             shipped += 1
     os.makedirs(os.path.join(game, "Packages", "Core"))
     shutil.copyfile(os.path.join(ui, "Packages", "Core", "window.xml"), os.path.join(game, "Packages", "Core", "window.xml"))
+    built_from.append("Packages/Core/window.xml " + sha(stock(os.path.join(client, "UI", "Packages", "Core", "window.xml"))))
+    with open(os.path.join(game, "built-from.txt"), "w", encoding="utf-8", newline="\n") as manifest:
+        manifest.write("\n".join(built_from) + "\n")
     # installer + docs
     for doc in ("install.ps1", "install.bat", "README.md", "INSTALL.md", "LICENSE", "CHANGELOG.md"):
         shutil.copyfile(os.path.join(REPO, doc), os.path.join(out, doc))

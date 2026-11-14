@@ -652,12 +652,21 @@ def main(argv):
             raise SystemExit("no .stock backup: skin was never modified")
         if client_running():
             raise SystemExit("quit PRK.Client.exe first")
+        if b"NDGUI" not in open(UVGI, "rb").read():
+            print("skin is already the game's own (a game patch replaced it)")
+            return
         shutil.copyfile(stock_i, UVGI)
         shutil.copyfile(stock_a, UVGA)
         if os.path.exists(COLORS + ".stock"):
             shutil.copyfile(COLORS + ".stock", COLORS)
         print("stock skin restored")
         return
+    if os.path.exists(stock_a) and b"NDGUI" not in open(UVGI, "rb").read():
+        # a game patch replaced the skin: the live files are the new stock
+        if client_running():
+            raise SystemExit("quit PRK.Client.exe first (it reads the skin at start)")
+        for live in (UVGI, UVGA, COLORS):
+            shutil.copyfile(live, live + ".stock")
     src_i, src_a = (stock_i, stock_a) if os.path.exists(stock_a) else (UVGI, UVGA)
     entries = read(src_i, src_a)
     names = {n for n, _ in entries}
