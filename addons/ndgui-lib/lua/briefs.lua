@@ -51,6 +51,10 @@ function B.zone(text)
 			best = table.concat(words, " ")
 		end
 	end
+	-- "Rome Blue" and "RomeBlue" are the same place; use the joined spelling when the text has it
+	if best and best:find(" ", 1, true) and text:find((best:gsub(" ", "")), 1, true) then
+		best = best:gsub(" ", "")
+	end
 	return best
 end
 

@@ -823,6 +823,19 @@ do
   end
 end
 
+-- Brief zone guess: last "in <Place>", with the joined spelling when the text has both.
+do
+  local Hz = Mock.new(addons, core, { width = W, height = Hh, loose = true })
+  local ok, Bz = pcall(function() Hz.load_package("ndgui-mission-hub"); return Hz.env.ui.require("notum.ndgui-lib/briefs") end)
+  if ok and Bz then
+    check(Bz.zone("hurry to the Rome house at RomeBlue in Rome Blue, you will find") == "RomeBlue", "zone prefers the joined spelling")
+    check(Bz.zone("the target is in RomeBlue, in a place called the Rome house.") == "RomeBlue", "zone skips 'in a place'")
+    check(Bz.zone("Nothing to see here.") == nil, "no zone")
+  else
+    check(false, "briefs module loads: " .. tostring(Bz))
+  end
+end
+
 -- Mission hub: one package provides Info, Missions and Mission Terminal; Info keeps the briefing
 -- of a mission page in ui.storage and the other two windows (other VMs) show it.
 do
