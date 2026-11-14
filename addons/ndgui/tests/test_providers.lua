@@ -289,7 +289,7 @@ do
   local ok, err = pcall(H.load_package, "ndgui-meter")
   check(ok, "ndgui-meter loads" .. (ok and "" or (": " .. tostring(err))))
   if ok then
-    check(H.manifest:find('<Window id="meter"', 1, true) ~= nil and registered == "meter", "meter is a registered addon window")
+    check(H.manifest:find('<View id="meter"', 1, true) ~= nil and registered == "meter", "meter is a registered addon window")
     check(#H.combat_subs == 1, "meter watches game.combat")
     local function ev(t, kind, amount, src, tgt)
       local e = { elapsed = t, kind = kind, amount = amount, source = src.id or 0, source_name = src.name or "", target = tgt.id or 0, target_name = tgt.name or "" }

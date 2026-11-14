@@ -1,6 +1,6 @@
 <Package id="notum.ndgui-meter" name="Notum Dovvetech Damage Meter">
   <Requires package="notum.ndgui-lib" />
-  <Window id="meter" name="Damage Meter" />
+  <View id="meter" name="Damage Meter" />
   <Script src="meter.lua" />
   <Script src="main.lua" />
 </Package>
