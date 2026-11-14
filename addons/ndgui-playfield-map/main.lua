@@ -75,6 +75,7 @@ end
 -- ---- state ------------------------------------------------------------------
 local opened, available, buttons, areas = false, true, false, false
 local window_visible, native_shown = false, nil
+local zoom_pending, last_update_at, shown_at, reattached = false, nil, nil, false
 local first_pending, centre_pending, follow_pending = false, false, false
 -- After a zone change the new map can arrive before your position does: keep centring on you
 -- for a few seconds (whatever Follow says) until the position settles.
@@ -533,6 +534,41 @@ function playfield_map_restore(saved_buttons)
 	show_buttons(saved_buttons)
 end
 
+-- Watchdog after each open: apply the deferred zoom once the view has a size, and if the client still
+-- sends no updates a second later, attach the view again (what a manual close / reopen achieves).
+local watching = false
+local function start_watchdog()
+	reattached = false
+	if watching or not ui.on_update then
+		return
+	end
+	watching = true
+	ui.on_update(function(now)
+		if not opened or last_update_at then
+			watching = false
+			ui.stop_updates()
+			return
+		end
+		local w, h = num(ui.width(surface)), num(ui.height(surface))
+		if w > 0 and h > 0 then
+			if zoom_pending then
+				zoom_pending = false
+				note(string.format("watchdog: zoom at %.0fx%.0f", w, h))
+				view.zoom(zoom_scale(), num(ui.x(surface)) + w / 2, num(ui.y(surface)) + h / 2)
+			elseif not reattached and now - (shown_at or now) > 1000 then
+				reattached = true
+				note("watchdog: no updates, attaching the view again")
+				view.attach(surface, true)
+				view.zoom(zoom_scale(), num(ui.x(surface)) + w / 2, num(ui.y(surface)) + h / 2)
+			elseif reattached and now - (shown_at or now) > 6000 then
+				note("watchdog: still no updates, giving up")
+				watching = false
+				ui.stop_updates()
+			end
+		end
+	end)
+end
+
 function playfield_map_visibility(shown)
 	if shown then
 		new_trace()
@@ -544,7 +580,16 @@ function playfield_map_visibility(shown)
 	centre_pending, follow_pending = shown, false
 	previous_x, previous_y, previous_character = nil, nil, nil
 	if shown then
-		view.zoom(zoom_scale(), num(ui.x(surface)) + num(ui.width(surface)) / 2, num(ui.y(surface)) + num(ui.height(surface)) / 2)
+		-- At login the client shows the map before its view has a size; zooming a 0x0 view left the map
+		-- black (no updates ever came) until the next open. Zoom only once the view has a size.
+		last_update_at, shown_at = nil, ui.time()
+		if num(ui.width(surface)) > 0 and num(ui.height(surface)) > 0 then
+			view.zoom(zoom_scale(), num(ui.x(surface)) + num(ui.width(surface)) / 2, num(ui.y(surface)) + num(ui.height(surface)) / 2)
+			zoom_pending = false
+		else
+			zoom_pending = true
+		end
+		start_watchdog()
 		paint_toolbar()
 	else
 		available = true
@@ -589,6 +634,7 @@ local function track(facts)
 end
 
 function playfield_map_update(facts)
+	last_update_at = ui.time()
 	if not opened then
 		if not window_visible then
 			note_facts("ignored (closed)", facts)
