@@ -21,6 +21,7 @@ Near-black navy panels, steel-blue frames, a blue accent, square buttons. The cl
 - **Target panels**: unit frames with profession portrait, level, exact HP (`941 / 941 (100%)`), a pale "damage just taken" ghost, low-HP pulse, nano, profession / side, distance and a reach dot. **Double-click** for **Lock**, **Size** (S / M / L) and **Compact**.
 - **Floating combat numbers** over target panels and team frames (damage, bigger yellow crits, healing, misses), and **who your target is attacking** (`» You` in orange).
 - **Nameplates**: clean names, a framed health bar in soft level colours (green, amber, red), corner ticks for selected (blue) / attacking (red), both when your target is attacking.
+- **Docking column and minibar** (Options > Interface & HUD): right-click a window's title, move to the right-edge column, left-click to dock it.
 - Smooth bar fills everywhere (no segment blocks).
 - **Hotbars** with a DarkTech plate, recessed slots, a lit rail on the active bar, and a spinner that doubles as the drag handle.
 - Restyled **NCU, target NCU, faction, chat, chat config, raid bars, timer bars, team invite, sneak indicator, logout countdown**.
@@ -95,7 +96,7 @@ Spiritech loads Lua/XML UI packages from `client/UI/Addons`. This repo holds **1
 
 ## Status
 
-`0.2.10`: playable, in daily use, with rough edges.
+`0.2.11`: playable, in daily use, with rough edges.
 
 ## Bugs, issues, ideas
 

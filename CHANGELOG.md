@@ -7,6 +7,11 @@ Versions follow Semantic Versioning 2.0.0: `MAJOR.MINOR.PATCH`.
 - PATCH bumps fix tokens, scale math, or docs without a config change.
 - While the major version is 0, the client view layer is still incomplete. The Lua model is safe to load offline.
 
+## 0.2.11
+
+- **Docking column** in ndGUI's Control Center (Options > Interface & HUD > Show rollup panel): a solid dark column down the right edge. **Right-click** a window's title, move the mouse to the column (no button held), **left-click** to dock it; the same undocks it or moves it in the stack. The game lets these dock: Actions, Team, Local Map, Friends, Missions, Inventory, NCU, Nano Programs, Planet Map, Stats, Wear, Tradeskills, Faction (not addon windows like Buff Watch). Wide windows are cut to the 190 px column. The opacity slider fades the column.
+- **Minibar** (Show minibar): the nine small window buttons top right; the column starts under it.
+
 ## 0.2.10
 
 For the Spiritech client update of 14 November (window snapping, right-side docking, Control Center minibar, 1-10 hotbars, column hiding).
@@ -15,7 +20,6 @@ For the Spiritech client update of 14 November (window snapping, right-side dock
 - **ndGUI windows fell back to stock after the client update.** The window and panel frames have the parts the new docking code needs.
 - **List columns**: the game now hides columns itself; ndGUI uses that on every list (not just inventory, bank and bags) and keeps its own column moving. Right-click a header: Move left / right, Reset column order, the columns, Show all columns. Columns you had hidden stay hidden.
 - **Hotbar**: no more 1-0 labels. The client doesn't tell addons your key bindings, so they were a guess.
-- Not yet in ndGUI's Control Center: the new minibar and the right-side docking column (they belong to the stock Control Center).
 
 ## 0.2.9
 
