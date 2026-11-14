@@ -3,6 +3,5 @@
   <View name="shortcut_cell" view_layout="stacked" min_size="Point(36,36)" max_size="Point(36,36)">
     <BitmapView name="shortcut_cell_back" image="library://notum.ndgui-lib/hotbar/slot.png" min_size="Point(36,36)" max_size="Point(36,36)" />
     <ItemSlotView name="shortcut_slot" click_sound="false" slot_gfx="" min_size="Point(36,36)" max_size="Point(36,36)" icon_inset="3" icon_fit="center" overlay_inset="3" />
-    <TextView name="shortcut_key" font_size="10" color="6CB6FF" min_size="Point(12,12)" max_size="Point(12,12)" h_alignment="start" v_alignment="start" layout_borders="Rect(4,2,0,0)" />
   </View>
 </root>

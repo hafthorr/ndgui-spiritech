@@ -1,24 +1,20 @@
 -- DarkTech prk.hotbar provider: stock hotbar_apply contract. Framed steel plate per bar,
--- recessed slot wells (native slot tile disabled with slot_gfx=""), lit blue rail and 1-0 key
--- labels on the active bar, slim spinner that doubles as the drag handle.
+-- recessed slot wells (native slot tile disabled with slot_gfx=""), lit blue rail on the active bar
+-- (no key labels: the client doesn't tell addons the real bindings), slim spinner that doubles as the drag handle.
 local root = ui.load("bar.xml")
 local horizontal = ui.find(root, "shortcut_bar_horizontal")
 local vertical = ui.find(root, "shortcut_bar_vertical")
 local horizontal_slots = ui.find(horizontal, "shortcut_bar_slots")
 local vertical_slots = ui.find(vertical, "shortcut_bar_slots")
 local LIB = "library://notum.ndgui-lib/hotbar/"
-local KEYS = { "1", "2", "3", "4", "5", "6", "7", "8", "9", "0" }
 local slots = {}
 local cells = {}
-local keys = {}
 local arranged_vertical
 
 for index = 1, 10 do
 	-- Each cell is ndGUI slot art with the native ItemSlotView on top.
 	cells[index] = ui.load("slot.xml")
 	slots[index] = ui.find(cells[index], "shortcut_slot")
-	keys[index] = ui.find(cells[index], "shortcut_key")
-	ui.click_through(keys[index], true)
 	ui.add(horizontal_slots, cells[index])
 end
 
@@ -84,6 +80,5 @@ function hotbar_apply(state, entries)
 	end
 	for index, slot in ipairs(slots) do
 		present(slot, entries[index])
-		ui.text(keys[index], state.active and KEYS[index] or "")
 	end
 end

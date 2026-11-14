@@ -502,11 +502,7 @@ if B then
   local labels = {}
   local function keyl(v) if v.name == "shortcut_key" then labels[#labels + 1] = v.text end for _, k in ipairs(v.kids) do keyl(k) end end
   keyl(B.root)
-  check(#labels == 10 and labels[1] == "1" and labels[10] == "0", "active hotbar labels slots 1-0")
-  B.env.hotbar_apply({ activate = 1, previous = 2, next = 3, spinner = 4, vertical = false, active = false, row = 2 }, entries)
-  labels = {}
-  keyl(B.root)
-  check(labels[1] == "", "inactive hotbar hides key labels")
+  check(#labels == 0, "no guessed key labels on the hotbar (the client doesn't expose bindings)")
 end
 
 -- Control Center: slim bottom strip, stock contract.

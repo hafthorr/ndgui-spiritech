@@ -22,7 +22,7 @@ Near-black navy panels, steel-blue frames, a blue accent, square buttons. The cl
 - **Floating combat numbers** over target panels and team frames (damage, bigger yellow crits, healing, misses), and **who your target is attacking** (`» You` in orange).
 - **Nameplates**: clean names, a framed health bar in soft level colours (green, amber, red), corner ticks for selected (blue) / attacking (red), both when your target is attacking.
 - Smooth bar fills everywhere (no segment blocks).
-- **Hotbars** with a DarkTech plate, recessed slots, `1`–`0` key labels on the active bar, and a spinner that doubles as the drag handle.
+- **Hotbars** with a DarkTech plate, recessed slots, a lit rail on the active bar, and a spinner that doubles as the drag handle.
 - Restyled **NCU, target NCU, faction, chat, chat config, raid bars, timer bars, team invite, sneak indicator, logout countdown**.
 
 **Windows** (every `core.window` window gets the ndGUI frame)
