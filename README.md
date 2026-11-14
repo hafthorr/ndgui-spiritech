@@ -17,7 +17,9 @@ Near-black navy panels, steel-blue frames, a blue accent, square buttons. The cl
 **HUD**
 - Slim **control center** strip on the bottom edge: menus, target cycling, NCU, credits, DEF/AGG slider.
 - **Health / nano** bars by your character, numbers on a dark plate so they stay readable. **Double-click** one for its **Lock** (stays put) and **Flat** (horizontal, number inside) buttons. **XP / AXP** sit on the menubar.
-- **Compass** top centre, **target panels** flanking it.
+- **Compass** top centre.
+- **Target panels**: unit frames with profession portrait, level, exact HP (`941 / 941 (100%)`), a pale "damage just taken" ghost, low-HP pulse, nano, profession / side, distance and a reach dot. **Double-click** for **Lock**, **Size** (S / M / L) and **Compact**.
+- Smooth bar fills everywhere (no segment blocks).
 - **Hotbars** with a DarkTech plate, recessed slots, `1`–`0` key labels on the active bar, and a spinner that doubles as the drag handle.
 - Restyled **NCU, target NCU, faction, chat, chat config, raid bars, timer bars, team invite, sneak indicator, logout countdown**.
 
@@ -73,7 +75,7 @@ Spiritech loads Lua/XML UI packages from `client/UI/Addons`. This repo holds **9
 
 ## Status
 
-`0.2.4`: playable, in daily use, with rough edges.
+`0.2.5`: playable, in daily use, with rough edges.
 
 ## Bugs, issues, ideas
 

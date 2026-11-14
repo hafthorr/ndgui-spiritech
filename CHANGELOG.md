@@ -7,6 +7,13 @@ Versions follow Semantic Versioning 2.0.0: `MAJOR.MINOR.PATCH`.
 - PATCH bumps fix tokens, scale math, or docs without a config change.
 - While the major version is 0, the client view layer is still incomplete. The Lua model is safe to load offline.
 
+## 0.2.5
+
+- **New target panels**: proper unit frames with a profession portrait (or the level for NPCs), name and level, exact HP like `941 / 941 (100%)`, a pale ghost of damage just taken that drains away, a pulsing fill under 25%, nano bar, profession / side, distance and a reach dot. Double-click for **Lock**, **Size** (S / M / L) and **Compact**. Saved per panel.
+- **Fix:** HP/NP bars and target panels now remember their position, Lock and Flat / Size across relogs (the saved values were read too early and came back empty).
+- HP, nano, XP, AXP and target bars are smooth fills, no more segment blocks.
+- `install.py --update` (and menu option 2) for Linux/macOS: installs the newest GitLab release (`git pull` in a checkout, otherwise downloads the source).
+
 ## 0.2.4
 
 - **Fix:** XP / AXP bars were replaced by the stock ones in 0.2.3 (the bar code looked for a shadow label only HP/NP have). The offline tests now treat a missing view as an error, like the game does.
