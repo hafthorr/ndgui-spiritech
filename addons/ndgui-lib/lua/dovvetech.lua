@@ -78,6 +78,9 @@ M.PLACEMENT_FIELD = "NdguiFrame"
 --   options.lock_key      ui.state field (the view's own scope, like the pose) holding a drag lock;
 --                         placement.locked() / placement.set_locked(value)
 --   options.double_click  called on a double-click (two still clicks within DOUBLE_CLICK_MS)
+--   options.restored      called whenever saved state becomes readable (restore / reset phase);
+--                         read your own ui.state fields there, never at load time: the view's
+--                         state scope is attached later and reads before that return ""
 M.DOUBLE_CLICK_MS = 450
 
 function M.movable(view, options)
@@ -87,8 +90,29 @@ function M.movable(view, options)
 	local key, locked = options.lock_key, false
 	local watch = key or options.double_click
 	local press_x, press_y, last_click = nil, nil, nil
-	if key then
-		locked = ui.state.read(view, key) == "true"
+	local function load_state()
+		if key then
+			locked = ui.state.read(view, key) == "true"
+		end
+		if options.restored then
+			options.restored()
+		end
+	end
+	-- One state handler per view: forward to core.placement's phases, then reload our fields.
+	if ui.on_state and placement.restore then
+		ui.on_state(view, function(phase)
+			if phase == "mount" then
+				placement:defaults()
+			elseif phase == "restore" then
+				placement:restore(false)
+				load_state()
+			elseif phase == "reset" then
+				placement:restore(true)
+				load_state()
+			elseif phase == "capture" then
+				placement:capture()
+			end
+		end)
 	end
 	local function clicked(x, y)
 		if not press_x then
@@ -143,6 +167,16 @@ function M.movable(view, options)
 	})
 	function placement.locked()
 		return locked
+	end
+	-- Call once the piece gets its first data (its state scope is attached by then). If the
+	-- native restore phase came before this package attached (HUD pieces built late, in an
+	-- initialize callback), apply the saved position now too.
+	function placement.reload()
+		if placement.restore and not placement.restored then
+			placement:defaults()
+			placement:restore(false)
+		end
+		load_state()
 	end
 	function placement.set_locked(value)
 		locked = value and true or false

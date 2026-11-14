@@ -298,18 +298,29 @@ local function relayout()
 	apply_all()
 end
 
+local function load_settings()
+	size = ui.state.read(root, "NdguiSize")
+	if not SIZES[size] then
+		size = "M"
+	end
+	compact = ui.state.read(root, "NdguiCompact") == "true"
+end
+
 placement = D.movable(root, {
 	lock_key = "NdguiLocked",
 	double_click = function()
 		editing = not editing
 		refresh_edit()
 	end,
+	-- saved settings become readable at restore, not at load
+	restored = function()
+		load_settings()
+		if edit then
+			refresh_edit()
+			relayout()
+		end
+	end,
 })
-size = ui.state.read(root, "NdguiSize")
-if not SIZES[size] then
-	size = "M"
-end
-compact = ui.state.read(root, "NdguiCompact") == "true"
 
 frames[1] = new_frame()
 frames[2] = new_frame()
@@ -360,8 +371,13 @@ function target_panel_place(viewport_width, hostile)
 	D.place_default(placement, root, math.floor(math.max(0, x)), D.TOP_Y)
 end
 
+local state_checked = false
 function target_panel_apply(upper_slot, lower_slot)
 	last_upper, last_lower = upper_slot, lower_slot
+	if not state_checked then
+		state_checked = true
+		placement.reload()
+	end
 	ui.size(root, frame_width(), -1)
 	apply_all()
 end

@@ -71,6 +71,15 @@ for _, case in ipairs({
       H.env.status_bar_apply(case[2], false)
       check(H.state[mv.view].NdguiFlat == "false" and H.find(H.root, "status_caption_plate") ~= nil, case[1] .. " Flat off restores the vertical bar")
       H.root.x, H.root.y = home_x, home_y
+      -- saved settings only become readable at the native "restore" phase, not at load
+      H.state[mv.view].NdguiFlat = "true"
+      check(H.state_handlers[mv.view] ~= nil, case[1] .. " listens for the restore phase")
+      H.state_handlers[mv.view]("restore")
+      check(H.find(H.root, "status_caption").parent == nil and H.find(H.find(H.root, "status_bar"), "status_caption") ~= nil,
+        case[1] .. " restore applies the saved Flat setting")
+      check(H.placements[#H.placements].restored == 1, case[1] .. " restore still restores the position")
+      H.state[mv.view].NdguiFlat = "false"
+      H.state_handlers[mv.view]("restore")
     end
     local fill = H.find(H.root, "status_fill")
     local vertical = case[1] == "health" or case[1] == "nano"
@@ -166,6 +175,14 @@ for _, hostile in ipairs({ false, true }) do
     check(v(frame2, "np").visible == true and v(frame2, "np_fill").w == math.floor(inner * 0.5 + 0.5), tag .. " nano bar at 50%")
     check(v(frame2, "info").text == "Doctor · Omni" and v(frame2, "distance").text == "", tag .. " info: Doctor · Omni, no distance to self")
     rects[tag] = { x = T.root.x, w = T.root.w }
+    -- saved Size comes back at the restore phase
+    local view = T.moves[#T.moves].view
+    T.state[view] = T.state[view] or {}
+    T.state[view].NdguiSize = "S"
+    T.state_handlers[view]("restore")
+    check(T.root.w == 250, tag .. " restore applies saved Size S (" .. tostring(T.root.w) .. ")")
+    T.state[view].NdguiSize = "M"
+    T.state_handlers[view]("restore")
     -- options: double-click -> Size cycles M -> L, Compact hides portrait and info
     local mv = T.moves[#T.moves].options
     mv.enabled(5, 5); mv.finished(true, 5, 5); T.now = T.now + 100; mv.enabled(5, 5); mv.finished(true, 5, 5); T.now = T.now + 1000

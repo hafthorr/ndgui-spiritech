@@ -151,14 +151,28 @@ function status_bar_initialize(which)
 			refresh_edit()
 			layout(true)
 		end or nil,
+		restored = spec.vital and function()
+			local saved = ui.state.read(root, "NdguiFlat") == "true"
+			if saved ~= flat then
+				flat = saved
+				if content then
+					build()
+				end
+			elseif content then
+				refresh_edit()
+				show_text()
+			end
+		end or nil,
 	})
-	if spec.vital then
-		flat = ui.state.read(root, "NdguiFlat") == "true"
-	end
 	build()
 end
 
+local state_checked = false
 function status_bar_apply(reading, shadowknowledge)
+	if not state_checked then
+		state_checked = true
+		placement.reload()
+	end
 	layout()
 	local label, tip = spec.label, spec.tooltip
 	if shadowknowledge and kind == "experience" then

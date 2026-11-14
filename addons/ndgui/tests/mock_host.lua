@@ -98,6 +98,8 @@ function M.new(addons_dir, core_dir, opts)
   end
   ui.local_x = function(v) assert(v, "local_x nil"); return v.x or 0 end
   ui.local_y = function(v) assert(v, "local_y nil"); return v.y or 0 end
+  H.state_handlers = {}
+  ui.on_state = function(v, cb) assert(v and type(cb) == "function", "on_state"); H.state_handlers[v] = cb end
   -- remember presentation calls the target panels assert on
   ui.image = function(v, src) assert(v, "image nil view"); v.image = src end
   ui.fill_color = function(v, c) assert(v, "fill_color nil view"); v.fill = c end
@@ -141,7 +143,8 @@ function M.new(addons_dir, core_dir, opts)
   H.menu_items = {}
   H.placements = {}
   ui.define("core.placement", function() return { attach = function(view, options)
-    local p = { view = view, field = options and options.field, moved = false, changed = function(self) self.moved = true end }
+    local p = { view = view, field = options and options.field, moved = false, changed = function(self) self.moved = true end,
+      defaults = function() end, restore = function(self) self.restored = (self.restored or 0) + 1 end, capture = function() end }
     H.placements[#H.placements + 1] = p; return p end } end)
 
   local game = { control_center = { bind_aggdef = function(v) assert(v, "bind_aggdef nil") end }, character = { subscribe = function(_, _, cb)
