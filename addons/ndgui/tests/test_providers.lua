@@ -124,6 +124,15 @@ if C then
   check((C.calls["compass.sprite"] or 0) == 4 and C.calls["compass.finish"] == 1, "compass draws band twice, waypoint and caret")
   check(C.find(C.root, "compass_distance").text == "14 m", "compass shows the waypoint distance: " .. tostring(C.find(C.root, "compass_distance").text))
   check(C.root.w == 280, "compass is 280 wide with the ndGUI art")
+  check(C.find(C.root, "ndgui_compass_frame").visible == false, "no plate or frame with the ndGUI art")
+end
+-- without the ndGUI skin installed: the old framed stock compass
+local C2 = Mock.new(addons, core, { width = W, height = Hh })
+C2.env.ui.compass.graphic_width = function(g) return g:find("NDGUI", 1, true) and 0 or 256 end
+if pcall(C2.load_package, "ndgui-compass") then
+  C2.env.compass_apply({ has_heading = true, heading = 1.0 })
+  check(C2.root.w == 137 and C2.find(C2.root, "ndgui_compass_frame").visible == true
+    and C2.find(C2.root, "compass_band").w == 129, "skin missing: framed stock compass")
 end
 
 -- Target panels: fixed-size unit frames fed by the native slot plus game.character facts.

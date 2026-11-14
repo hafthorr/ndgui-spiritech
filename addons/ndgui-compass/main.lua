@@ -9,6 +9,9 @@ ui.root(root)
 local placement = D.movable(root)
 
 local band = ui.find(root, "compass_band")
+local box = ui.find(root, "compass_box")
+local back = ui.find(root, "ndgui_compass_back")
+local frame = ui.find(root, "ndgui_compass_frame")
 local label = ui.find(root, "compass_label")
 local distance = ui.find(root, "compass_distance")
 local distance_shadow = ui.find(root, "compass_distance_shadow")
@@ -30,11 +33,22 @@ local function choose_art()
 		art, band_width = STOCK, ui.compass.graphic_width(STOCK.band)
 		view_width, view_height = 129, 14
 	end
+	local framed = art == STOCK
+	local box_w, box_h = framed and 137 or view_width, framed and 22 or view_height
+	ui.visible(back, framed)
+	ui.visible(frame, framed)
+	ui.size(box, box_w, box_h)
+	ui.size(back, box_w, box_h)
+	ui.size(frame, box_w, box_h)
+	ui.borders(band, framed and 4 or 0, framed and 4 or 0, framed and 4 or 0, framed and 4 or 0)
+	if framed then
+		ui.graphic_tint(frame, D.color.border)
+	end
 	ui.size(band, view_width, view_height)
-	ui.size(label, view_width, LABEL_H)
+	ui.size(label, box_w, LABEL_H)
 	ui.size(distance, view_width, LABEL_H)
 	ui.size(distance_shadow, view_width - 1, LABEL_H - 1)
-	ui.size(root, view_width, view_height + LABEL_H)
+	ui.size(root, box_w, box_h + LABEL_H)
 end
 
 local function metres(d)

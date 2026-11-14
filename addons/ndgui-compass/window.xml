@@ -2,7 +2,12 @@
 <root>
   <!-- ndGUI compass: no plate; light ink with a black outline reads on snow and at night. Sizes from main.lua. -->
   <View name="ndgui_compass_window" capture_input="true" composite_layer="true" view_layout="vertical">
-    <PannedSurfaceView name="compass_band" capture_input="true" fill_color="transparent" />
+    <!-- stock-art fallback (ndGUI skin not installed): the old framed plate -->
+    <View name="compass_box" view_layout="stacked">
+      <BitmapView name="ndgui_compass_back" image="library://notum.ndgui-lib/chrome/plate.png" visible="false" />
+      <PannedSurfaceView name="compass_band" capture_input="true" fill_color="transparent" />
+      <BitmapView name="ndgui_compass_frame" image="gfx://GFX_GUI_COMPASS_FRAME" graphic_mode="tinted" color="3D6F9A" visible="false" />
+    </View>
     <View name="compass_label" view_layout="stacked" h_alignment="center">
       <TextView name="compass_distance_shadow" value="" color="000000" font_size="11" text_alignment="center" size_to_text="false" layout_borders="Rect(1,1,0,0)" />
       <TextView name="compass_distance" value="" color="9CF0AE" font_size="11" text_alignment="center" size_to_text="false" />
