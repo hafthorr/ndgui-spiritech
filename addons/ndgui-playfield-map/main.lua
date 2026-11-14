@@ -281,7 +281,29 @@ local function chrome_height()
 	return (buttons and 152 or 0) + (settings.compact and 0 or TOOLBAR_H + STATUS_H)
 end
 
+-- Zoning trace (diagnostics): the first updates after a map change and every open/close go to this
+-- package's storage (addon-data/*.json) so a black map after zoning can be read back afterwards.
+local trace, trace_left = {}, 0
+local function note(text)
+	trace[#trace + 1] = string.format("%d %s", math.floor(ui.time() or 0), text)
+	while #trace > 60 do
+		table.remove(trace, 1)
+	end
+	if ui.storage and ui.storage.write then
+		pcall(ui.storage.write, "zone_trace", table.concat(trace, string.char(10)))
+	end
+end
+local function note_facts(tag, facts)
+	note(string.format("%s changed=%s acc=%s avail=%s char=%s pos=%.0f,%.0f map=%.0fx%.0f view=%.0f,%.0f %.0fx%.0f pending=%s",
+		tag, tostring(facts.changed), tostring(facts.accessible), tostring(available), tostring(facts.has_character),
+		num(facts.x), num(facts.y), num(facts.width), num(facts.height),
+		num(view.read("x")), num(view.read("y")), num(view.read("width")), num(view.read("height")), tostring(centre_pending)))
+end
+
 local function layout(window, width, height)
+	if trace_left > 0 then
+		note(string.format("layout %.0fx%.0f surface=%.0fx%.0f", num(width), num(height), num(ui.width(surface)), num(ui.height(surface))))
+	end
 	if width ~= shown_width then
 		wanted_width = width
 	end
@@ -316,25 +338,6 @@ local function centre(facts)
 	local y = facts.has_character and facts.y or facts.height / 2
 	view.pan(x - num(view.read("width")) / 2, y - num(view.read("height")) / 2)
 	centred_x, centred_y = facts.has_character and x or nil, facts.has_character and y or nil
-end
-
--- Zoning trace (diagnostics): the first updates after a map change and every open/close go to this
--- package's storage (addon-data/*.json) so a black map after zoning can be read back afterwards.
-local trace, trace_left = {}, 0
-local function note(text)
-	trace[#trace + 1] = string.format("%d %s", math.floor(ui.time() or 0), text)
-	while #trace > 60 do
-		table.remove(trace, 1)
-	end
-	if ui.storage and ui.storage.write then
-		pcall(ui.storage.write, "zone_trace", table.concat(trace, string.char(10)))
-	end
-end
-local function note_facts(tag, facts)
-	note(string.format("%s changed=%s acc=%s avail=%s char=%s pos=%.0f,%.0f map=%.0fx%.0f view=%.0f,%.0f %.0fx%.0f pending=%s",
-		tag, tostring(facts.changed), tostring(facts.accessible), tostring(available), tostring(facts.has_character),
-		num(facts.x), num(facts.y), num(facts.width), num(facts.height),
-		num(view.read("x")), num(view.read("y")), num(view.read("width")), num(view.read("height")), tostring(centre_pending)))
 end
 
 -- True when the viewport shows none of the map (panned onto the black void, e.g. after zoning).
@@ -518,6 +521,9 @@ end
 
 function playfield_map_visibility(shown)
 	note("visibility " .. tostring(shown))
+	if shown then
+		trace_left = 25
+	end
 	native_shown = shown
 	opened = shown
 	centre_pending, follow_pending = shown, false
@@ -578,7 +584,7 @@ function playfield_map_update(facts)
 	end
 	last_facts = facts
 	if facts.changed then
-		trace_left = 15
+		trace_left = math.max(trace_left, 15)
 	end
 	if trace_left > 0 then
 		trace_left = trace_left - 1
@@ -654,6 +660,9 @@ function playfield_map_update(facts)
 		end
 	end
 	game.playfield_map.render(show_areas)
+	if trace_left > 0 then
+		note("render areas=" .. tostring(show_areas))
+	end
 	refresh_status()
 end
 
