@@ -13,6 +13,7 @@ Versions follow Semantic Versioning 2.0.0: `MAJOR.MINOR.PATCH`.
 - **Floating combat numbers** on target panels and team frames: damage, bigger yellow crits, healing, misses (from the game's combat feed).
 - **Target-of-target**: the target panel shows who your target is attacking (`» You` in orange), for 8 s after its last attack.
 - **Damage Meter** (new addon window: Control Center > Actions > Addons > Damage Meter): Damage / Healing / Taken per source as skinned bars with amount, per second and share; This fight (ends after 6 s without combat) or Overall; you in blue, pets teal; only you, your pets and players are listed. Resizable: rows fit the height.
+- **Nameplates** (new provider, `prk.nameplates`): clean overhead names with a thin outline, a framed health bar in soft consider colours (green, amber, red), organization in muted steel, thin corner ticks for selected (blue) / attacking (red), one dark panel when backing is on. GM / PvP / roleplay tags and distance scaling as stock.
 - The unit frame lives in ndgui-lib (`unit.xml`, `lua/unit.lua`); Team is now a hand-made package instead of a generated fork.
 
 ## 0.2.5

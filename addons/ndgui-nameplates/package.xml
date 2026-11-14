@@ -1,0 +1,4 @@
+<Package id="notum.ndgui-nameplates" name="Notum Dovvetech Nameplates">
+  <Provides role="prk.nameplates" />
+  <Script src="main.lua" />
+</Package>

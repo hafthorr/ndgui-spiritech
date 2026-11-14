@@ -325,6 +325,49 @@ do
   end
 end
 
+-- Nameplates: drawn on the native canvas; stock tags kept, framed bar in consider colours, corner ticks.
+do
+  local H = Mock.new(addons, core, { width = W, height = Hh })
+  local draws, size = {}, nil
+  H.env.ui.nameplates = {
+    measure = function(text, sz, field) if field == "width" then return #text * sz * 0.5 elseif field == "ascent" then return sz * 0.8 else return sz * 0.2 end end,
+    layout = function(w, h) size = { w, h } end,
+    project = function() return 1 end, font_limit = function() return 200 end,
+    place = function() return true end,
+    graphic = function() return 0 end, image = function() draws[#draws + 1] = { "image" } end,
+    backdrop = function(x, y, w, h, c) draws[#draws + 1] = { "backdrop", x, y, w, h, c } end,
+    rectangle = function(x, y, w, h, c) assert(w >= 0 and h >= 0, "negative rectangle"); draws[#draws + 1] = { "rect", x, y, w, h, c } end,
+    text = function(t, x, b, sz, c, o) draws[#draws + 1] = { "text", t, x, b, sz, c, o } end,
+  }
+  local ok, err = pcall(H.load_package, "ndgui-nameplates")
+  check(ok, "ndgui-nameplates loads" .. (ok and "" or (": " .. tostring(err))))
+  if ok then
+    check(role(H, "prk.nameplates"), "nameplates declare prk.nameplates")
+    local plate = { name = "Bob", organization = "Neutral Zone", health = 0.5, has_bar = true, bar_rgb = 0xff0000,
+      has_name_color = false, name_rgba = 0, brackets = "selected", has_character = true, npc = false, green_name = false,
+      blue_name = false, pvp_flagged = true, roleplay_tag = false, has_consider = true, consider = 0.5 }
+    H.env.nameplate_draw(plate, { world = false, backing = true, distance = 10, cos_half_fov = 0.8, near = 0.1, mirror_y = false })
+    local texts, rects, backdrops = {}, {}, 0
+    for _, d in ipairs(draws) do
+      if d[1] == "text" then texts[#texts + 1] = d elseif d[1] == "rect" then rects[#rects + 1] = d elseif d[1] == "backdrop" then backdrops = backdrops + 1 end
+    end
+    check(texts[1][2] == "** Bob **" and texts[2][2] == "Neutral Zone", "PvP tag and organization drawn")
+    check(backdrops == 1, "one backing panel")
+    local amber = 0
+    for _, r in ipairs(rects) do if r[6] == 0xE0C040FF then amber = amber + 1 end end
+    check(amber == 1, "even-level bar is amber")
+    local blue = 0
+    for _, r in ipairs(rects) do if r[6] == 0x4FB3E8FF then blue = blue + 1 end end
+    check(blue == 8, "selected: four blue corner ticks (" .. blue .. " rects)")
+    for _, r in ipairs(rects) do
+      if r[2] < 0 or r[3] < 0 or r[2] + r[4] > size[1] + 0.01 or r[3] + r[5] > size[2] + 0.01 then
+        check(false, "rectangle inside the measured plate"); break
+      end
+    end
+    check(texts[2][4] > 16 + 5, "organization sits under the bar")
+  end
+end
+
 -- Hotbar.
 local B = load_pkg("ndgui-hotbar")
 if B then
