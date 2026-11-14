@@ -7,7 +7,7 @@ Versions follow Semantic Versioning 2.0.0: `MAJOR.MINOR.PATCH`.
 - PATCH bumps fix tokens, scale math, or docs without a config change.
 - While the major version is 0, the client view layer is still incomplete. The Lua model is safe to load offline.
 
-## Unreleased
+## 0.2.12
 
 - **Health / Nano bars: four sizes.** Double-click a bar; the strip now has **Size** next to Lock and Flat and cycles S / M / L / XL (M is the old size). Works upright and flat, saved per bar.
 - Nameplates: targeting one of two same-named mobs at the same health no longer marks the other one as selected (the guess is only used on attacking plates, where the client hides the selection).
