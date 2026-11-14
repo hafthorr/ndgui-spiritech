@@ -132,7 +132,7 @@ end
 local frame = Window.create({
 	template = "library://notum.ndgui-lib/window.xml",
 	title = "Damage Meter", content = content, width = 340, height = HEADER_H + 8 * ROW_H,
-	horizontal = "right", vertical = "center", layout = layout,
+	horizontal = "end", vertical = "center", layout = layout,
 })
 ui.add(root, frame.root)
 ui.register_view(frame.root, "meter")
