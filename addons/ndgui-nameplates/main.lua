@@ -66,6 +66,11 @@ local function is_selected(plate)
 	if plate.brackets == "selected" then
 		return true
 	end
+	-- only an attacking plate can hide the selection (the client then reports "attacking"); a plate
+	-- with no brackets is never the target, even when a same-named mob has the same health
+	if plate.brackets ~= "attacking" then
+		return false
+	end
 	if not selected.name or plate.name ~= selected.name then
 		return false
 	end

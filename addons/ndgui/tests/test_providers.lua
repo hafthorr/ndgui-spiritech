@@ -65,11 +65,27 @@ for _, case in ipairs({
       local fill = H.find(H.root, "status_fill")
       check(fill.w == 80 and fill.h == 18, case[1] .. " flat fill grows sideways (" .. tostring(fill.w) .. "x" .. tostring(fill.h) .. ")")
       check(H.find(H.root, "status_edit").visible == true and H.find(H.root, "status_flat").selected == true, case[1] .. " strip stays open, Flat lit")
+      check(H.find(H.root, "status_size").text == "Size M", case[1] .. " Size starts at M")
+      H.find(H.root, "status_size").on_click()
+      H.env.status_bar_apply({ current = 1, maximum = 2, fraction = 0.5 }, false)
+      fill = H.find(H.root, "status_fill")
+      check(H.state[mv.view].NdguiSize == "L" and H.find(H.root, "status_size").text == "Size L", case[1] .. " Size cycles to L, saved")
+      check(H.root.w == 220 and H.find(H.root, "status_bar").max_w == 220 and fill.w == 110 and fill.h == 24,
+        case[1] .. " flat L: 220x24 bar, fill " .. tostring(fill.w) .. "x" .. tostring(fill.h))
+      check(H.find(H.root, "status_caption").font == 13, case[1] .. " flat L: bigger number")
       click(); click()
       check(H.find(H.root, "status_edit").visible == false, case[1] .. " double-click again hides the strip")
       H.find(H.root, "status_flat").on_click()  -- back to vertical for the fill checks below
       H.env.status_bar_apply(case[2], false)
       check(H.state[mv.view].NdguiFlat == "false" and H.find(H.root, "status_caption_plate") ~= nil, case[1] .. " Flat off restores the vertical bar")
+      local vbar = H.find(H.root, "status_bar")
+      check(H.root.w == 112 and vbar.max_w == 18 and vbar.max_h == 190 and H.root.h == 190 + 2 + 20,
+        case[1] .. " upright L: 18x190 bar, root " .. tostring(H.root.w) .. "x" .. tostring(H.root.h))
+      H.env.status_bar_apply({ current = 1, maximum = 2, fraction = 0.5 }, false)
+      check(H.find(H.root, "status_fill").h == 95, case[1] .. " upright L fill grows upward")
+      for _ = 1, 3 do H.find(H.root, "status_size").on_click() end  -- XL, S, M
+      check(H.state[mv.view].NdguiSize == "M" and H.root.w == 96 and H.root.h == 160, case[1] .. " back to M = the classic 96x160")
+      H.env.status_bar_apply(case[2], false)
       H.root.x, H.root.y = home_x, home_y
       -- saved settings only become readable at the native "restore" phase, not at load
       H.state[mv.view].NdguiFlat = "true"
@@ -78,7 +94,11 @@ for _, case in ipairs({
       check(H.find(H.root, "status_caption").parent == nil and H.find(H.find(H.root, "status_bar"), "status_caption") ~= nil,
         case[1] .. " restore applies the saved Flat setting")
       check((H.placements[#H.placements].restored or 0) >= 1, case[1] .. " restore still restores the position")
+      H.state[mv.view].NdguiSize = "XL"
+      H.state_handlers[mv.view]("restore")
+      check(H.root.w == 300 and H.find(H.root, "status_bar").max_h == 30, case[1] .. " restore applies the saved size (" .. tostring(H.root.w) .. ")")
       H.state[mv.view].NdguiFlat = "false"
+      H.state[mv.view].NdguiSize = "M"
       H.state_handlers[mv.view]("restore")
     end
     local fill = H.find(H.root, "status_fill")
@@ -488,6 +508,8 @@ do
     local other = setmetatable({ health = 0.2 }, { __index = pet })
     local b2 = colours(other)
     check(b2 == 0, "a same-named mob at other health is not the selected one")
+    local twin = setmetatable({ brackets = "none" }, { __index = pet })
+    check(select(1, colours(twin)) == 0, "a same-named mob at the same health that is not attacking is not marked")
     target_cb(nil, nil)
     check(select(1, colours(pet)) == 0, "no target: no blue ticks")
   end

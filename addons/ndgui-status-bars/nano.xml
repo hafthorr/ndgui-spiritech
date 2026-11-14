@@ -1,5 +1,5 @@
 <root>
-  <View view_layout="vertical" min_size="Point(96,160)" max_size="Point(96,160)">
+  <View name="status_body" view_layout="vertical" min_size="Point(96,160)" max_size="Point(96,160)">
     <View name="status_bar" view_layout="stacked" capture_input="true" min_size="Point(14,140)" max_size="Point(14,140)" h_alignment="center">
       <BitmapView name="status_track" image="library://notum.ndgui-lib/bars/track_v.png" />
       <BitmapView name="status_fill" image="library://notum.ndgui-lib/bars/np_v.png" h_alignment="center" v_alignment="bottom" />
