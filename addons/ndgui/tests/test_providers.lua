@@ -906,6 +906,11 @@ do
       if t == "Your DoT" then found_mine = true elseif t == "Someone Else's DoT" then found_other = true end
     end
     check(found_mine and not found_other, "target shows only effects you cast")
+    -- targeting yourself: no repeat of your own buffs
+    char_subs.target(nil, { id = 42, name = "Ninnai" })
+    effects_subs.target({ sampled_at_ms = clock, data = { { subject = "me", known = true, effects = {
+      fx(1, "Cyclic Coat of Barbs", 1200, 1200, { caster = 42 }) } } } })
+    check(f("target_head").text == "ON YOURSELF" and #texts("buff_name") == #names, "self target is not listed twice: " .. tostring(f("target_head").text))
     -- team grid
     roster({ data = { in_team = true, members = {
       { own_team = true, character = { reference = "r1", name = "Ninnai", is_self = true } },

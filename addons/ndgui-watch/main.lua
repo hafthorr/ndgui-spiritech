@@ -186,8 +186,13 @@ end
 
 local function refresh_lists(now)
 	you_list = Watch.on_you(you.effects, you.sampled, now)
-	target_list = Watch.on_target(target.effects, self_id, target.sampled, now)
-	if target.name then
+	local on_self = target.name ~= nil and (target.is_self or (self_id ~= nil and target.id == self_id))
+	-- targeting yourself: "On you" already lists all of it
+	target_list = on_self and {} or Watch.on_target(target.effects, self_id, target.sampled, now)
+	if on_self then
+		ui.text(target_head, "ON YOURSELF")
+		ui.text(target_empty, "Same as above.")
+	elseif target.name then
 		ui.text(target_head, "ON " .. string.upper(target.name))
 		ui.text(target_empty, "Nothing of yours on it.")
 	else
@@ -432,7 +437,10 @@ end)
 
 game.character.subscribe("self", "", function(_, character)
 	if character then
-		self_id = character.id
+		if self_id ~= character.id then
+			self_id = character.id
+			refresh_lists(ui.time()) -- the target section depends on who you are
+		end
 		vitals.health, vitals.max_health = character.health, character.max_health
 		vitals.nano, vitals.max_nano = character.nano, character.max_nano
 		render_alert(ui.time())
@@ -441,6 +449,8 @@ end)
 
 game.character.subscribe("target", "", function(_, character)
 	target.name = character and character.name or nil
+	target.id = character and character.id or nil
+	target.is_self = character and character.is_self == true or false
 	refresh_lists(ui.time())
 end)
 
