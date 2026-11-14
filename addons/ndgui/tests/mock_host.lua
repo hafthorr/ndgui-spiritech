@@ -56,7 +56,8 @@ function M.new(addons_dir, core_dir, opts)
     end
     return parse(pkgdir, f)
   end
-  function ui.find(v, name) assert(v, "ui.find nil view"); return find(v, name) end
+  -- like the client: a missing view is an error, not nil
+  function ui.find(v, name) assert(v, "ui.find nil view"); return (assert(find(v, name), "Missing UI view: " .. tostring(name))) end
   function ui.add(p, c)
     assert(p and c, "ui.add nil")
     if c.parent then
