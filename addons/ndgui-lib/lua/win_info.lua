@@ -148,6 +148,11 @@ local function create_line(page, fact, index, cells)
 			game.info.document(root, page, index)
 		elseif fact.link then
 			ui.aoml(root, "", "<u>" .. escape_markup(fact.text) .. "</u>", false)
+		elseif (fact.value or "") ~= "" and fact.rgb < 0 then
+			-- client 0.3: "Label: value" lines draw the value in the detail tone
+			local label = fact.text:sub(1, #fact.text - #fact.value)
+			ui.aoml(root, "", "<font color=" .. colors[fact.tone] .. ">" .. escape_markup(label) .. "</font>"
+				.. "<font color=" .. colors.detail .. ">" .. escape_markup(fact.value) .. "</font>", false)
 		end
 	end
 	if fact.item or fact.link then

@@ -7,8 +7,11 @@ Versions follow Semantic Versioning 2.0.0: `MAJOR.MINOR.PATCH`.
 - PATCH bumps fix tokens, scale math, or docs without a config change.
 - While the major version is 0, the client view layer is still incomplete. The Lua model is safe to load offline.
 
-## Unreleased
+## 0.3.0
 
+Needs the game client 0.3.4 or newer (the installer says so on an older game).
+
+- **Client 0.3.4:** lists use the game's own column menu everywhere: right-click a header to show / hide columns or Move Left / Move Right, or drag a header to move it. Column orders and hidden columns saved by older ndGUI carry over. Control Center: **Attack Actions** lists your attacks (like Perk Actions), **Control Panel** opens Actions, **Settings** opens Options. The docking column lets clicks through where no page is. The Mission Terminal no longer reopens at login; Info shows "Label: value" lines in two tones.
 - **Buff Watch shows what needs attention.** Rows are now only for debuffs on you, buffs about to run out (amber) and buffs you pin; every other buff is a small icon strip under them (hover: name, time left, cast by you or someone else). A buff moves up to a row when it has less than the warning time left (window menu: 30 s / 1 min / 5 min, and never before the last quarter of a short buff). Right-click a buff: **Always show as a row** or **Hide this buff**; the window menu has **Show hidden buffs again** and **Show every buff as a row** (the old list). The window is as tall as what it shows.
 
 ## 0.2.12

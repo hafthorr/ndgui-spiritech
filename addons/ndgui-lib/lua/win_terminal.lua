@@ -367,6 +367,7 @@ end)
 frame = Shell.window({
 	template = "library://notum.ndgui-lib/window.xml",
 	title = "Mission Terminal",
+	remember_open = false, -- client 0.3: a terminal is opened by the terminal, not reopened at login
 	content = content,
 	width = width,
 	resizable = false,

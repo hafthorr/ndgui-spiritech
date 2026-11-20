@@ -22,12 +22,15 @@ local aggdef = ui.find(right, "aggdef")
 local right_target = ui.find(right, "right_target")
 local commands = {}
 local latest_state = nil
-local latest_perks = {}
 local menu_state = {}
 local top_menus = {}
 local addon_windows = {}
-local perk_anchor = ui.load("menu_anchor.xml")
-ui.add(root, perk_anchor)
+-- Perk Actions / Attack Actions: submenus filled from control_center_apply (client 0.3)
+local dynamic_menus = {}
+for _, key in ipairs({ "perks", "attacks" }) do
+	dynamic_menus[key] = { anchor = ui.load("menu_anchor.xml"), entries = {} }
+	ui.add(root, dynamic_menus[key].anchor)
+end
 
 game.control_center.bind_aggdef(aggdef)
 
@@ -86,6 +89,7 @@ local windows = {
 	team_search = ui.destinations.require("prk.team-search"),
 	pets = ui.destinations.require("prk.pets"),
 	faction = ui.destinations.require("prk.faction"),
+	options = ui.destinations.require("prk.options"),
 }
 
 local function window_entry(label, window)
@@ -165,8 +169,8 @@ local actions_menu = {
 		{ "sit", "Sit" }, { "stand", "Stand" }, { "crawl", "Crawl" }, { "walk", "Walk" }, { "run", "Run" },
 	})),
 	menu_entry("Normal Actions", command_list({ { "invite", "Invite" }, { "quit", "Quit" } })),
-	window_entry("Attack Actions", windows.actions),
-	{ label = "Perk Actions", dynamic_perks = true },
+	{ label = "Attack Actions", dynamic = "attacks" },
+	{ label = "Perk Actions", dynamic = "perks" },
 	window_entry("Stats", windows.stats),
 	menu_entry("Status Bars", {
 		window_entry("Health", windows.health), window_entry("Nano", windows.nano_bar),
@@ -176,9 +180,9 @@ local actions_menu = {
 		window_entry("Default Window", windows.chat), window_entry("Combat", windows.combat_chat),
 	}),
 	window_entry("Tradeskill Kit", windows.tradeskills),
-	{ label = "Control Panel" },
+	window_entry("Control Panel", windows.actions),
 	menu_entry("Help/Settings", {
-		command_entry("help", "Help"), command_entry("settings", "Settings"),
+		command_entry("help", "Help"), window_entry("Settings", windows.options),
 		window_entry("Chat Configuration", windows.chat_config),
 	}),
 }
@@ -216,9 +220,9 @@ local function populate(anchor, items, path)
 			local child = new_anchor()
 			populate(child, item.children, path .. "." .. tostring(index))
 			menu_index = ui.menu.submenu(anchor, item.label, child)
-		elseif item.dynamic_perks then
-			menu_index = ui.menu.submenu(anchor, item.label, perk_anchor)
-			menu_state.perks_index = menu_index
+		elseif item.dynamic then
+			menu_index = ui.menu.submenu(anchor, item.label, dynamic_menus[item.dynamic].anchor)
+			dynamic_menus[item.dynamic].index = menu_index
 		elseif item.window then
 			menu_index = ui.menu.destination(anchor, item.label, item.window)
 		elseif item.key and commands[item.key] then
@@ -330,10 +334,30 @@ local function update_selections()
 	end
 end
 
-local function rebuild_perks()
-	ui.menu.clear(perk_anchor)
-	for _, perk in ipairs(latest_perks) do
-		ui.menu.action_icon(perk_anchor, perk.label, "game.control_center.activate", perk.reference, perk.icon)
+local function same_entries(shown, entries)
+	if shown == nil or #shown ~= #entries then
+		return false
+	end
+	for index, entry in ipairs(entries) do
+		if shown[index].key ~= entry.key or shown[index].label ~= entry.label then
+			return false
+		end
+	end
+	return true
+end
+
+-- rebuilt only when the list changes (an open submenu is not cleared under the mouse)
+local function rebuild_dynamic(menu)
+	if same_entries(menu.shown, menu.entries) then
+		return
+	end
+	menu.shown = menu.entries
+	ui.menu.clear(menu.anchor)
+	for _, entry in ipairs(menu.entries) do
+		ui.menu.action_icon(menu.anchor, entry.label, "game.control_center.activate", entry.reference, entry.icon)
+	end
+	if menu.index then
+		ui.menu.visible(ui.find(left, "actions"), menu.index, #menu.entries > 0)
 	end
 end
 
@@ -347,10 +371,9 @@ local function update_menu_state()
 	if menu_state.perks_window_index then
 		ui.menu.visible(ui.find(left, "character"), menu_state.perks_window_index, latest_state.perks_available)
 	end
-	if menu_state.perks_index then
-		ui.menu.visible(ui.find(left, "actions"), menu_state.perks_index, #latest_perks > 0)
+	for _, menu in pairs(dynamic_menus) do
+		rebuild_dynamic(menu)
 	end
-	rebuild_perks()
 end
 
 function control_center_configure(actions, registered_commands, registered_windows)
@@ -433,9 +456,10 @@ function control_center_refresh()
 	end
 end
 
-function control_center_apply(state, perks)
+function control_center_apply(state, perks, attacks)
 	latest_state = state
-	latest_perks = perks
+	dynamic_menus.perks.entries = perks or {}
+	dynamic_menus.attacks.entries = attacks or {}
 	ui.visible(minibar, state.minibar_shown == true)
 	if column then
 		column:show(state.rollup_shown == true, state.rollup_background_opacity)

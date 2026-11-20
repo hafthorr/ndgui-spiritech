@@ -557,6 +557,14 @@ if ok_cc then
     has_pets = false, perks_available = false, minibar_shown = true, rollup_shown = true, rollup_background_opacity = 0.5 }, {})
   check(cc_find("minibar").visible == true and cc_find("rollup_panel").visible == true, "Options toggles show the minibar and the column")
   check(cc_find("rollup_background").opacity == 0.5, "column backdrop follows the opacity slider")
+  -- client 0.3: Attack Actions is a live list (third argument), rebuilt only when it changes
+  local icons_before = CC.calls["menu.action_icon"] or 0
+  local state = { used_ncu = 0, max_ncu = 8, credits = 27691802, aggdef_advanced = false, aggdef = 25, fighting = false, has_pets = false, perks_available = false }
+  local attacks = { { key = "fling", label = "Fling Shot", reference = 11, icon = 3 }, { key = "burst", label = "Burst", reference = 12, icon = 4 } }
+  CC.env.control_center_apply(state, {}, attacks)
+  check((CC.calls["menu.action_icon"] or 0) - icons_before == 2, "Attack Actions lists the attacks")
+  CC.env.control_center_apply(state, {}, attacks)
+  check((CC.calls["menu.action_icon"] or 0) - icons_before == 2, "an unchanged list is not rebuilt")
   check(cc_find("rollup_panel").w == 190 + 12, "column = 190 px of pages + a scroll-bar lane (" .. tostring(cc_find("rollup_panel").w) .. ")")
   -- live titles reach the docked page too (Core writes rollup_title only once)
   local Title = CC.env.ui.require("notum.ndgui-lib/title")
@@ -700,13 +708,14 @@ do
       ok, err = pcall(function() t = Table.create({ host = host, columns = cols, binding = function(e) return 1 end, preference = "t" }) end)
       check(ok, "lib table creates" .. (ok and "" or (": " .. tostring(err))))
       if ok then
+        check(t.options.column_menu == true and t.menu_items[2] ~= nil, "every table gets Core's column menu")
         t:show({ "a", "b" })
-        t:ndgui_toggle(2)
+        t:toggle_column(2)
         check(arrays["t.col_hidden"] == "4:cost" and t.headers[2].root.visible == false and t.rows[1].cells[2].root.visible == false,
-          "hiding a column hides header + cells and saves it in the stock format (" .. tostring(arrays["t.col_hidden"]) .. ")")
-        t:ndgui_toggle(1)
+          "hiding a column hides header + cells and saves it (" .. tostring(arrays["t.col_hidden"]) .. ")")
+        t:toggle_column(1)
         check(t:shown(1), "the last visible column cannot be hidden")
-        t:ndgui_toggle(2)
+        t:toggle_column(2)
         check(arrays["t.col_hidden"] == "" and t.rows[2].cells[2].root.visible == true, "showing it again restores it")
         arrays["t.col_hidden"] = "4:cost"
         local t2 = Table.create({ host = host, columns = cols, binding = function(e) return 1 end, preference = "t" })
@@ -717,21 +726,18 @@ do
         local old = Table.create({ host = host, columns = cols, binding = function(e) return 1 end, preference = "t" })
         check(not old:shown(2) and arrays["t.col_hidden"] == "4:cost", "old ndGUI hidden columns migrate (" .. tostring(arrays["t.col_hidden"]) .. ")")
         arrays["t.col_hidden"] = ""
+        -- Core moves columns (Move Left / Right, or drag a header); the order is saved in col_id
         local t3 = Table.create({ host = host, columns = cols, binding = function(e) return 1 end, preference = "t" })
         t3:show({ "a", "b" })
-        t3:move_column("cost", -1)
-        check(t3.columns[1].id == "cost" and prefs["t.col_order"] == ",cost,name," and #t3.headers == 2,
-          "moving a column re-orders and saves it (" .. tostring(prefs["t.col_order"]) .. ")")
-        check(t3.rows[1] and t3.rows[1].cells[1].text == "ca" and t3.rows[1].cells[2].text == "a", "rows rebuilt in the new column order")
-        check(t3.widths[1] == 50 and t3.widths[2] == 100,
-          "widths follow their column when moved (" .. tostring(t3.widths[1]) .. "," .. tostring(t3.widths[2]) .. ")")
-        t3:move_column("cost", 1)
-        check(t3.widths[1] == 100 and t3.widths[2] == 50, "widths still right after moving back")
-        t3:move_column("cost", -1)
+        check(t3:move_column(2, -1) == true and t3.column_order[1] == 2, "Move Left puts Cost first")
         local t4 = Table.create({ host = host, columns = cols, binding = function(e) return 1 end, preference = "t" })
-        check(t4.columns[1].id == "cost" and cols[1].id == "name", "column order is remembered (package columns untouched)")
-        t4:reset_order()
-        check(t4.columns[1].id == "name" and prefs["t.col_order"] == "", "reset restores package order")
+        check(t4.column_order[1] == 2 and t4.column_order[2] == 1, "column order is remembered")
+        -- an order saved by ndGUI 0.2.x (",cost,name," text) carries over once
+        arrays["t.col_id"], arrays["t.col_width"] = nil, nil
+        prefs["t.col_order"] = ",cost,name,"
+        local t5 = Table.create({ host = host, columns = cols, binding = function(e) return 1 end, preference = "t" })
+        check(t5.column_order[1] == 2 and t5.column_order[2] == 1 and (prefs["t.col_order"] or "") == "",
+          "old ndGUI column order migrates (" .. tostring(t5.column_order[1]) .. "," .. tostring(t5.column_order[2]) .. ")")
       end
     end
   end
