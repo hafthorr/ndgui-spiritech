@@ -3,6 +3,8 @@
 --   M.left(effect, sampled_at_ms, now)   seconds left now (native samples, counted down between them)
 --   M.clock(seconds)                     "1h05" / "4:07" / "38s"
 --   M.on_you(effects, sampled, now)      your buffs and debuffs, debuffs first, then soonest to end
+--   M.split_you(effects, sampled, now, options)  rows (what needs attention) and icons (the rest)
+--   M.expiring(effect, left, warn)       a buff inside its warning window
 --   M.on_target(effects, self_id, ...)   what you put on your target (or every hostile effect if the
 --                                        client reports no casters)
 --   M.team_grid(members, collections)    columns = buffs seen on the team, cells = time left / missing
@@ -15,6 +17,9 @@ ui.define("ndgui.watch", function()
 	M.LOW_HEALTH, M.LOW_NANO = 0.30, 0.20
 	M.DEBUFF_ALERT_MS = 4000
 	M.MAX_COLUMNS = 10
+	M.WARN_CHOICES = { 30, 60, 300 } -- "warn when a buff has less than": seconds
+	M.WARN_DEFAULT = 60
+	M.WARN_FRACTION = 0.25 -- ...and less than this share of its duration (a 30 s buff warns at 7 s)
 
 	function M.left(effect, sampled_at, now)
 		if effect.permanent then
@@ -69,6 +74,54 @@ ui.define("ndgui.watch", function()
 			end
 		end
 		return sorted(list, sampled, now)
+	end
+
+	function M.expiring(effect, left, warn)
+		if effect.permanent or left == math.huge then
+			return false
+		end
+		local limit = warn or M.WARN_DEFAULT
+		if effect.duration and effect.duration > 0 then
+			limit = math.min(limit, effect.duration * M.WARN_FRACTION)
+		end
+		return left <= limit
+	end
+
+	-- What needs attention gets a row: debuffs on you, buffs inside their warning window, buffs pinned
+	-- with "Always show as a row". Everything else is an icon (soonest to end first, permanent last).
+	-- options: { warn = seconds, pinned = { [name] = true }, hidden = { [name] = true },
+	--            all_rows = bool (the old full list), max_rows = n (overflow becomes icons) }
+	function M.split_you(effects, sampled, now, options)
+		options = options or {}
+		local pinned, hidden = options.pinned or {}, options.hidden or {}
+		local rows, icons = {}, {}
+		for _, entry in ipairs(M.on_you(effects, sampled, now)) do
+			local name = entry.effect.name or ""
+			entry.expiring = not entry.hostile and M.expiring(entry.effect, entry.left, options.warn)
+			entry.pinned = pinned[name] == true
+			if entry.hostile then
+				rows[#rows + 1] = entry
+			elseif hidden[name] then
+				-- "Hide this buff"
+			elseif options.all_rows or entry.pinned or entry.expiring then
+				rows[#rows + 1] = entry
+			else
+				icons[#icons + 1] = entry
+			end
+		end
+		local max_rows = options.max_rows or math.huge
+		if #rows > max_rows then
+			while #rows > max_rows do
+				icons[#icons + 1] = table.remove(rows)
+			end
+			table.sort(icons, function(a, b)
+				if a.left ~= b.left then
+					return a.left < b.left
+				end
+				return (a.effect.name or "") < (b.effect.name or "")
+			end)
+		end
+		return rows, icons
 	end
 
 	function M.on_target(effects, self_id, sampled, now)

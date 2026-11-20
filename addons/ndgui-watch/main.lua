@@ -1,7 +1,9 @@
 -- ndGUI Buff Watch (standalone addon: Control Center > Actions > Addons > Buff Watch / Team Buffs).
 --
---   Buff Watch  your buffs and debuffs with draining timers (debuffs first, then soonest to end),
---               and what you put on your target
+--   Buff Watch  what needs attention as rows with draining timers: debuffs on you, buffs about to run
+--               out (amber), buffs you pinned; every other buff as a small icon strip (hover for
+--               details, right-click: Always show as a row / Hide); then what you put on your target.
+--               The window menu sets the warning time, shows hidden buffs again, or lists everything
 --   Team Buffs  a member per row, a buff per column (buffs anyone on the team has): time left, or red
 --               when missing. Click a member to target them, then cast as usual (an addon cannot cast)
 --   Alerts      a banner under the compass, always on (the Buff Watch window menu turns it off): low
@@ -33,6 +35,8 @@ local BUFF_MIN_W, BUFF_MAX_W = 200, 460
 local TITLE_ENDS, BORDERS = 33, 6
 local NAME_W, CELL_W, CELL_H = 110, 42, 22
 local MAX_MEMBERS = 12
+local ICON_STEP, ICON_LINES, ICONS_PER_LINE = 22, 5, 20
+local ICON_OPACITY = 0.8 -- the strip is background next to the rows
 
 -- ---- state -------------------------------------------------------------------------------
 local self_id
@@ -42,13 +46,32 @@ local vitals = {}
 local team = { members = {}, collections = {}, sampled = 0, in_team = false }
 local debuff_refs, debuff_hits = nil, {}
 local alerts_on = pref("NdguiWatchAlerts", "true") ~= "false"
+local all_rows = pref("NdguiWatchAllRows", "false") == "true"
+local warn = tonumber(pref("NdguiWatchWarn", "")) or Watch.WARN_DEFAULT
+-- buff names for "Always show as a row" / "Hide this buff", saved as name|name
+local function read_set(key)
+	local set = {}
+	for name in pref(key, ""):gmatch("[^|]+") do
+		set[name] = true
+	end
+	return set
+end
+local function write_set(key, set)
+	local names = {}
+	for name in pairs(set) do
+		names[#names + 1] = name
+	end
+	table.sort(names)
+	set_pref(key, table.concat(names, "|"), "text")
+end
+local pinned, hidden = read_set("NdguiWatchPinned"), read_set("NdguiWatchHidden")
 
 -- =========================================================================================
 -- Buff Watch window
 -- =========================================================================================
 local buffs = ui.load("buffs.xml")
 local function bfind(name) return ui.find(buffs, name) end
-local you_host, target_host = bfind("you_rows"), bfind("target_rows")
+local you_host, target_host, icons_host = bfind("you_rows"), bfind("target_rows"), bfind("you_icons")
 local you_head, you_empty = bfind("you_head"), bfind("you_empty")
 local target_head, target_empty = bfind("target_head"), bfind("target_empty")
 local buff_w = tonumber(pref("NdguiWatchWidth", "")) or 250
@@ -70,7 +93,116 @@ end
 local you_rows = make_rows(you_host, MAX_YOU)
 local target_rows = make_rows(target_host, MAX_TARGET)
 
-local you_list, target_list = {}, {}
+local you_list, target_list, icon_list = {}, {}, {}
+local refresh_lists, set_warn -- below
+
+-- right-click a buff (row or icon): pin it as a row, or hide it
+local function buff_menu(anchor, entry)
+	if not entry or entry.hostile then
+		return -- debuffs on you always show
+	end
+	local name = entry.effect.name or ""
+	if name == "" then
+		return
+	end
+	ui.menu.clear(anchor)
+	ui.menu.add(anchor, "Always show as a row", pinned[name] == true, function()
+		pinned[name] = not pinned[name] or nil
+		write_set("NdguiWatchPinned", pinned)
+		refresh_lists(ui.time())
+	end)
+	ui.menu.add(anchor, "Hide this buff", false, function()
+		hidden[name], pinned[name] = true, nil
+		write_set("NdguiWatchHidden", hidden)
+		write_set("NdguiWatchPinned", pinned)
+		refresh_lists(ui.time())
+	end)
+	ui.menu.show(anchor)
+end
+for _, row in ipairs(you_rows) do
+	ui.on_pointer_release(row.root, "right", function() buff_menu(row.root, row.entry) end)
+end
+
+-- icon strip: ICON_LINES lines of up to ICONS_PER_LINE icons, as many per line as the width allows
+local icon_lines, icon_cells = {}, {}
+for line = 1, ICON_LINES do
+	local view = ui.load("icon_line.xml")
+	ui.add(icons_host, view)
+	icon_lines[line] = ui.find(view, "icon_line")
+	ui.visible(icon_lines[line], false)
+	for column = 1, ICONS_PER_LINE do
+		local cell_view = ui.load("icon_cell.xml")
+		ui.add(icon_lines[line], cell_view)
+		local cell = { root = ui.find(cell_view, "icon_cell"), slot = ui.find(cell_view, "icon_slot"),
+			line = line, column = column }
+		ui.opacity(cell.slot, ICON_OPACITY)
+		ui.visible(cell.root, false)
+		ui.on_pointer_release(cell.root, "right", function() buff_menu(cell.root, cell.entry) end)
+		icon_cells[#icon_cells + 1] = cell
+	end
+end
+
+local function per_line(inner)
+	return math.max(1, math.min(ICONS_PER_LINE, inner // ICON_STEP))
+end
+local function icon_line_count(inner)
+	return math.min(ICON_LINES, math.ceil(#icon_list / per_line(inner)))
+end
+
+local function caster_text(effect)
+	if effect.caster == nil then
+		return ""
+	end
+	return (self_id ~= nil and effect.caster == self_id) and "Cast by you" or "Cast by someone else"
+end
+
+local function icon_tooltip(effect, left)
+	local nl = string.char(10)
+	local tip = effect.name or ""
+	local clock = Watch.clock(left)
+	if clock ~= "" then
+		tip = tip .. "  (" .. clock .. " left)"
+	end
+	local who = caster_text(effect)
+	if who ~= "" then
+		tip = tip .. nl .. who
+	end
+	if effect.description and effect.description ~= "" then
+		tip = tip .. nl .. effect.description
+	end
+	return tip .. nl .. "Right-click: always show as a row / hide"
+end
+
+local function render_icons(inner, now)
+	local per = per_line(inner)
+	local lines = icon_line_count(inner)
+	for line = 1, ICON_LINES do
+		ui.visible(icon_lines[line], line <= lines)
+	end
+	for _, cell in ipairs(icon_cells) do
+		local entry = nil
+		if cell.column <= per and cell.line <= lines then
+			entry = icon_list[(cell.line - 1) * per + cell.column]
+		end
+		ui.visible(cell.root, entry ~= nil)
+		cell.entry = entry
+		if entry then
+			local effect = entry.effect
+			if cell.ref ~= effect.reference then
+				cell.ref = effect.reference
+				ui.icon(cell.slot, effect.icon or 0)
+				ui.content(cell.slot, (effect.icon or 0) ~= 0)
+			end
+			local tip = icon_tooltip(effect, Watch.left(effect, you.sampled, now))
+			if cell.tip ~= tip then
+				cell.tip = tip
+				ui.tooltip(cell.root, tip)
+			end
+		else
+			cell.ref = nil
+		end
+	end
+end
 
 local function fill_color(entry, left, mine)
 	if entry.hostile then
@@ -81,7 +213,7 @@ local function fill_color(entry, left, mine)
 	end
 	if left <= Watch.EXPIRING then
 		return RED
-	elseif left <= 60 then
+	elseif entry.expiring or left <= 60 then
 		return AMBER
 	end
 	return STEEL
@@ -89,6 +221,7 @@ end
 
 local function show_row(row, entry, sampled, now, inner, mine)
 	ui.visible(row.root, entry ~= nil)
+	row.entry = entry
 	if not entry then
 		row.ref = nil
 		return
@@ -110,8 +243,15 @@ local function show_row(row, entry, sampled, now, inner, mine)
 		ui.text(row.buff_name, effect.name or "")
 		ui.text_color(row.buff_name, entry.hostile and HOSTILE_TEXT or TEXT)
 		local tip = effect.name or ""
+		local who = caster_text(effect)
+		if who ~= "" then
+			tip = tip .. string.char(10) .. who
+		end
 		if effect.description and effect.description ~= "" then
 			tip = tip .. string.char(10) .. effect.description
+		end
+		if not entry.hostile and not mine then
+			tip = tip .. string.char(10) .. "Right-click: always show as a row / hide"
 		end
 		ui.tooltip(row.root, tip)
 	end
@@ -122,19 +262,24 @@ local function show_row(row, entry, sampled, now, inner, mine)
 end
 
 local buff_frame
+local function inner_width()
+	return buff_w - Window.CONTENT_SIDES - BORDERS
+end
 local function buffs_height()
-	local h = HEAD_H + math.max(1, math.min(#you_list, MAX_YOU)) * ROW_H
-	if #you_list == 0 then h = HEAD_H + EMPTY_H end
+	local lines = icon_line_count(inner_width())
+	local h = HEAD_H + math.min(#you_list, MAX_YOU) * ROW_H + lines * ICON_STEP + (lines > 0 and 2 or 0)
+	if #you_list == 0 and lines == 0 then h = HEAD_H + EMPTY_H end
 	h = h + GAP + HEAD_H
 	h = h + (#target_list > 0 and math.min(#target_list, MAX_TARGET) * ROW_H or EMPTY_H)
 	return TITLE_ENDS + BORDERS + h + 4
 end
 
 local function render_buffs(now)
-	local inner = buff_w - Window.CONTENT_SIDES - BORDERS
+	local inner = inner_width()
 	for index, row in ipairs(you_rows) do
 		show_row(row, you_list[index], you.sampled, now, inner, false)
 	end
+	render_icons(inner, now)
 	for index, row in ipairs(target_rows) do
 		show_row(row, target_list[index], target.sampled, now, inner, true)
 	end
@@ -147,7 +292,7 @@ local function buffs_layout(window, width)
 	ui.size(target_head, inner, HEAD_H)
 	ui.size(you_empty, inner, EMPTY_H)
 	ui.size(target_empty, inner, EMPTY_H)
-	ui.visible(you_empty, #you_list == 0)
+	ui.visible(you_empty, #you_list == 0 and #icon_list == 0)
 	ui.visible(target_empty, #target_list == 0)
 	local height = buffs_height()
 	ui.limits(window.root, BUFF_MIN_W, height, BUFF_MAX_W, height)
@@ -167,8 +312,32 @@ buff_frame = Window.create({
 			set_pref("NdguiWatchAlerts", tostring(alerts_on), "bool")
 			pcall(ui.menu.checked, buff_frame.icon, 1, alerts_on)
 		end },
+		{ label = "Show every buff as a row", checked = all_rows, invoke = function()
+			all_rows = not all_rows
+			set_pref("NdguiWatchAllRows", tostring(all_rows), "bool")
+			pcall(ui.menu.checked, buff_frame.icon, 2, all_rows)
+			refresh_lists(ui.time())
+		end },
+		{ label = "Warn under 30 s", checked = warn == 30, invoke = function() set_warn(30) end },
+		{ label = "Warn under 1 min", checked = warn == 60, invoke = function() set_warn(60) end },
+		{ label = "Warn under 5 min", checked = warn == 300, invoke = function() set_warn(300) end },
+		{ label = "Show hidden buffs again", checked = false, invoke = function()
+			hidden = {}
+			write_set("NdguiWatchHidden", hidden)
+			refresh_lists(ui.time())
+		end },
 	},
 })
+
+-- menu entries 3-5: the warning time (a buff becomes an amber row when it has less left)
+function set_warn(seconds)
+	warn = seconds
+	set_pref("NdguiWatchWarn", tostring(seconds), "int")
+	for index, choice in ipairs(Watch.WARN_CHOICES) do
+		pcall(ui.menu.checked, buff_frame.icon, 2 + index, choice == seconds)
+	end
+	refresh_lists(ui.time())
+end
 ui.add(root, buff_frame.root)
 ui.register_view(buff_frame.root, "buffs")
 
@@ -184,8 +353,10 @@ local function relayout_buffs()
 	end
 end
 
-local function refresh_lists(now)
-	you_list = Watch.on_you(you.effects, you.sampled, now)
+function refresh_lists(now)
+	you_list, icon_list = Watch.split_you(you.effects, you.sampled, now, {
+		warn = warn, pinned = pinned, hidden = hidden, all_rows = all_rows, max_rows = MAX_YOU,
+	})
 	local on_self = target.name ~= nil and (target.is_self or (self_id ~= nil and target.id == self_id))
 	-- targeting yourself: "On you" already lists all of it
 	target_list = on_self and {} or Watch.on_target(target.effects, self_id, target.sampled, now)
@@ -487,7 +658,7 @@ ui.on_update(function(now)
 		return
 	end
 	next_tick = now + 250
-	render_buffs(now)
+	refresh_lists(now) -- buffs move from the icon strip to the rows as they reach the warning time
 	render_team(now)
 	render_alert(now)
 end)

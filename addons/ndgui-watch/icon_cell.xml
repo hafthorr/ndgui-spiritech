@@ -1,0 +1,7 @@
+<?xml version="1.0"?>
+<root>
+  <!-- one buff in the icon strip: hover for name / time left / caster, right-click for options -->
+  <View name="icon_cell" view_layout="stacked" capture_input="true" interactive="true" min_size="Point(22,22)" max_size="Point(22,22)">
+    <ItemSlotView name="icon_slot" interactive="false" icon_fit="cover" min_size="Point(20,20)" max_size="Point(20,20)" h_alignment="left" v_alignment="top" />
+  </View>
+</root>

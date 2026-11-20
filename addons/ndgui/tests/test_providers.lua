@@ -972,8 +972,43 @@ do
     end
     local function walk() names = texts("buff_name") end
     walk()
-    check(names[1] == "Minor Wilderness Protection" and names[2] == "Cyclic Coat of Barbs" and #names == 2,
-      "your buffs, soonest to end first, hidden ones left out: " .. table.concat(names, ", "))
+    check(names[1] == "Minor Wilderness Protection" and #names == 1,
+      "rows: only the buff inside its warning time (hidden ones left out): " .. table.concat(names, ", "))
+    -- everything else is a small icon; hover tells name, time left and caster
+    local function cells()
+      local out = {}
+      local function walk_cells(v) if v.visible == false then return end
+        if v.name == "icon_cell" then out[#out + 1] = v end
+        for _, k in ipairs(v.kids or {}) do walk_cells(k) end end
+      walk_cells(H.root)
+      return out
+    end
+    local strip = cells()
+    check(#strip == 1 and strip[1].tooltip and strip[1].tooltip:find("Cyclic Coat of Barbs", 1, true)
+      and strip[1].tooltip:find("20:00 left", 1, true),
+      "the long buff sits in the icon strip, tooltip with time left: " .. tostring(strip[1] and strip[1].tooltip))
+    -- right-click an icon: Always show as a row
+    local function right_click(view)
+      for _, r in ipairs(H.releases) do if r.view == view then H.menu_items = {}; r.cb(); return H.menu_items end end
+    end
+    local items = right_click(strip[1])
+    check(items and items[1] and items[1].label == "Always show as a row" and items[2].label == "Hide this buff",
+      "right-click an icon: Always show as a row / Hide this buff")
+    items[1].cb()
+    walk()
+    check(#names == 2 and #cells() == 0, "pinned: the buff becomes a row: " .. table.concat(names, ", "))
+    -- right-click its row: unpin; then hide it
+    local row_view
+    for _, r in ipairs(H.releases) do if r.view.name == "buff_row" and r.view.visible ~= false then
+      local n = H.find(r.view, "buff_name"); if n and n.text == "Cyclic Coat of Barbs" then row_view = r.view end end end
+    items = right_click(row_view)
+    check(items and items[1].checked == true, "the row menu shows Always show as a row ticked")
+    items[1].cb()
+    walk()
+    check(#names == 1 and #cells() == 1, "unpinned: back to the icon strip")
+    items = right_click(cells()[1])
+    items[2].cb()
+    check(#cells() == 0, "Hide this buff takes it off the strip")
     -- a debuff lands: it goes first and raises the banner
     effects_subs.self({ reset = false, sampled_at_ms = clock, data = { { subject = "me", known = true, effects = {
       fx(1, "Cyclic Coat of Barbs", 1200, 1200), fx(2, "Minor Wilderness Protection", 40, 2700),
@@ -985,6 +1020,23 @@ do
     -- timers count down between samples; an expiring long buff alerts after the debuff alert passes
     clock = clock + 30000
     H.tick()
+    -- a buff in the strip moves up to an amber row once it reaches the warning time (1 min)
+    effects_subs.self({ reset = false, sampled_at_ms = clock, data = { { subject = "me", known = true, effects = {
+      fx(2, "Minor Wilderness Protection", 10, 2700), fx(9, "Snake Venom", 30, 30, { hostile = true }),
+      fx(4, "Essence of Behemoth", 70, 3600) } } } })
+    walk()
+    check(#names == 2 and #cells() == 1, "Essence (70 s left) still an icon: " .. table.concat(names, ", "))
+    clock = clock + 15000
+    H.tick()
+    walk()
+    check(#names == 3 and names[3] == "Essence of Behemoth" and #cells() == 0,
+      "at 55 s left it moves up to the rows: " .. table.concat(names, ", "))
+    -- a short buff only warns in the last quarter of its duration
+    effects_subs.self({ reset = false, sampled_at_ms = clock, data = { { subject = "me", known = true, effects = {
+      fx(2, "Minor Wilderness Protection", 10, 2700), fx(9, "Snake Venom", 30, 30, { hostile = true }),
+      fx(6, "Short Proc", 20, 30) } } } })
+    walk()
+    check(#names == 2 and #cells() == 1, "a 30 s buff with 20 s left stays an icon")
     check(f("alert_text").text == "Minor Wilderness Protection ends in 10s", "expiring buff alert: " .. tostring(f("alert_text").text))
     -- low health beats everything
     char_subs.self(nil, { id = 42, health = 200, max_health = 1000, nano = 500, max_nano = 500 })

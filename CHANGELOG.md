@@ -7,6 +7,10 @@ Versions follow Semantic Versioning 2.0.0: `MAJOR.MINOR.PATCH`.
 - PATCH bumps fix tokens, scale math, or docs without a config change.
 - While the major version is 0, the client view layer is still incomplete. The Lua model is safe to load offline.
 
+## Unreleased
+
+- **Buff Watch shows what needs attention.** Rows are now only for debuffs on you, buffs about to run out (amber) and buffs you pin; every other buff is a small icon strip under them (hover: name, time left, cast by you or someone else). A buff moves up to a row when it has less than the warning time left (window menu: 30 s / 1 min / 5 min, and never before the last quarter of a short buff). Right-click a buff: **Always show as a row** or **Hide this buff**; the window menu has **Show hidden buffs again** and **Show every buff as a row** (the old list). The window is as tall as what it shows.
+
 ## 0.2.12
 
 - **Health / Nano bars: four sizes.** Double-click a bar; the strip now has **Size** next to Lock and Flat and cycles S / M / L / XL (M is the old size). Works upright and flat, saved per bar.

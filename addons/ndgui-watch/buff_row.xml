@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <root>
   <!-- one effect: icon, name, time left over a draining bar -->
-  <View name="buff_row" view_layout="stacked" layout_borders="Rect(0,0,0,2)">
+  <View name="buff_row" view_layout="stacked" capture_input="true" interactive="true" layout_borders="Rect(0,0,0,2)">
     <BitmapView name="buff_track" image="library://notum.ndgui-lib/bars/track_h.png" />
     <BitmapView name="buff_fill" image="library://notum.ndgui-lib/bars/target_h.png" graphic_mode="tinted" color="3D6F9A" h_alignment="left" />
     <View view_layout="horizontal">
