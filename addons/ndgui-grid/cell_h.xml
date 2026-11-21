@@ -1,0 +1,6 @@
+<?xml version="1.0"?>
+<root>
+  <View name="grid_cell" view_layout="horizontal">
+    <View name="grid_line" />
+  </View>
+</root>

@@ -1247,6 +1247,7 @@ do
     maximum_width = function() return -1 end, maximum_height = function() return -1 end }
   local env = setmetatable({ ui = fake_ui }, { __index = _G })
   local G = assert(loadfile(addons .. "/ndgui-lib/lua/grid.lua", "t", env))()
+  G.size = 10 -- whatever the installer set on this machine
   check(G.active and snapping.ndgui_grid == G, "grid wraps Core's snapping")
   local dx, dy = snapping.offset({}, 103, 57, 200, 100, true, true, true, true, false)
   check(dx == -3 and dy == 3, "moving: the nearer edge lands on the 10 px grid (" .. dx .. "," .. dy .. ")")
@@ -1268,6 +1269,27 @@ do
   check(dx == 0 and dy == 0, "game snapping off (magnetism 0): no grid either")
   local G2 = assert(loadfile(addons .. "/ndgui-lib/lua/grid.lua", "t", env))()
   check(G2.active == nil, "a second require in the same VM does not wrap twice")
+end
+-- Grid Overlay: a click-through full-screen grid at the installer's grid size, amber centre lines
+do
+  local H = Mock.new(addons, core, { width = 1920, height = 1080, loose = true })
+  local registered
+  H.env.ui.register_view = function(v, id) registered = id end
+  local ok, err = pcall(H.load_package, "ndgui-grid")
+  check(ok, "ndgui-grid loads" .. (ok and "" or (": " .. tostring(err))))
+  if ok then
+    check(registered == "grid", "Grid Overlay is a registered addon window")
+    local lines, centre, view = 0, 0, H.find(H.root, "ndgui_grid")
+    local function walk(v) if v.name == "grid_line" then
+        if v.fill == "#A0FFB040" then centre = centre + 1 elseif v.fill and v.fill ~= "" then lines = lines + 1 end end
+      for _, k in ipairs(v.kids or {}) do walk(k) end end
+    walk(H.root)
+    local size = H.env.ui.require("notum.ndgui-lib/grid").size
+    local step = size * math.max(1, math.ceil(20 / size)) -- a 10 px grid draws a line every 20 px
+    local want = math.ceil(1920 / step) + math.ceil(1080 / step)
+    check(lines == want and centre == 2, "grid lines every " .. step .. " px (" .. size .. " px grid) + 2 centre lines: " .. lines .. " / " .. centre)
+    check(view and view.max_w == 1920 and view.max_h == 1080, "the overlay covers the screen")
+  end
 end
 -- every hand-made package that moves things loads the grid
 for _, d in ipairs({ "compass", "hotbar", "meter", "mission-hub", "planet-map", "playfield-map", "status-bars", "target-panels", "team", "watch" }) do

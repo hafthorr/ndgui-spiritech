@@ -1,0 +1,5 @@
+<?xml version="1.0"?>
+<root>
+  <!-- the whole screen, click-through (no capture_input): faint grid lines + amber centre lines -->
+  <View name="ndgui_grid" view_layout="stacked" />
+</root>

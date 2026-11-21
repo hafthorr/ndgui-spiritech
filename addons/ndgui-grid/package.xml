@@ -1,0 +1,5 @@
+<Package id="notum.ndgui-grid" name="Notum Dovvetech Grid Overlay">
+  <Requires package="notum.ndgui-lib" />
+  <View id="grid" name="Grid Overlay" />
+  <Script src="main.lua" />
+</Package>

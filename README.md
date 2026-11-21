@@ -64,6 +64,7 @@ Inventory, Wear, Stats, Skills, Nano Programs, Team, Raid, Friends, Pets, Perks,
 - Steel-blue **tabs, scrollbars, dropdowns, sliders, item slots**. Stock teal is retinted to steel.
 - Crisp text at high UI scale (tested at 4.5K / 171 %): baked-text art was replaced with real labels.
 - Every piece can be dragged, and positions are saved per character.
+- **Snap to grid** while moving or resizing (see [Snap to grid](#snap-to-grid)), and a **Grid Overlay** (Control Center > Actions > **Addons** > Grid Overlay) that draws the grid and amber screen-centre lines while you arrange things. It takes no clicks; close it from the same menu.
 
 ## Install (short version)
 
@@ -82,9 +83,28 @@ Linux/Mac, or building from source: `python install.py` (see [INSTALL.md](INSTAL
 
 Full guide, options, updating after a client patch, and troubleshooting: **[INSTALL.md](INSTALL.md)**.
 
+## Snap to grid
+
+Windows and HUD pieces snap to a grid when you move or resize them (10 px unless you change it). It uses the game's own snapping switch: **Options > Interface & HUD > Windows and HUD > magnetism** above 0 turns on edge snapping and the grid; 0 turns both off. When another window's edge is in reach, it snaps to that edge instead.
+
+**Change the grid size** (any whole number of pixels from 0 to 200; 0 = grid off). Quit the game first, then restart it afterwards. Updates and reinstalls keep your size.
+
+- **Windows:** double-click `install.bat` and pick **5) Snap-to-grid size**. Or, in PowerShell in the unpacked folder:
+  ```powershell
+  .\install.ps1 -Grid 20
+  ```
+- **Linux / Mac** (or from source on Windows): in the ndGUI folder run `python install.py` and pick **5) Snap-to-grid size**, or:
+  ```bash
+  python install.py --grid 20
+  python install.py --grid 20 --client "/path/to/PRK-AO-Native/client"   # if it can't find the game
+  ```
+- **By hand** (any system): edit `local SIZE = 10` near the top of `client/UI/Addons/ndgui-lib/lua/grid.lua`.
+
+The Grid Overlay always draws the size you set (a small grid shows every 2nd / 3rd line so it stays readable).
+
 ## How it works (one paragraph)
 
-Spiritech loads Lua/XML UI packages from `client/UI/Addons`. This repo holds **14 totally AI-hand-made packages** ([`addons/`](addons)) and the Python tools that derive the other **26** from the game's own UI. They also square every button and paint the DarkTech skin. `build_release.py` runs all of that once, on a developer's machine, and zips the result. The player's `install.ps1` then only copies the packages, swaps in the patched screen layouts, merges the finished skin images into the game's graphics file (`cd_image/gui/Default`), and selects the ndGUI providers. It keeps `*.stock` backups of everything it touches. Details are in [CONTRIBUTING.md](CONTRIBUTING.md).
+Spiritech loads Lua/XML UI packages from `client/UI/Addons`. This repo holds **15 totally AI-hand-made packages** ([`addons/`](addons)) and the Python tools that derive the other **26** from the game's own UI. They also square every button and paint the DarkTech skin. `build_release.py` runs all of that once, on a developer's machine, and zips the result. The player's `install.ps1` then only copies the packages, swaps in the patched screen layouts, merges the finished skin images into the game's graphics file (`cd_image/gui/Default`), and selects the ndGUI providers. It keeps `*.stock` backups of everything it touches. Details are in [CONTRIBUTING.md](CONTRIBUTING.md).
 
 ## Known limits
 
@@ -96,7 +116,7 @@ Spiritech loads Lua/XML UI packages from `client/UI/Addons`. This repo holds **1
 
 ## Status
 
-`0.3.1`: playable, in daily use, with rough edges.
+`0.3.2`: playable, in daily use, with rough edges.
 
 ## Bugs, issues, ideas
 

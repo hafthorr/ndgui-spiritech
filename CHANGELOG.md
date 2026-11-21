@@ -7,6 +7,10 @@ Versions follow Semantic Versioning 2.0.0: `MAJOR.MINOR.PATCH`.
 - PATCH bumps fix tokens, scale math, or docs without a config change.
 - While the major version is 0, the client view layer is still incomplete. The Lua model is safe to load offline.
 
+## 0.3.2
+
+- **Grid Overlay** (Control Center > Actions > Addons > Grid Overlay): shows the snap grid over the whole screen, with amber lines through the screen centre, to line up and centre windows and HUD pieces. It takes no clicks; close it from the same menu when done. Small grids draw every 2nd / 3rd line (at least 20 px apart) so it stays readable; every 5th drawn line is brighter.
+
 ## 0.3.1
 
 - **Snap to grid.** Moving or resizing any ndGUI window or HUD piece (bars, hotbars, compass, target panels, maps...) now lands on a 10 px grid. It follows the game's own snapping switch: Options > Interface & HUD > Windows and HUD > magnetism above 0 turns on edge snapping and the grid, 0 turns both off. Snapping to another window's edge still wins when it is in reach. Grid size (any number of pixels, 0 = off): installer menu **Snap-to-grid size**, or `python install.py --grid 20`; updates keep your choice.
