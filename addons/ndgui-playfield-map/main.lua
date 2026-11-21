@@ -1,4 +1,5 @@
 -- ndGUI Local Map (prk.playfield-map). Hand-made; keeps the stock native contract
+ui.require("notum.ndgui-lib/grid") -- ndGUI: snap to grid while moving/resizing (ndgui-lib/lua/grid.lua)
 -- (playfield_map_* callbacks, pfmap_* widgets, protected waypoint commands) and adds:
 --   toolbar (zoom -/+, centre, follow, trail, rings, marker filters, minimap mode),
 --   live world X/Z, cursor world X/Z + distance, right-click "Set waypoint here",

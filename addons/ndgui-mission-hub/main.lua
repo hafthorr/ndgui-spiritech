@@ -1,4 +1,5 @@
 -- ndGUI Mission Hub: Info, Missions and Mission Terminal from one package, so Info can keep each
+ui.require("notum.ndgui-lib/grid") -- ndGUI: snap to grid while moving/resizing (ndgui-lib/lua/grid.lua)
 -- mission briefing it shows (ndgui-lib briefs.lua, in this package's ui.storage) and the Missions
 -- side pane and terminal offers can show it. The client runs each role in its own VM and every VM
 -- sees every game.* domain, so a VM only learns its role from the first callback it receives. The

@@ -1,4 +1,5 @@
 -- Dovvetech prk.target-panels provider. One VM per panel (friendly / hostile), two native slots each.
+ui.require("notum.ndgui-lib/grid") -- ndGUI: snap to grid while moving/resizing (ndgui-lib/lua/grid.lua)
 -- Each slot is a fixed-size unit frame: consider-colour accent, profession portrait (players) or
 -- level (NPCs), name + level, HP bar with exact numbers and a draining "ghost" of recent damage,
 -- nano bar when known, and an info row (profession / org or side, distance, weapon reach).

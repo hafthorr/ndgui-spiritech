@@ -1,4 +1,5 @@
 -- Dovvetech prk.compass provider: a clean heading strip centred on the top edge.
+ui.require("notum.ndgui-lib/grid") -- ndGUI: snap to grid while moving/resizing (ndgui-lib/lua/grid.lua)
 -- Our own art (skin.py GFX_GUI_NDGUI_COMPASS_*): a dotted line with N / E / S / W, NE..NW and 15-degree ticks,
 -- a green waypoint marker riding the line, a caret where you face, and the waypoint distance under it.
 -- Light ink with a black outline, no backing plate, so it reads on snow and at night.

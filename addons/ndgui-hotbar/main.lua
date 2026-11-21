@@ -1,4 +1,5 @@
 -- DarkTech prk.hotbar provider: stock hotbar_apply contract. Framed steel plate per bar,
+ui.require("notum.ndgui-lib/grid") -- ndGUI: snap to grid while moving/resizing (ndgui-lib/lua/grid.lua)
 -- recessed slot wells (native slot tile disabled with slot_gfx=""), lit blue rail on the active bar
 -- (no key labels: the client doesn't tell addons the real bindings), slim spinner that doubles as the drag handle.
 local root = ui.load("bar.xml")

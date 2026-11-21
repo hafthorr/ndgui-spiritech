@@ -1,4 +1,5 @@
 -- ndGUI Buff Watch (standalone addon: Control Center > Actions > Addons > Buff Watch / Team Buffs).
+ui.require("notum.ndgui-lib/grid") -- ndGUI: snap to grid while moving/resizing (ndgui-lib/lua/grid.lua)
 --
 --   Buff Watch  what needs attention as rows with draining timers: debuffs on you, buffs about to run
 --               out (amber), buffs you pinned; every other buff as a small icon strip (hover for

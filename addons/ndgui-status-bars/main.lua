@@ -1,4 +1,5 @@
 -- Dovvetech prk.status-bars provider (classic ndGUI layout).
+ui.require("notum.ndgui-lib/grid") -- ndGUI: snap to grid while moving/resizing (ndgui-lib/lua/grid.lua)
 -- Native creates one VM per bar and calls status_bar_initialize(kind), then status_bar_apply.
 -- HP/NP: vertical bars flanking the character with numbers underneath, or flat with the number
 --        inside. Double-click one to show its Lock / Flat / Size strip (HUD pieces get no right-click).

@@ -7,6 +7,10 @@ Versions follow Semantic Versioning 2.0.0: `MAJOR.MINOR.PATCH`.
 - PATCH bumps fix tokens, scale math, or docs without a config change.
 - While the major version is 0, the client view layer is still incomplete. The Lua model is safe to load offline.
 
+## 0.3.1
+
+- **Snap to grid.** Moving or resizing any ndGUI window or HUD piece (bars, hotbars, compass, target panels, maps...) now lands on a 10 px grid. It follows the game's own snapping switch: Options > Interface & HUD > Windows and HUD > magnetism above 0 turns on edge snapping and the grid, 0 turns both off. Snapping to another window's edge still wins when it is in reach. Grid size (any number of pixels, 0 = off): installer menu **Snap-to-grid size**, or `python install.py --grid 20`; updates keep your choice.
+
 ## 0.3.0
 
 Needs the game client 0.3.4 or newer (the installer says so on an older game).

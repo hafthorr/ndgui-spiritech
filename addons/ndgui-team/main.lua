@@ -1,4 +1,5 @@
 -- ndGUI Team window (prk.team), hand-made from the stock Team package.
+ui.require("notum.ndgui-lib/grid") -- ndGUI: snap to grid while moving/resizing (ndgui-lib/lua/grid.lua)
 -- Each member is an ndGUI unit frame (ndgui-lib unit.lua): profession portrait, name + level, exact HP
 -- with a draining ghost of damage just taken, low-HP pulse, nano, profession / side, distance, and
 -- floating damage / healing numbers. Leader = green name and stripe; absent members are greyed.

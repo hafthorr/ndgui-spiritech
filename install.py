@@ -25,7 +25,7 @@ and --uninstall restores them. See INSTALL.md.
 """
 import argparse, glob, json, os, re, runpy, shutil, string, subprocess, sys, traceback
 
-VERSION = "0.3.0"
+VERSION = "0.3.1"
 REPO = os.path.dirname(os.path.abspath(__file__))
 SOURCE = os.path.join(REPO, "addons")
 # Generated on the player's machine from their own client (never copied back by --pull).
@@ -223,12 +223,69 @@ def copy_packages(client):
     say(f"  copied {len(names)} packages into {addons}")
 
 
+# ---- snap-to-grid size (ndgui-lib/lua/grid.lua) ------------------------------------------
+GRID_FILE = os.path.join("UI", "Addons", "ndgui-lib", "lua", "grid.lua")
+GRID_RE = re.compile(r"^local SIZE = (\d+)", re.M)
+
+
+def read_grid(client):
+    path = os.path.join(client, GRID_FILE)
+    if not os.path.exists(path):
+        return None
+    m = GRID_RE.search(open(path, encoding="utf-8").read())
+    return int(m.group(1)) if m else None
+
+
+def write_grid(client, size):
+    path = os.path.join(client, GRID_FILE)
+    code = open(path, encoding="utf-8").read()
+    if not GRID_RE.search(code):
+        raise SystemExit("ndgui-lib/lua/grid.lua has no 'local SIZE = ' line; reinstall ndGUI.")
+    code = GRID_RE.sub(f"local SIZE = {size}", code, count=1)
+    open(path, "w", encoding="utf-8", newline="\n").write(code)
+    say(f"  snap grid: {size} px" if size >= 2 else "  snap grid: off")
+
+
+def grid_size(text):
+    size = int(text)
+    if not 0 <= size <= 200:
+        raise ValueError("grid size must be 0-200")
+    return size
+
+
+def grid_label(size):
+    if size is None:
+        return "not installed"
+    return f"{size} px" if size >= 2 else "off"
+
+
+def ask_grid(client):
+    current = read_grid(client)
+    if current is None:
+        raise SystemExit("ndGUI is not installed in this folder yet; install it first.")
+    say("Windows and HUD pieces snap to this grid while you move or resize them, when the game's")
+    say("snapping is on (Options > Interface & HUD > Windows and HUD > magnetism above 0).")
+    say(f"Now: {grid_label(current)}")
+    answer = input("\nGrid size in pixels, e.g. 5, 10, 20, 25, 50 (0 = off) [keep]: ").strip()
+    if not answer:
+        return
+    try:
+        size = grid_size(answer)
+    except ValueError:
+        raise SystemExit("Give a whole number from 0 to 200.")
+    write_grid(client, size)
+    say("Restart the game to use it.")
+
+
 # ---- actions ---------------------------------------------------------------------------
-def install(client, stock_screens=False):
+def install(client, stock_screens=False, grid=None):
     if not check(client):
         raise SystemExit("\nFix the items above and run the installer again.")
     say("\n[1/5] Copying ndGUI packages")
+    kept_grid = read_grid(client)  # the copy replaces grid.lua; keep the player's grid size
     copy_packages(client)
+    if grid is not None or (kept_grid is not None and kept_grid != read_grid(client)):
+        write_grid(client, grid if grid is not None else kept_grid)
     say("\n[2/5] Building the ndGUI windows from your client's own UI")
     tool(client, "fork_windows.py")
     tool(client, "fork_hud.py")
@@ -392,8 +449,9 @@ def menu(client):
     say("  2) Update to the newest version (from GitHub)")
     say(f"  3) Install {VERSION}, but keep the game's own screens stock (Options, login...)")
     say("  4) Uninstall (back to the stock UI)")
-    say("  5) Quit")
-    choice = input("\nPick 1-5 [1]: ").strip() or "1"
+    say(f"  5) Snap-to-grid size (now: {grid_label(read_grid(client))})")
+    say("  6) Quit")
+    choice = input("\nPick 1-6 [1]: ").strip() or "1"
     say()
     if choice == "1":
         install(client)
@@ -403,6 +461,8 @@ def menu(client):
         install(client, stock_screens=True)
     elif choice == "4":
         uninstall(client)
+    elif choice == "5":
+        ask_grid(client)
 
 
 def main():
@@ -415,8 +475,16 @@ def main():
     parser.add_argument("--check", action="store_true")
     parser.add_argument("--pull", action="store_true", help=argparse.SUPPRESS)
     parser.add_argument("--stock-screens", action="store_true")
+    parser.add_argument("--grid", type=grid_size, metavar="PX",
+                        help="snap-to-grid size in pixels, 0 = off (default: keep; 10 on a first install)")
     args = parser.parse_args()
     actions = args.install or args.uninstall or args.check or args.pull or args.update
+    if args.grid is not None and not actions:
+        client = find_client(args.client)
+        if not client or read_grid(client) is None:
+            raise SystemExit("ndGUI is not installed in that client yet; install it first.")
+        write_grid(client, args.grid)
+        return
     if not actions:
         interactive = True
         try:
@@ -441,7 +509,7 @@ def main():
     elif args.pull:
         pull(client)
     else:
-        install(client, stock_screens=args.stock_screens)
+        install(client, stock_screens=args.stock_screens, grid=args.grid)
 
 
 if __name__ == "__main__":

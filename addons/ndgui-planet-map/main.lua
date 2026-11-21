@@ -1,4 +1,5 @@
 -- ndGUI Planet Map (prk.planet-map). Hand-made; keeps the stock native contract
+ui.require("notum.ndgui-lib/grid") -- ndGUI: snap to grid while moving/resizing (ndgui-lib/lua/grid.lua)
 -- (planet_map_* callbacks, planet_* widgets, protected teleport) and adds:
 --   DarkTech toolbar (zoom -/+ with level readout, Me, Mission, Follow, Route, Maps),
 --   status line with map name and mission distance + bearing,

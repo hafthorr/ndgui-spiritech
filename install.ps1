@@ -8,6 +8,7 @@
     .\install.ps1 -Install -StockScreens   keep the game's own screens (Options, login...) stock
     .\install.ps1 -Uninstall           back to the stock UI
     .\install.ps1 -Install -Client "D:\Games\PRK-AO-Native\client"
+    .\install.ps1 -Grid 20             snap-to-grid size in pixels (0 = off); kept across updates
 
   Everything it changes in the game keeps a *.stock backup first; -Uninstall puts them back.
   Works with Windows PowerShell 5.1 (built into Windows 10/11) and PowerShell 7.
@@ -17,7 +18,8 @@ param(
     [switch]$Install,
     [switch]$Uninstall,
     [switch]$StockScreens,
-    [switch]$Update
+    [switch]$Update,
+    [int]$Grid = -1
 )
 
 $ErrorActionPreference = 'Stop'
@@ -25,7 +27,7 @@ $Here = Split-Path -Parent $MyInvocation.MyCommand.Path
 $Game = Join-Path $Here 'game'
 $Latin1 = [System.Text.Encoding]::GetEncoding(28591)
 $Utf8 = New-Object System.Text.UTF8Encoding($false)
-$Interactive = -not ($Install -or $Uninstall -or $Update)
+$Interactive = -not ($Install -or $Uninstall -or $Update -or $Grid -ge 0)
 $Project = 'hafthorr/ndgui-spiritech'   # public GitHub repository the updater reads releases from
 
 $Info = @{}
@@ -341,6 +343,46 @@ function Get-ClientVersion([string]$ClientDir) {
     return 'unknown'
 }
 
+# ---- snap-to-grid size (ndgui-lib\lua\grid.lua) -------------------------------------------
+function Get-GridFile([string]$ClientDir) { return Join-Path $ClientDir 'UI\Addons\ndgui-lib\lua\grid.lua' }
+
+function Get-Grid([string]$ClientDir) {
+    $file = Get-GridFile $ClientDir
+    if (-not (Test-Path -LiteralPath $file)) { return -1 }
+    $m = [regex]::Match([System.IO.File]::ReadAllText($file), '(?m)^local SIZE = (\d+)')
+    if ($m.Success) { return [int]$m.Groups[1].Value }
+    return -1
+}
+
+function Set-Grid([string]$ClientDir, [int]$Size) {
+    if ($Size -lt 0 -or $Size -gt 200) { throw 'The grid size must be a whole number from 0 to 200.' }
+    $file = Get-GridFile $ClientDir
+    if ((Get-Grid $ClientDir) -lt 0) { throw 'ndGUI is not installed in this game folder yet; install it first.' }
+    $code = [regex]::Replace([System.IO.File]::ReadAllText($file), '(?m)^local SIZE = \d+', "local SIZE = $Size", 1)
+    [System.IO.File]::WriteAllText($file, $code, $Utf8)
+    if ($Size -ge 2) { Say "  snap grid: $Size px" } else { Say '  snap grid: off' }
+}
+
+function Get-GridLabel([int]$Size) {
+    if ($Size -lt 0) { return 'not installed' }
+    if ($Size -lt 2) { return 'off' }
+    return "$Size px"
+}
+
+function Invoke-GridMenu([string]$ClientDir) {
+    $current = Get-Grid $ClientDir
+    if ($current -lt 0) { throw 'ndGUI is not installed in this game folder yet; install it first.' }
+    Say "Windows and HUD pieces snap to this grid while you move or resize them, when the game's"
+    Say 'snapping is on (Options > Interface & HUD > Windows and HUD > magnetism above 0).'
+    Say "Now: $(Get-GridLabel $current)"
+    $answer = (Read-Host "`nGrid size in pixels, e.g. 5, 10, 20, 25, 50 (0 = off) [keep]").Trim()
+    if (-not $answer) { return }
+    $size = 0
+    if (-not [int]::TryParse($answer, [ref]$size)) { throw 'Give a whole number from 0 to 200.' }
+    Set-Grid $ClientDir $size
+    Say 'Restart the game to use it.'
+}
+
 # ---- actions ------------------------------------------------------------------------------
 function Invoke-Install([string]$ClientDir, [bool]$KeepScreens) {
     if (-not (Test-Path -LiteralPath (Join-Path $Game 'Addons'))) {
@@ -355,10 +397,13 @@ function Invoke-Install([string]$ClientDir, [bool]$KeepScreens) {
     $addons = Join-Path $ClientDir 'UI\Addons'
     New-Item -ItemType Directory -Force -Path $addons | Out-Null
     Say "`n[1/4] ndGUI packages"
+    $keptGrid = Get-Grid $ClientDir   # the copy replaces grid.lua; keep the player's grid size
     $old = Remove-Packages $addons
     foreach ($dir in Get-ChildItem -LiteralPath (Join-Path $Game 'Addons') -Directory) {
         Copy-Item -LiteralPath $dir.FullName -Destination (Join-Path $addons $dir.Name) -Recurse -Force
     }
+    if ($Grid -ge 0) { Set-Grid $ClientDir $Grid }
+    elseif ($keptGrid -ge 0 -and $keptGrid -ne (Get-Grid $ClientDir)) { Set-Grid $ClientDir $keptGrid }
     $count = (Get-ChildItem -LiteralPath (Join-Path $Game 'Addons') -Directory).Count
     # remember what is installed, so -Update can tell whether a newer release exists
     $marker = Join-Path $addons 'ndgui\installed-version.txt'
@@ -454,6 +499,7 @@ try {
     }
     Say "Game folder: $dir"
     if ($Install) { Invoke-Install $dir ([bool]$StockScreens) }
+    elseif ($Grid -ge 0) { Set-Grid $dir $Grid; Say 'Restart the game to use it.' }
     elseif ($Update) { Invoke-Update $dir }
     elseif ($Uninstall) { Invoke-Uninstall $dir }
     else {
@@ -464,14 +510,16 @@ try {
         Say '  2) Update to the newest version (downloads from GitHub)'
         Say "  3) Install $Version, but keep the game's own screens stock (Options, login...)"
         Say '  4) Uninstall (back to the stock UI)'
-        Say '  5) Quit'
-        $choice = (Read-Host "`nPick 1-5 [1]").Trim()
+        Say "  5) Snap-to-grid size (now: $(Get-GridLabel (Get-Grid $dir)))"
+        Say '  6) Quit'
+        $choice = (Read-Host "`nPick 1-6 [1]").Trim()
         if (-not $choice) { $choice = '1' }
         switch ($choice) {
             '1' { Invoke-Install $dir $false }
             '2' { Invoke-Update $dir }
             '3' { Invoke-Install $dir $true }
             '4' { Invoke-Uninstall $dir }
+            '5' { Invoke-GridMenu $dir }
         }
     }
 } catch {

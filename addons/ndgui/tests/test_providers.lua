@@ -1235,4 +1235,44 @@ for _, n in ipairs({ "rollup_body", "rollup_icon", "rollup_close", "rollup_colla
 end
 check(rnames, "ndGUI rollup frame keeps the core.rollup widget names")
 
+-- snap to grid (ndgui-lib/lua/grid.lua): wraps Core's Snapping.offset in the package VM
+do
+  local magnet, room = 8, 1920
+  local edge_dx = 0
+  local snapping = { offset = function() return edge_dx, 0 end }
+  local fake_ui = { require = function(name) assert(name == "core.snapping"); return snapping end,
+    movable_geometry = { magnetism = function() return magnet end },
+    parent_width = function() return room end, parent_height = function() return 1080 end,
+    minimum_width = function() return 50 end, minimum_height = function() return 20 end,
+    maximum_width = function() return -1 end, maximum_height = function() return -1 end }
+  local env = setmetatable({ ui = fake_ui }, { __index = _G })
+  local G = assert(loadfile(addons .. "/ndgui-lib/lua/grid.lua", "t", env))()
+  check(G.active and snapping.ndgui_grid == G, "grid wraps Core's snapping")
+  local dx, dy = snapping.offset({}, 103, 57, 200, 100, true, true, true, true, false)
+  check(dx == -3 and dy == 3, "moving: the nearer edge lands on the 10 px grid (" .. dx .. "," .. dy .. ")")
+  room = 1366
+  dx = snapping.offset({}, 1164, 0, 200, 100, true, true, true, true, false)
+  room = 1920
+  check(dx == 2, "moving near the right edge: flush with the screen (" .. dx .. ")")
+  edge_dx = 5
+  dx = snapping.offset({}, 103, 57, 200, 100, true, true, true, true, false)
+  check(dx == 5, "edge snapping to another window wins over the grid")
+  edge_dx = 0
+  -- resizing the right edge: only that edge snaps
+  dx = snapping.offset({}, 103, 57, 204, 100, false, true, false, false, true)
+  check(dx == 3, "resizing: the dragged right edge lands on the grid (" .. dx .. ")")
+  dx = snapping.offset({}, 103, 57, 204, 100, true, false, false, false, true)
+  check(dx == -3, "resizing the left edge moves the left edge onto the grid (" .. dx .. ")")
+  magnet = 0
+  dx, dy = snapping.offset({}, 103, 57, 200, 100, true, true, true, true, false)
+  check(dx == 0 and dy == 0, "game snapping off (magnetism 0): no grid either")
+  local G2 = assert(loadfile(addons .. "/ndgui-lib/lua/grid.lua", "t", env))()
+  check(G2.active == nil, "a second require in the same VM does not wrap twice")
+end
+-- every hand-made package that moves things loads the grid
+for _, d in ipairs({ "compass", "hotbar", "meter", "mission-hub", "planet-map", "playfield-map", "status-bars", "target-panels", "team", "watch" }) do
+  local src = io.open(addons .. "/ndgui-" .. d .. "/main.lua", "rb"):read("a")
+  check(src:find('ui.require("notum.ndgui-lib/grid")', 1, true), "ndgui-" .. d .. " loads the grid")
+end
+
 print(fail == 0 and "ALL PASS" or ("FAILURES " .. fail)); os.exit(fail == 0 and 0 or 1)

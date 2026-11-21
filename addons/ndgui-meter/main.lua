@@ -1,4 +1,5 @@
 -- ndGUI Damage Meter: a standalone window (Control Center > Actions > Addons > Damage Meter).
+ui.require("notum.ndgui-lib/grid") -- ndGUI: snap to grid while moving/resizing (ndgui-lib/lua/grid.lua)
 --
 --   Damage / Healing / Taken  per source: amount, per second, share; click a source for its abilities
 --   Targets                   damage per enemy; click one for who hit it
