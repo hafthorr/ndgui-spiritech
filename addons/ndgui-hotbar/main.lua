@@ -66,16 +66,19 @@ local function present(slot, entry)
 	ui.icon(slot, entry.icon)
 	ui.content(slot, entry.content)
 	ui.tooltip(slot, entry.tooltip)
-	ui.badge(slot, entry.badge)
 	ui.fade(slot, entry.faded, "")
 	ui.image(slot, entry.graphic ~= "" and "gfx://" .. entry.graphic or "")
 	ui.caption(slot, entry.caption)
-	-- Items send their cooldown as centered countdown text (big, readable); perks send theirs as small corner
-	-- text (2m). Show both the same way: a timer in the corner moves to the centre. Plain counts (stacks) stay.
-	local corner, center = entry.corner, entry.countdown
-	if center == "" and is_timer(corner) then
+	-- Items send their cooldown as centered countdown text (big, readable); perks send theirs as small
+	-- bottom-right text (2m, badge or corner). Show both the same way: a timer there moves to the centre.
+	-- Plain counts (stacks) stay where they are.
+	local badge, corner, center = entry.badge, entry.corner, entry.countdown
+	if center == "" and is_timer(badge) then
+		badge, center = "", badge
+	elseif center == "" and is_timer(corner) then
 		corner, center = "", corner
 	end
+	ui.badge(slot, badge)
 	ui.corner(slot, corner)
 	ui.center(slot, center)
 end

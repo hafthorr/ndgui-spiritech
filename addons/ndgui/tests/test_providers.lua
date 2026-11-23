@@ -542,6 +542,8 @@ if B then
   entries[2].corner = "12"
   entries[3].countdown = "4m"
   entries[4].corner = "1:20"
+  entries[5].badge = "1m"
+  entries[6].badge = "3"
   B.env.hotbar_apply({ activate = 1, previous = 2, next = 3, spinner = 4, vertical = false, active = true, row = 3 }, entries)
   local s = {}
   local function slots_of(v) if v.tag == "ItemSlotView" and v.name == "shortcut_slot" then s[#s + 1] = v end for _, k in ipairs(v.kids) do slots_of(k) end end
@@ -550,6 +552,8 @@ if B then
   check(s[2].corner == "12" and s[2].center == "", "a stack count stays in the corner")
   check(s[3].corner == "" and s[3].center == "4m", "item cooldown in the centre is unchanged")
   check(s[4].corner == "" and s[4].center == "1:20", "m:ss timers move too")
+  check(s[5].badge == "" and s[5].center == "1m", "perk timer in the badge moves to the centre")
+  check(s[6].badge == "3" and s[6].center == "", "a badge count stays")
 end
 
 -- Control Center: slim bottom strip, stock contract.
