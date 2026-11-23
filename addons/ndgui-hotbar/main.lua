@@ -55,6 +55,11 @@ local function arrange(vertical_mode)
 	arranged_vertical = vertical_mode
 end
 
+-- "2m", "30s", "1h", "1:20", "1m 30s": a time, not a stack count
+local function is_timer(text)
+	return text:find("%d") ~= nil and text:find("[smhd:]") ~= nil and text:find("^[%d%s:%.smhd]+$") ~= nil
+end
+
 local function present(slot, entry)
 	ui.bind(slot, entry.token)
 	ui.action(slot, "game.hotbar.use", entry.token, "left")
@@ -65,8 +70,14 @@ local function present(slot, entry)
 	ui.fade(slot, entry.faded, "")
 	ui.image(slot, entry.graphic ~= "" and "gfx://" .. entry.graphic or "")
 	ui.caption(slot, entry.caption)
-	ui.corner(slot, entry.corner)
-	ui.center(slot, entry.countdown)
+	-- Items send their cooldown as centered countdown text (big, readable); perks send theirs as small corner
+	-- text (2m). Show both the same way: a timer in the corner moves to the centre. Plain counts (stacks) stay.
+	local corner, center = entry.corner, entry.countdown
+	if center == "" and is_timer(corner) then
+		corner, center = "", corner
+	end
+	ui.corner(slot, corner)
+	ui.center(slot, center)
 end
 
 function hotbar_apply(state, entries)

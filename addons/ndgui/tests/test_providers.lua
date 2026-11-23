@@ -538,6 +538,18 @@ if B then
   local function keyl(v) if v.name == "shortcut_key" then labels[#labels + 1] = v.text end for _, k in ipairs(v.kids) do keyl(k) end end
   keyl(B.root)
   check(#labels == 0, "no guessed key labels on the hotbar (the client doesn't expose bindings)")
+  entries[1].corner = "2m"
+  entries[2].corner = "12"
+  entries[3].countdown = "4m"
+  entries[4].corner = "1:20"
+  B.env.hotbar_apply({ activate = 1, previous = 2, next = 3, spinner = 4, vertical = false, active = true, row = 3 }, entries)
+  local s = {}
+  local function slots_of(v) if v.tag == "ItemSlotView" and v.name == "shortcut_slot" then s[#s + 1] = v end for _, k in ipairs(v.kids) do slots_of(k) end end
+  slots_of(B.root)
+  check(s[1].corner == "" and s[1].center == "2m", "perk timer in the corner moves to the centre, like item cooldowns")
+  check(s[2].corner == "12" and s[2].center == "", "a stack count stays in the corner")
+  check(s[3].corner == "" and s[3].center == "4m", "item cooldown in the centre is unchanged")
+  check(s[4].corner == "" and s[4].center == "1:20", "m:ss timers move too")
 end
 
 -- Control Center: slim bottom strip, stock contract.

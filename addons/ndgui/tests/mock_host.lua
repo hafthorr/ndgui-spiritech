@@ -104,7 +104,7 @@ function M.new(addons_dir, core_dir, opts)
   ui.pixel_scale_y = function() return 1 end
   for _, k in ipairs({ "align", "click_through", "fill_color", "font_size", "text_alignment", "on_click",
     "visual_selected", "bind", "action", "icon", "content", "badge", "fade", "image", "caption", "corner", "center" }) do
-    ui[k] = function(v, binding) assert(v, k .. " nil view"); H.calls[k] = (H.calls[k] or 0) + 1; if k == "bind" then v.bound = binding end end
+    ui[k] = function(v, binding) assert(v, k .. " nil view"); H.calls[k] = (H.calls[k] or 0) + 1; if k == "bind" then v.bound = binding elseif k == "corner" or k == "center" then v[k] = binding end end
   end
   ui.borders = function(v, l, t, r, b) assert(v and l and t and r and b, "borders"); v.borders = { l, t, r, b } end
   ui.local_x = function(v) assert(v, "local_x nil"); return v.x or 0 end
