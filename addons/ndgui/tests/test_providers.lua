@@ -1010,8 +1010,8 @@ do
       for _, r in ipairs(H.releases) do if r.view == view then H.menu_items = {}; r.cb(); return H.menu_items end end
     end
     local items = right_click(strip[1])
-    check(items and items[1] and items[1].label == "Always show as a row" and items[2].label == "Hide this buff",
-      "right-click an icon: Always show as a row / Hide this buff")
+    check(items and items[1] and items[1].label == "Always show as a row" and items[2].label == "Don't warn about this buff"
+      and items[3].label == "Hide this buff", "right-click an icon: Always show as a row / Don't warn / Hide this buff")
     items[1].cb()
     walk()
     check(#names == 2 and #cells() == 0, "pinned: the buff becomes a row: " .. table.concat(names, ", "))
@@ -1025,7 +1025,7 @@ do
     walk()
     check(#names == 1 and #cells() == 1, "unpinned: back to the icon strip")
     items = right_click(cells()[1])
-    items[2].cb()
+    items[3].cb()
     check(#cells() == 0, "Hide this buff takes it off the strip")
     -- a debuff lands: it goes first and raises the banner
     effects_subs.self({ reset = false, sampled_at_ms = clock, data = { { subject = "me", known = true, effects = {
@@ -1055,6 +1055,22 @@ do
       fx(6, "Short Proc", 20, 30) } } } })
     walk()
     check(#names == 2 and #cells() == 1, "a 30 s buff with 20 s left stays an icon")
+    effects_subs.self({ reset = false, sampled_at_ms = clock, data = { { subject = "me", known = true, effects = {
+      fx(2, "Minor Wilderness Protection", 10, 2700), fx(9, "Snake Venom", 30, 30, { hostile = true }),
+      fx(6, "Team Aura", 3, 30), fx(7, "Long Aura", 20, 240) } } } })
+    walk()
+    check(#names == 3 and names[3] == "Long Aura" and #cells() == 1,
+      "a buff shorter than 1 min never becomes a warning row, even at 3 s: " .. table.concat(names, ", "))
+    local long_row
+    for _, r in ipairs(H.releases) do if r.view.name == "buff_row" and r.view.visible ~= false then
+      local n = H.find(r.view, "buff_name"); if n and n.text == "Long Aura" then long_row = r.view end end end
+    items = right_click(long_row)
+    check(items and items[2].label == "Don't warn about this buff" and items[2].checked == false, "warning row offers Don't warn")
+    items[2].cb()
+    walk()
+    check(#names == 2 and #cells() == 2, "Don't warn: the aura goes back to the icon strip: " .. table.concat(names, ", "))
+    items = right_click(cells()[2] and (cells()[1].tooltip:find("Long Aura", 1, true) and cells()[1] or cells()[2]))
+    check(items and items[2].checked == true, "the icon menu shows Don't warn ticked")
     check(f("alert_text").text == "Minor Wilderness Protection ends in 10s", "expiring buff alert: " .. tostring(f("alert_text").text))
     -- low health beats everything
     char_subs.self(nil, { id = 42, health = 200, max_health = 1000, nano = 500, max_nano = 500 })

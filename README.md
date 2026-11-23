@@ -43,7 +43,7 @@ Inventory, Wear, Stats, Skills, Nano Programs, Team, Raid, Friends, Pets, Perks,
 - Live per-second graph, crit / miss / biggest hit / best 5 s, fight history (`<` `>`, last 10) and Overall, pets counted as you.
 
 **Buff Watch** (AI-hand-made; Control Center > Actions > **Addons** > Buff Watch / Team Buffs)
-- **Buff Watch**: your buffs and debuffs with icons, time left and draining bars (debuffs first in red, then soonest to end; amber under 1 min, red and blinking at the end), and what *you* put on your target (your DoTs, debuffs, or buffs on a friend).
+- **Buff Watch**: your buffs and debuffs with icons, time left and draining bars (debuffs first in red, then soonest to end; amber under 1 min, red and blinking at the end), and what *you* put on your target (your DoTs, debuffs, or buffs on a friend). Right-click a buff: **Always show as a row**, **Don't warn about this buff** (team auras), **Hide this buff**.
 - **Team Buffs**: one row per member, one column per buff anyone has; red cells are missing buffs (`Bob  -1`). Click a member to target them, then cast as usual (addons can't cast).
 - **Alerts** under the compass: low health, a debuff landing, low nano, a long buff about to end. Toggle it from Buff Watch's title icon menu.
 
@@ -116,7 +116,7 @@ Spiritech loads Lua/XML UI packages from `client/UI/Addons`. This repo holds **1
 
 ## Status
 
-`0.3.3`: playable, in daily use, with rough edges.
+`0.3.4`: playable, in daily use, with rough edges.
 
 ## Bugs, issues, ideas
 

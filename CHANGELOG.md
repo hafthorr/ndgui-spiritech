@@ -7,6 +7,10 @@ Versions follow Semantic Versioning 2.0.0: `MAJOR.MINOR.PATCH`.
 - PATCH bumps fix tokens, scale math, or docs without a config change.
 - While the major version is 0, the client view layer is still incomplete. The Lua model is safe to load offline.
 
+## 0.3.4
+
+- **Buff Watch:** short buffs (under 1 minute, like team auras) no longer turn into amber warning rows; they stay small icons. Right-click any buff → **Don't warn about this buff** keeps it an icon and out of the alerts banner. The window menu's **Show hidden buffs again, warn about all** undoes it.
+
 ## 0.3.3
 
 - **Hotbar:** perk timers now show big in the middle of the slot, like item cooldowns, instead of small in the corner. Stack counts stay in the corner.

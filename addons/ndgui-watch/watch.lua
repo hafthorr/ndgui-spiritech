@@ -13,7 +13,7 @@ ui.define("ndgui.watch", function()
 	local M = {}
 
 	M.EXPIRING = 15 -- seconds: a buff about to end
-	M.MIN_ALERT_DURATION = 60 -- shorter buffs (heals over time, procs) never raise an expiry alert
+	M.MIN_ALERT_DURATION = 60 -- shorter buffs (team auras, heals over time, procs) never warn: no amber row, no alert
 	M.LOW_HEALTH, M.LOW_NANO = 0.30, 0.20
 	M.DEBUFF_ALERT_MS = 4000
 	M.MAX_COLUMNS = 10
@@ -80,6 +80,9 @@ ui.define("ndgui.watch", function()
 		if effect.permanent or left == math.huge then
 			return false
 		end
+		if effect.duration and effect.duration > 0 and effect.duration < M.MIN_ALERT_DURATION then
+			return false -- short auras and procs run out all the time
+		end
 		local limit = warn or M.WARN_DEFAULT
 		if effect.duration and effect.duration > 0 then
 			limit = math.min(limit, effect.duration * M.WARN_FRACTION)
@@ -89,15 +92,16 @@ ui.define("ndgui.watch", function()
 
 	-- What needs attention gets a row: debuffs on you, buffs inside their warning window, buffs pinned
 	-- with "Always show as a row". Everything else is an icon (soonest to end first, permanent last).
-	-- options: { warn = seconds, pinned = { [name] = true }, hidden = { [name] = true },
+	-- options: { warn = seconds, pinned = { [name] = true }, hidden = { [name] = true }, quiet = { [name] = true }
+	--            (quiet: "Don't warn about this buff": stays an icon, no alert),
 	--            all_rows = bool (the old full list), max_rows = n (overflow becomes icons) }
 	function M.split_you(effects, sampled, now, options)
 		options = options or {}
-		local pinned, hidden = options.pinned or {}, options.hidden or {}
+		local pinned, hidden, quiet = options.pinned or {}, options.hidden or {}, options.quiet or {}
 		local rows, icons = {}, {}
 		for _, entry in ipairs(M.on_you(effects, sampled, now)) do
 			local name = entry.effect.name or ""
-			entry.expiring = not entry.hostile and M.expiring(entry.effect, entry.left, options.warn)
+			entry.expiring = not entry.hostile and not quiet[name] and M.expiring(entry.effect, entry.left, options.warn)
 			entry.pinned = pinned[name] == true
 			if entry.hostile then
 				rows[#rows + 1] = entry
@@ -203,7 +207,7 @@ ui.define("ndgui.watch", function()
 		return { columns = order, rows = rows }
 	end
 
-	-- state: { health, max_health, nano, max_nano, effects, sampled, debuffs = { {name, at} } }
+	-- state: { health, max_health, nano, max_nano, effects, sampled, debuffs = { {name, at} }, quiet = { [name] = true } }
 	-- Returns { { kind, text, level = "danger" | "warn" | "info", key } ... } most urgent first.
 	function M.alerts(state, now)
 		local list = {}
@@ -230,7 +234,7 @@ ui.define("ndgui.watch", function()
 		local expiring = {}
 		for _, effect in ipairs(state.effects or {}) do
 			if not effect.hostile and not effect.hidden and not effect.permanent
-				and (effect.duration or 0) >= M.MIN_ALERT_DURATION then
+				and (effect.duration or 0) >= M.MIN_ALERT_DURATION and not (state.quiet or {})[effect.name or ""] then
 				local left = M.left(effect, state.sampled, now)
 				if left > 0 and left <= M.EXPIRING then
 					expiring[#expiring + 1] = { effect = effect, left = left }

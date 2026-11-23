@@ -66,6 +66,7 @@ local function write_set(key, set)
 	set_pref(key, table.concat(names, "|"), "text")
 end
 local pinned, hidden = read_set("NdguiWatchPinned"), read_set("NdguiWatchHidden")
+local quiet = read_set("NdguiWatchQuiet") -- "Don't warn about this buff" (team auras...)
 
 -- =========================================================================================
 -- Buff Watch window
@@ -97,7 +98,7 @@ local target_rows = make_rows(target_host, MAX_TARGET)
 local you_list, target_list, icon_list = {}, {}, {}
 local refresh_lists, set_warn -- below
 
--- right-click a buff (row or icon): pin it as a row, or hide it
+-- right-click a buff (row or icon): pin it as a row, stop warning about it, or hide it
 local function buff_menu(anchor, entry)
 	if not entry or entry.hostile then
 		return -- debuffs on you always show
@@ -110,6 +111,11 @@ local function buff_menu(anchor, entry)
 	ui.menu.add(anchor, "Always show as a row", pinned[name] == true, function()
 		pinned[name] = not pinned[name] or nil
 		write_set("NdguiWatchPinned", pinned)
+		refresh_lists(ui.time())
+	end)
+	ui.menu.add(anchor, "Don't warn about this buff", quiet[name] == true, function()
+		quiet[name] = not quiet[name] or nil
+		write_set("NdguiWatchQuiet", quiet)
 		refresh_lists(ui.time())
 	end)
 	ui.menu.add(anchor, "Hide this buff", false, function()
@@ -322,9 +328,10 @@ buff_frame = Window.create({
 		{ label = "Warn under 30 s", checked = warn == 30, invoke = function() set_warn(30) end },
 		{ label = "Warn under 1 min", checked = warn == 60, invoke = function() set_warn(60) end },
 		{ label = "Warn under 5 min", checked = warn == 300, invoke = function() set_warn(300) end },
-		{ label = "Show hidden buffs again", checked = false, invoke = function()
-			hidden = {}
+		{ label = "Show hidden buffs again, warn about all", checked = false, invoke = function()
+			hidden, quiet = {}, {}
 			write_set("NdguiWatchHidden", hidden)
+			write_set("NdguiWatchQuiet", quiet)
 			refresh_lists(ui.time())
 		end },
 	},
@@ -356,7 +363,7 @@ end
 
 function refresh_lists(now)
 	you_list, icon_list = Watch.split_you(you.effects, you.sampled, now, {
-		warn = warn, pinned = pinned, hidden = hidden, all_rows = all_rows, max_rows = MAX_YOU,
+		warn = warn, pinned = pinned, hidden = hidden, quiet = quiet, all_rows = all_rows, max_rows = MAX_YOU,
 	})
 	local on_self = target.name ~= nil and (target.is_self or (self_id ~= nil and target.id == self_id))
 	-- targeting yourself: "On you" already lists all of it
@@ -538,7 +545,7 @@ local shown_alert
 local function render_alert(now)
 	local list = alerts_on and Watch.alerts({
 		health = vitals.health, max_health = vitals.max_health, nano = vitals.nano, max_nano = vitals.max_nano,
-		effects = you.effects, sampled = you.sampled, debuffs = debuff_hits,
+		effects = you.effects, sampled = you.sampled, debuffs = debuff_hits, quiet = quiet,
 	}, now) or {}
 	local top = list[1]
 	ui.visible(alert.root, top ~= nil)

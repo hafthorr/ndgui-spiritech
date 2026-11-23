@@ -10,13 +10,13 @@ You don't need Python or an exe. The installer is a PowerShell script (`install.
 4. Double-click **`install.bat`**. A window opens:
 
    ```
-   ndGUI for Spiritech 0.3.3
+   ndGUI for Spiritech 0.3.4
 
    Game folder: C:\Games\PRK-AO-Native\client
 
-     1) Install / update to 0.3.3 (this folder)
+     1) Install / update to 0.3.4 (this folder)
      2) Update to the newest version (downloads from GitHub)
-     3) Install 0.3.3, but keep the game's own screens stock (Options, login...)
+     3) Install 0.3.4, but keep the game's own screens stock (Options, login...)
      4) Uninstall (back to the stock UI)
      5) Snap-to-grid size (now: 10 px)
      6) Quit
