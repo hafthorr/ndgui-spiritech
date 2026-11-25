@@ -589,6 +589,9 @@ if ok_cc then
   local actions = { select_self = 1, toggle_attack = 2, friendly_previous = 3, friendly_next = 4, hostile_previous = 5, hostile_next = 6 }
   CC.env.control_center_configure(actions, { { key = "sit", reference = 9 } }, { { key = "example.meter/meter", label = "Meter" } })
   CC.env.control_center_apply({ used_ncu = 0, max_ncu = 8, credits = 27691802, aggdef_advanced = false, aggdef = 25, fighting = false, has_pets = false, perks_available = false }, {})
+  -- client may omit aggdef_advanced; visible() requires a real boolean
+  local ok_nil_aggdef = pcall(CC.env.control_center_apply, { used_ncu = 0, max_ncu = 8, credits = 0, aggdef = 25, fighting = false, has_pets = false, perks_available = false }, {})
+  check(ok_nil_aggdef, "control center tolerates a missing aggdef_advanced")
   -- minibar and docking column follow the Options toggles (Nov 2026 client)
   local function cc_find(name) return CC.find(CC.root, name) end
   check(#CC.rollup_hosts == 1 and CC.rollup_hosts[1].width == 190, "control center offers one 190 px docking column")
