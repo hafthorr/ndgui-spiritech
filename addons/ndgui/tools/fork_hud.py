@@ -155,6 +155,8 @@ def fork(src, role, title):
     lines = [f'<Package id="notum.{dest}" name="Notum Dovvetech {title}">',
              '  <Requires package="notum.ndgui-lib" />',
              f'  <Provides role="{role}" />']
+    # client 0.3.5+: Options blocks declare the package's own settings (read with ui.settings.*); keep them
+    lines += ["  " + block for block in re.findall(r'<Options\b.*?</Options>', manifest, re.S)]
     lines += [f'  <Script src="{name}" />' for name in extra]
     lines += [f'  <{kind} src="{name}" />' for kind, name in scripts]
     lines.append("</Package>")

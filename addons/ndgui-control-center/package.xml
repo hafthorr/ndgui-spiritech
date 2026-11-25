@@ -1,6 +1,19 @@
 <Package id="notum.ndgui-control-center" name="Notum Dovvetech Control Center">
   <Requires package="notum.ndgui-lib" />
   <Provides role="prk.control-center" />
+  <Options category="interface" section="performance">
+    <Choice key="fps-display" label="FPS display" scope="machine" default="off" hint="Cycle FPS display can be rebound under Controls.">
+      <Item id="off" label="Off" />
+      <Item id="simple" label="Simple" />
+      <Item id="advanced" label="Advanced" />
+    </Choice>
+  </Options>
+  <Options category="interface" section="control-center">
+    <Toggle key="minibar" label="Show minibar" scope="character" default="false" hint="Additional top-right buttons; keeps the normal control center." />
+    <Toggle key="rollup" label="Show rollup panel" scope="character" default="false" hint="Shows the docking column. Turning it off floats docked pages." />
+    <Slider key="rollup-opacity" label="Rollup background opacity" scope="character" default="0" hint="Docked windows keep their own background." min="0" max="100" steps="100" unit="%" />
+    <Toggle key="advanced-aggdef" label="Advanced Agg/Def settings" scope="machine" default="false" hint="An i button beside the AGG/DEF slider opens the Agg/Def window." />
+  </Options>
   <Script src="main.lua" />
   <InteractionScript src="interaction.lua" />
 </Package>

@@ -99,6 +99,16 @@ function M.new(addons_dir, core_dir, opts)
   if not ui.selected then function ui.selected(v, b) assert(v, "selected nil"); v.selected = b end end
   function ui.graphic_tint(v, c) assert(v, "graphic_tint nil"); v.tint = c end
   ui.parent_width = function() return opts.width or 2000 end
+  if opts.settings then -- client 0.3.5+: package Options (only keys the package.xml declares)
+    local declared = {}
+    ui.settings = {
+      toggle = function(k) assert(declared[k], "undeclared setting " .. k); return opts.settings[k] == true end,
+      number = function(k) assert(declared[k], "undeclared setting " .. k); return opts.settings[k] or 0 end,
+      choice = function(k) assert(declared[k], "undeclared setting " .. k); return opts.settings[k] or "" end,
+      on_change = function(cb) H.settings_changed = cb end,
+      declare = function(manifest) for k in manifest:gmatch('key="([^"]+)"') do declared[k] = true end end,
+    }
+  end
   ui.parent_height = function() return opts.height or 1334 end
   ui.pixel_scale_x = function() return 1 end
   ui.pixel_scale_y = function() return 1 end

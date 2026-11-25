@@ -304,6 +304,7 @@ local aggdef_info = ui.find(right, "aggdef_info")
 local aggdef_advanced_shown = false
 
 local function show_aggdef_advanced(advanced)
+	advanced = advanced == true
 	if advanced == aggdef_advanced_shown then
 		return
 	end
@@ -460,20 +461,39 @@ function control_center_apply(state, perks, attacks)
 	latest_state = state
 	dynamic_menus.perks.entries = perks or {}
 	dynamic_menus.attacks.entries = attacks or {}
-	ui.visible(minibar, state.minibar_shown == true)
-	if column then
-		column:show(state.rollup_shown == true, state.rollup_background_opacity)
+	if not ui.settings then -- clients before 0.3.5 sent the Options in the state
+		ui.visible(minibar, state.minibar_shown == true)
+		if column then
+			column:show(state.rollup_shown == true, state.rollup_background_opacity)
+		end
+		show_aggdef_advanced(state.aggdef_advanced)
 	end
 	ui.text(ncu, "NCU " .. number(state.used_ncu) .. "/" .. number(state.max_ncu))
 	ui.text(credits, "CRED " .. grouped(state.credits))
-	show_aggdef_advanced(state.aggdef_advanced)
-	if state.aggdef >= AGGDEF_MIN then
+	if (state.aggdef or AGGDEF_MIN - 1) >= AGGDEF_MIN then
 		ui.progress(aggdef, aggdef_progress(state.aggdef))
 		show_aggdef(state.aggdef)
 	end
 	ui.visual_selected(right_target, state.fighting)
 	update_selections()
 	update_menu_state()
+end
+
+-- client 0.3.5+: Options > Interface & HUD settings are this package's own (package.xml <Options>)
+local function apply_settings()
+	local ok_minibar, minibar_on = pcall(ui.settings.toggle, "minibar")
+	ui.visible(minibar, ok_minibar and minibar_on == true)
+	if column then
+		local ok_rollup, rollup_on = pcall(ui.settings.toggle, "rollup")
+		local ok_opacity, opacity = pcall(ui.settings.number, "rollup-opacity")
+		column:show(ok_rollup and rollup_on == true, ok_opacity and (opacity or 0) / 100 or 0)
+	end
+	local ok_aggdef, advanced = pcall(ui.settings.toggle, "advanced-aggdef")
+	show_aggdef_advanced(ok_aggdef and advanced == true)
+end
+if ui.settings then
+	apply_settings()
+	ui.settings.on_change(apply_settings)
 end
 
 ui.on_lockdown(function(locked)

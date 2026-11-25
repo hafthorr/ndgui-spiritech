@@ -556,6 +556,30 @@ if B then
   check(s[6].badge == "3" and s[6].center == "", "a badge count stays")
 end
 
+-- Control Center on client 0.3.5+: Options come from ui.settings and this package's own <Options>.
+do
+  local settings = { minibar = false, rollup = false, ["rollup-opacity"] = 0, ["advanced-aggdef"] = false }
+  local S = Mock.new(addons, core, { width = W, height = Hh, grant_destinations = true, settings = settings })
+  S.env.ui.settings.declare(io.open(addons .. "/ndgui-control-center/package.xml"):read("a"))
+  local ok, err = pcall(S.load_package, "ndgui-control-center")
+  check(ok, "control center loads with ui.settings" .. (ok and "" or (": " .. tostring(err))))
+  if ok then
+    local function sf(name) return S.find(S.root, name) end
+    local state = { in_play = true, used_ncu = 0, max_ncu = 8, credits = 5, aggdef = 25, fighting = false, has_pets = false, perks_available = false }
+    S.env.control_center_configure({ select_self = 1, toggle_attack = 2, friendly_previous = 3, friendly_next = 4, hostile_previous = 5, hostile_next = 6 }, {}, {})
+    local ok_apply, err_apply = pcall(S.env.control_center_apply, state, {}, {})
+    check(ok_apply, "control_center_apply takes the 0.3.5 state (no Options fields)" .. (ok_apply and "" or (": " .. tostring(err_apply))))
+    check(sf("minibar").visible ~= true and sf("rollup_panel").visible ~= true and sf("aggdef_info").visible ~= true,
+      "settings off: no minibar, column or Agg/Def i button")
+    settings.minibar, settings.rollup, settings["rollup-opacity"], settings["advanced-aggdef"] = true, true, 40, true
+    S.settings_changed()
+    S.env.control_center_apply(state, {}, {})
+    check(sf("minibar").visible == true and sf("rollup_panel").visible == true and sf("aggdef_info").visible == true,
+      "Options changes show the minibar, the column and the Agg/Def i button")
+    check(sf("rollup_background").opacity == 0.4, "column backdrop follows the opacity slider (" .. tostring(sf("rollup_background").opacity) .. ")")
+  end
+end
+
 -- Control Center: slim bottom strip, stock contract.
 local CC = Mock.new(addons, core, { width = W, height = Hh, grant_destinations = true })
 local ok_cc, err_cc = pcall(CC.load_package, "ndgui-control-center")
