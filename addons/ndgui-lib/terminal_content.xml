@@ -3,8 +3,12 @@
   <!-- ndGUI Mission Terminal: offers as readable rows, a watch list that flags offers you want,
        slider presets, the chosen-reward panel with roll cost, and this session's roll log.
        Sizes are set from main.lua. -->
+  <View name="terminal_frame" view_layout="horizontal">
   <View name="mission_terminal" view_layout="vertical" layout_borders="Rect(5,4,5,5)">
-    <TextView name="status" value="" font_size="11" color="9FB3C4" size_to_text="false" min_size="Point(-1,15)" max_size="Point(-1,15)" />
+    <View view_layout="horizontal" min_size="Point(-1,18)" max_size="Point(-1,18)">
+      <TextView name="status" value="" font_size="11" color="9FB3C4" size_to_text="false" min_size="Point(-1,15)" max_size="Point(-1,15)" v_alignment="center" />
+      <Button name="map_toggle" label="Map" font_size="11" visible="false" min_size="Point(48,18)" max_size="Point(48,18)" v_alignment="center" tooltip="Show or hide the offer map" gfxid_raised_left="GFX_NDGUI_BTN22_RAISED_LEFT" gfxid_raised_middle="GFX_NDGUI_BTN22_RAISED_MIDDLE" gfxid_raised_right="GFX_NDGUI_BTN22_RAISED_RIGHT" gfxid_hover_left="GFX_NDGUI_BTN22_HOVER_LEFT" gfxid_hover_middle="GFX_NDGUI_BTN22_HOVER_MIDDLE" gfxid_hover_right="GFX_NDGUI_BTN22_HOVER_RIGHT" gfxid_pressed_left="GFX_NDGUI_BTN22_PRESSED_LEFT" gfxid_pressed_middle="GFX_NDGUI_BTN22_PRESSED_MIDDLE" gfxid_pressed_right="GFX_NDGUI_BTN22_PRESSED_RIGHT" />
+    </View>
     <View name="offers" view_layout="vertical" layout_borders="Rect(0,3,0,0)" />
     <!-- watch list -->
     <TextView name="watch_head" value="WATCH FOR  (comma separated: item, zone, type...)" font_size="11" color="7F9BB0" size_to_text="false" min_size="Point(-1,15)" max_size="Point(-1,15)" layout_borders="Rect(0,8,0,2)" />
@@ -83,5 +87,8 @@
       <Button name="accept" label="Accept" font_size="11" min_size="Point(96,28)" max_size="Point(96,28)" layout_borders="Rect(4,0,0,0)" tooltip="" gfxid_raised_left="GFX_NDGUI_BTN28_RAISED_LEFT" gfxid_raised_middle="GFX_NDGUI_BTN28_RAISED_MIDDLE" gfxid_raised_right="GFX_NDGUI_BTN28_RAISED_RIGHT" gfxid_hover_left="GFX_NDGUI_BTN28_HOVER_LEFT" gfxid_hover_middle="GFX_NDGUI_BTN28_HOVER_MIDDLE" gfxid_hover_right="GFX_NDGUI_BTN28_HOVER_RIGHT" gfxid_pressed_left="GFX_NDGUI_BTN28_PRESSED_LEFT" gfxid_pressed_middle="GFX_NDGUI_BTN28_PRESSED_MIDDLE" gfxid_pressed_right="GFX_NDGUI_BTN28_PRESSED_RIGHT" gfxid_selected="GFX_NDGUI_BTN28_SELECTED" />
       <Button name="cancel" label="Cancel" font_size="11" min_size="Point(64,28)" max_size="Point(64,28)" layout_borders="Rect(4,0,0,0)" tooltip="" gfxid_raised_left="GFX_NDGUI_BTN28_RAISED_LEFT" gfxid_raised_middle="GFX_NDGUI_BTN28_RAISED_MIDDLE" gfxid_raised_right="GFX_NDGUI_BTN28_RAISED_RIGHT" gfxid_hover_left="GFX_NDGUI_BTN28_HOVER_LEFT" gfxid_hover_middle="GFX_NDGUI_BTN28_HOVER_MIDDLE" gfxid_hover_right="GFX_NDGUI_BTN28_HOVER_RIGHT" gfxid_pressed_left="GFX_NDGUI_BTN28_PRESSED_LEFT" gfxid_pressed_middle="GFX_NDGUI_BTN28_PRESSED_MIDDLE" gfxid_pressed_right="GFX_NDGUI_BTN28_PRESSED_RIGHT" gfxid_selected="GFX_NDGUI_BTN28_SELECTED" />
     </View>
+  </View>
+  <!-- offer map (client 0.3.5+): terminal_map.xml is moved in here by terminal_map.lua -->
+  <View name="terminal_map_host" view_layout="stacked" weight="1" />
   </View>
 </root>

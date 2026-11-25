@@ -10,6 +10,7 @@ Versions follow Semantic Versioning 2.0.0: `MAJOR.MINOR.PATCH`.
 ## 0.3.7
 
 - **Mission Terminal shows every offer's pay, XP, playfield, QL and reward right away** (client 0.3.5 sends them with the offers), so no more Ctrl-clicking each offer into Info. The watch list matches the reward and playfield straight away too.
+- **Mission Terminal offer map** (client 0.3.5+): the planet map beside the offer rows with a numbered marker per offer (gold when it matches your watch list, ringed when selected) and you. Click a number to pick that offer; drag to pan, mouse wheel or `-` `+` to zoom; the **Map** button hides it.
 - **Troubleshooting:** type `/uidebug` in chat to see every UI package and the error of a failed one (README, INSTALL.md).
 - Release packages carry `version` and `apiVersion` in their package.xml (the published-addon format the launcher checks).
 

@@ -13,7 +13,11 @@ local BASE = "library://notum.ndgui-lib/terminal_"
 local Window = ui.require("core.window")
 local Shell = ui.require("notum.ndgui-lib/shell")
 local Briefs = ui.require("notum.ndgui-lib/briefs")
+local Map = ui.require("notum.ndgui-lib/terminal_map")
 local content = ui.load(BASE .. "content.xml")
+local column = ui.find(content, "mission_terminal")
+local map_host = ui.find(content, "terminal_map_host")
+local map_toggle = ui.find(content, "map_toggle")
 local status = ui.find(content, "status")
 local offers_host = ui.find(content, "offers")
 local watch_input = ui.find(content, "watch")
@@ -36,6 +40,7 @@ local log_view = ui.find(content, "log")
 local row_difficulty = ui.find(content, "row_difficulty")
 
 local WIDTH = 380
+local MAP_WIDTH = 460 -- the offer map beside the rows (client 0.3.5+)
 local OFFERS = 6
 local ICON, TEXT_LEFT = 40, 6 + 40 + 7 + 4
 local GOLD, STEEL, SELECTED_BACK, BACK, MATCH_BACK = "#FFD84A", "#3D6F9A", "#C0183048", "#A00A1016", "#B03A3010"
@@ -167,6 +172,7 @@ for index = 1, OFFERS do
 		reward = ui.find(root, "offer_reward"),
 		hit = ui.find(root, "offer_hit"),
 	}
+	rows[index].number = tostring(index)
 	ui.visible(root, false)
 end
 
@@ -217,6 +223,7 @@ local function show_offer(row, offer)
 	ui.text_color(row.text, hit and "#FFF2C0" or "#C5D7E6")
 	ui.icon(row.icon, offer.icon or 0)
 	ui.content(row.icon, (offer.icon or 0) ~= 0)
+	ui.corner(row.icon, Map.available and row.number or "")
 	local gap = string.char(10, 10)
 	local tip = offer.description or ""
 	if brief and brief.live then
@@ -404,6 +411,23 @@ ui.on_click(watch_clear, function()
 	if refresh_offers then refresh_offers() end
 end)
 
+-- ---- offer map ---------------------------------------------------------------------------
+-- The hub attached the map surface at load (Map.mount); move it beside the column. A package that
+-- loads this module directly mounts it here.
+if Map.pane then
+	ui.add(map_host, Map.pane)
+else
+	Map.mount(map_host)
+end
+Map.wire()
+local map_on = stored("map") ~= "off"
+local function map_shown()
+	return Map.available and map_on
+end
+local function window_width()
+	return width + (map_shown() and MAP_WIDTH or 0)
+end
+
 -- ---- window -----------------------------------------------------------------------------
 frame = Shell.window({
 	template = "library://notum.ndgui-lib/window.xml",
@@ -415,25 +439,37 @@ frame = Shell.window({
 	horizontal = "center",
 	vertical = "center",
 	layout = function(window)
-		ui.size(window.root, width, -1)
-		ui.size(content, width - 11, -1)
-		ui.size(status, width - 21, 15)
+		local total = window_width()
+		ui.size(window.root, total, -1)
+		ui.size(content, total - 11, -1)
+		ui.size(column, width - 11, -1)
+		ui.visible(map_host, map_shown())
+		ui.visible(map_toggle, Map.available)
+		ui.text(map_toggle, map_on and "Map <" or "Map >")
+		ui.size(status, width - 21 - (Map.available and 52 or 0), 15)
 		ui.size(reward_back, width - 21, 48)
-		window:fit_title(width, true)
+		window:fit_title(total, true)
 	end,
 })
 ui.fill_color(reward_back, BACK)
+ui.on_click(map_toggle, function()
+	map_on = not map_on
+	store("map", map_on and "on" or "off")
+	frame:resize(window_width(), -1)
+end)
 
 local current_offers = {}
 refresh_offers = function()
-	local any_hit = false
+	local any_hit, hits = false, {}
 	for index, row in ipairs(rows) do
 		local hit = show_offer(row, current_offers[index])
+		hits[index] = hit or nil
 		any_hit = any_hit or hit
 	end
+	Map.show(current_offers, hits)
 	ui.text(ui.find(frame.root, "window_title"), any_hit and "Mission Terminal  -  MATCH!" or "Mission Terminal")
 	show_status()
-	frame:resize(width, -1)
+	frame:resize(window_width(), -1)
 end
 
 function M.mission_terminal_configure(label_request, accept_label, labels)
@@ -460,7 +496,15 @@ function M.mission_terminal_configure(label_request, accept_label, labels)
 		end
 	end
 	width = math.max(WIDTH, column * 2 + 120 + 21)
-	frame:resize(width, -1)
+	frame:resize(window_width(), -1)
+end
+
+-- client 0.3.5+: the offer map's tile records and mouse wheel
+function M.mission_terminal_map(revision, records)
+	Map.map(revision, records)
+end
+function M.mission_terminal_map_wheel(turn, x, y)
+	Map.wheel(turn, x, y)
 end
 
 function M.mission_terminal_sliders(next_values)

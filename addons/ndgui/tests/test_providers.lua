@@ -1310,6 +1310,48 @@ do
     check(rows3.offer_badge[1].visible == true and rows3.offer_badge[1].text:find("carbonum", 1, true),
       "the watch list matches the reward item without a Ctrl-click")
     check(rows3.offer_brief[2].visible == false and rows3.offer_badge[2].visible == false, "an offer without facts stays a plain row")
+    -- client 0.3.5+: offer map beside the rows, numbered markers, watched offers gold
+    local H4 = Mock.new(addons, core, { width = W, height = Hh, loose = true })
+    H4.env.ui.storage = { read = function(k) return store[k] or "" end, write = function(k, v) store[k] = v end }
+    local drawn = { texts = {}, fans = {}, attached = 0, targets = 0, fit = 0 }
+    H4.env.game = H4.env.game or {}
+    H4.env.game.map_surface = {
+      attach = function(view) assert(view, "attach nil"); drawn.attached = drawn.attached + 1 end,
+      read = function(k) return ({ width = 440, height = 400, x = 0, y = 0 })[k] or 0 end,
+      fan = function(x, y, r, a, b, c) drawn.fans[#drawn.fans + 1] = c end,
+      text = function(t, x, y, size, c) drawn.texts[#drawn.texts + 1] = t .. "=" .. c end,
+      line = function() end, sprite = function(g, x, y, f, sc) assert(sc, "sprite needs a scale") end,
+      pan = function() end, zoom = function() end, markers_begin = function() drawn.texts = {} end, markers_end = function() end,
+    }
+    local spots = { { 100, 100 }, { 300, 200 } }
+    H4.env.game.mission_map = {
+      offer = function(i, k) local s = spots[i]; if not s then return 0 end; return ({ placed = 1, x = s[1], y = s[2] })[k] end,
+      player = function(k) return ({ placed = 1, x = 50, y = 60 })[k] end,
+      planet = function() return 0 end, record = function() end, fit = function() drawn.fit = drawn.fit + 1; return 0 end,
+      target = function() drawn.targets = drawn.targets + 1 end, clear_targets = function() drawn.targets = 0 end,
+    }
+    local ok4, err4 = pcall(H4.load_package, "ndgui-mission-hub")
+    check(ok4, "terminal with the offer map loads" .. (ok4 and "" or (": " .. tostring(err4))))
+    if ok4 then
+      check(drawn.attached == 1, "the map surface is attached once, at load")
+      H4.env.mission_terminal_configure("Request", "Accept", labels)
+      H4.env.mission_terminal_map(1, 3)
+      H4.env.mission_terminal_apply(state, {
+        { reference = 41, icon = 5, description = "Repair a generator", selected = false, location = "Rome Blue", ql = 120,
+          credits = 100, experience = 50, rewards = { { icon = 7, name = "Carbonum Plate Helmet", ql = 118 } } },
+        { reference = 42, icon = 6, description = "Kill a thug", selected = true, location = "Newland", ql = 12,
+          credits = 100, experience = 50, rewards = {} },
+      }, reward)
+      check(drawn.fit == 1, "the map fits itself to the surface once it has records")
+      table.sort(drawn.texts)
+      check(table.concat(drawn.texts, " ") == "1=#3A2A00 2=#FFFFFF",
+        "numbered markers; the watched offer (carbonum) is gold: " .. table.concat(drawn.texts, " "))
+      check(drawn.targets == 2, "both markers are click targets (" .. drawn.targets .. ")")
+      local host = H4.find(H4.root, "terminal_map_host")
+      check(host and host.visible ~= false and H4.find(host, "terminal_map_tiles") ~= nil, "the map sits beside the offer rows")
+      local toggle = H4.find(H4.root, "map_toggle")
+      check(toggle and toggle.visible == true, "Map button shown when the client has the offer map")
+    end
   end
 end
 

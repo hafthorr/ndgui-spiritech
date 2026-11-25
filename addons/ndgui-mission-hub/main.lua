@@ -5,9 +5,11 @@ ui.require("notum.ndgui-lib/grid") -- ndGUI: snap to grid while moving/resizing 
 -- sees every game.* domain, so a VM only learns its role from the first callback it receives. The
 -- client still wants a root widget mounted at load: an empty frame (ndgui-lib shell.lua) that the
 -- window module fills on that first callback.
-ui.require("notum.ndgui-lib/shell").mount()
+local shell = ui.require("notum.ndgui-lib/shell").mount()
 -- and an Info package must declare its page surface at load too (harmless in the other two VMs)
 pcall(ui.require, "notum.ndgui-lib/info_page")
+-- the same for the Mission Terminal's offer map surface (client 0.3.5+); the terminal moves it in later
+pcall(function() ui.require("notum.ndgui-lib/terminal_map").mount(shell.content) end)
 local kind, impl
 
 local function get(wanted)

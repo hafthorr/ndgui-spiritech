@@ -1,0 +1,16 @@
+<?xml version="1.0" standalone="yes"?>
+<root>
+  <!-- ndGUI Mission Terminal offer map (client 0.3.5+): the planet map with a numbered marker per offer.
+       Sits to the right of the offer column; terminal_map.lua draws it. -->
+  <View name="terminal_map" view_layout="vertical" weight="1" layout_borders="Rect(0,4,5,5)">
+    <View name="terminal_map_frame" view_layout="stacked" weight="1">
+      <View name="terminal_map_back" />
+      <PannedSurfaceView name="terminal_map_tiles" capture_input="true" pointer_pan="true" weight="1" layout_borders="Rect(1,1,1,1)" />
+    </View>
+    <View view_layout="horizontal" min_size="Point(-1,26)" max_size="Point(-1,26)" layout_borders="Rect(0,4,0,0)">
+      <TextView name="terminal_map_hint" value="Drag to pan, wheel to zoom, click a number to pick it" font_size="10" color="7F9BB0" size_to_text="false" weight="1" min_size="Point(40,22)" max_size="Point(-1,22)" v_alignment="center" />
+      <Button name="terminal_map_zoom_out" label="-" font_size="13" min_size="Point(22,22)" max_size="Point(22,22)" v_alignment="center" tooltip="Zoom out" gfxid_raised_left="GFX_NDGUI_BTN22_RAISED_LEFT" gfxid_raised_middle="GFX_NDGUI_BTN22_RAISED_MIDDLE" gfxid_raised_right="GFX_NDGUI_BTN22_RAISED_RIGHT" gfxid_hover_left="GFX_NDGUI_BTN22_HOVER_LEFT" gfxid_hover_middle="GFX_NDGUI_BTN22_HOVER_MIDDLE" gfxid_hover_right="GFX_NDGUI_BTN22_HOVER_RIGHT" gfxid_pressed_left="GFX_NDGUI_BTN22_PRESSED_LEFT" gfxid_pressed_middle="GFX_NDGUI_BTN22_PRESSED_MIDDLE" gfxid_pressed_right="GFX_NDGUI_BTN22_PRESSED_RIGHT" />
+      <Button name="terminal_map_zoom_in" label="+" font_size="13" min_size="Point(22,22)" max_size="Point(22,22)" v_alignment="center" layout_borders="Rect(4,0,0,0)" tooltip="Zoom in" gfxid_raised_left="GFX_NDGUI_BTN22_RAISED_LEFT" gfxid_raised_middle="GFX_NDGUI_BTN22_RAISED_MIDDLE" gfxid_raised_right="GFX_NDGUI_BTN22_RAISED_RIGHT" gfxid_hover_left="GFX_NDGUI_BTN22_HOVER_LEFT" gfxid_hover_middle="GFX_NDGUI_BTN22_HOVER_MIDDLE" gfxid_hover_right="GFX_NDGUI_BTN22_HOVER_RIGHT" gfxid_pressed_left="GFX_NDGUI_BTN22_PRESSED_LEFT" gfxid_pressed_middle="GFX_NDGUI_BTN22_PRESSED_MIDDLE" gfxid_pressed_right="GFX_NDGUI_BTN22_PRESSED_RIGHT" />
+    </View>
+  </View>
+</root>
