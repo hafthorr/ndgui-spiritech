@@ -1284,6 +1284,32 @@ do
       "chosen-reward rolls add up: " .. tostring(H2.find(H2.root, "status").text))
     check(H2.find(H2.root, "reward_cost").text == "Each roll costs 12,500 credits", "cost per roll")
     check(store.recent_rewards == "Ofab Shark Mk 1\t200", "chosen reward remembered")
+    -- client 0.3.5+: offers carry pay, XP, playfield, QL and reward items; no Ctrl-click needed
+    store.watch = "carbonum"
+    local H3 = Mock.new(addons, core, { width = W, height = Hh, loose = true })
+    H3.env.ui.storage = { read = function(k) return store[k] or "" end, write = function(k, v) store[k] = v end }
+    check(pcall(H3.load_package, "ndgui-mission-hub"), "terminal loads for live offer facts")
+    H3.env.mission_terminal_configure("Request", "Accept", labels)
+    H3.env.mission_terminal_apply(state, {
+      { reference = 31, icon = 5, description = "Repair a broken generator", selected = false, location = "Rome Blue", ql = 120,
+        credits = 2827, experience = 486, rewards = { { icon = 7, name = "Carbonum Plate Helmet", ql = 118 } } },
+      { reference = 32, icon = 6, description = "Kill a thug", selected = false, location = "", ql = 0, credits = 0, experience = 0, rewards = {} },
+    }, reward)
+    local rows3 = {}
+    local function walk3(v)
+      if v.name == "offer_brief" or v.name == "offer_reward" or v.name == "offer_badge" or v.name == "offer_hit" then
+        rows3[v.name] = rows3[v.name] or {}; table.insert(rows3[v.name], v)
+      end
+      for _, k in ipairs(v.kids or {}) do walk3(k) end
+    end
+    walk3(H3.root)
+    local pay, item, tip = rows3.offer_brief[1].text, rows3.offer_reward[1].text, rows3.offer_hit[1].tooltip or ""
+    check(pay == "2,827 credits  ·  486 XP  ·  Rome Blue  ·  QL 120", "offer row shows pay, XP, zone and QL straight away: " .. tostring(pay))
+    check(item == "Reward: Carbonum Plate Helmet (QL 118)", "offer row shows its reward item: " .. tostring(item))
+    check(not tip:find("Ctrl-click", 1, true) and tip:find("Carbonum", 1, true), "tooltip has the facts, no Ctrl-click hint")
+    check(rows3.offer_badge[1].visible == true and rows3.offer_badge[1].text:find("carbonum", 1, true),
+      "the watch list matches the reward item without a Ctrl-click")
+    check(rows3.offer_brief[2].visible == false and rows3.offer_badge[2].visible == false, "an offer without facts stays a plain row")
   end
 end
 

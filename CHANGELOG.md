@@ -7,6 +7,12 @@ Versions follow Semantic Versioning 2.0.0: `MAJOR.MINOR.PATCH`.
 - PATCH bumps fix tokens, scale math, or docs without a config change.
 - While the major version is 0, the client view layer is still incomplete. The Lua model is safe to load offline.
 
+## 0.3.7
+
+- **Mission Terminal shows every offer's pay, XP, playfield, QL and reward right away** (client 0.3.5 sends them with the offers), so no more Ctrl-clicking each offer into Info. The watch list matches the reward and playfield straight away too.
+- **Troubleshooting:** type `/uidebug` in chat to see every UI package and the error of a failed one (README, INSTALL.md).
+- Release packages carry `version` and `apiVersion` in their package.xml (the published-addon format the launcher checks).
+
 ## 0.3.6
 
 Needs the game client 0.3.5 (addon API 0.2.0) or newer.

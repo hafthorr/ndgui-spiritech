@@ -10,13 +10,13 @@ You don't need Python or an exe. The installer is a PowerShell script (`install.
 4. Double-click **`install.bat`**. A window opens:
 
    ```
-   ndGUI for Spiritech 0.3.6
+   ndGUI for Spiritech 0.3.7
 
    Game folder: C:\Games\PRK-AO-Native\client
 
-     1) Install / update to 0.3.6 (this folder)
+     1) Install / update to 0.3.7 (this folder)
      2) Update to the newest version (downloads from GitHub)
-     3) Install 0.3.6, but keep the game's own screens stock (Options, login...)
+     3) Install 0.3.7, but keep the game's own screens stock (Options, login...)
      4) Uninstall (back to the stock UI)
      5) Snap-to-grid size (now: 10 px)
      6) Quit
@@ -97,5 +97,6 @@ Settings are looked for under `~/.local/share/ProjectRubiKa/prefs/Client.xml`. S
 
 - **The window flashes and closes:** run `install.bat` from an unpacked folder, not from inside the zip.
 - **Still looks stock in game:** log out to character select and back in. Check **Options → Interface & HUD → UI packages** lists the `Notum Dovvetech` providers.
-- **One HUD piece is stock again:** the game falls back to its built-in when a provider errors. Look in the newest file in `PRK-AO-Native\logs\` for `ndgui` and send that line and a screenshot to **thedenis** on the PRK Discord (or open an issue).
+- **One HUD piece is stock again, or missing:** a package hit an error. Type **`/uidebug`** in chat: it lists every UI package and marks failed ones; click the failed row to see the error and where it happened. Send a screenshot of that to **thedenis** on the PRK Discord (or open an issue). The newest file in `PRK-AO-Native\logs\` has the same error under `ndgui`.
+- **After a game update something breaks:** game updates can change the addon API. Run `install.bat` → **2** for the newest ndGUI, and check `/uidebug`.
 - **Everything is broken:** `install.bat` → **4** (Uninstall). If even that fails, delete the `client\UI\Addons\ndgui*` folders, then rename each `*.stock` file back over its neighbour. You can also let the launcher repair the game.

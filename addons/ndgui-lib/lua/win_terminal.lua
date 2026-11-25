@@ -102,9 +102,42 @@ local function matched_terms(text)
 	return found
 end
 
--- the brief Info kept for an offer, and everything a watch term can match in it
+-- What is known about an offer. Client 0.3.5+ sends pay, XP, playfield, QL and the reward items with
+-- every offer; older clients only had the summary, so pay and reward came from the briefing Info kept
+-- after a Ctrl-click (Briefs). The kept briefing still adds its full text (tooltip, watch matching).
+local function reward_names(offer)
+	local names = {}
+	for _, reward in ipairs(offer.rewards or {}) do
+		if reward.name and reward.name ~= "" then
+			names[#names + 1] = (reward.ql or 0) > 0 and (reward.name .. " (QL " .. reward.ql .. ")") or reward.name
+		end
+	end
+	return names
+end
 local function offer_brief(offer)
-	return Briefs.find(offer.description)
+	local kept = Briefs.find(offer.description)
+	if offer.credits == nil and offer.experience == nil and offer.rewards == nil then
+		return kept -- client before 0.3.5
+	end
+	local names = reward_names(offer)
+	return {
+		title = offer.description,
+		cash = (offer.credits or 0) > 0 and offer.credits or (kept and kept.cash) or nil,
+		xp = (offer.experience or 0) > 0 and offer.experience or (kept and kept.xp) or nil,
+		zone = (offer.location or "") ~= "" and offer.location or (kept and kept.zone) or nil,
+		item = #names > 0 and table.concat(names, ", ") or (kept and kept.item) or nil,
+		ql = (offer.ql or 0) > 0 and offer.ql or nil,
+		text = kept and kept.text or "",
+		live = true,
+	}
+end
+-- "2,827 credits  ·  486 XP  ·  Rome Blue  ·  QL 120"
+local function offer_summary(brief)
+	local text = Briefs.summary(brief)
+	if brief and brief.ql then
+		text = text ~= "" and (text .. "  ·  QL " .. brief.ql) or ("QL " .. brief.ql)
+	end
+	return text
 end
 local function offer_terms(offer)
 	local brief = offer_brief(offer)
@@ -154,7 +187,7 @@ local function show_offer(row, offer)
 	local inner = width - 11 - 10
 	local text_w = inner - TEXT_LEFT
 	local badge_h = hit and 13 or 0
-	local pay = brief and Briefs.summary(brief) or ""
+	local pay = offer_summary(brief)
 	local item = brief and brief.item and fit_line("Reward: " .. brief.item, text_w) or ""
 	local pay_h, item_h = pay ~= "" and 13 or 0, item ~= "" and 13 or 0
 	-- the title takes the lines it needs (one for the usual short title), then pay and reward
@@ -185,8 +218,16 @@ local function show_offer(row, offer)
 	ui.icon(row.icon, offer.icon or 0)
 	ui.content(row.icon, (offer.icon or 0) ~= 0)
 	local gap = string.char(10, 10)
-	ui.tooltip(row.hit, brief and brief.text ~= "" and ((offer.description or "") .. gap .. brief.text)
-		or (offer.description or "") .. gap .. "Ctrl-click to look at it once; its pay and reward then show here.")
+	local tip = offer.description or ""
+	if brief and brief.live then
+		tip = tip .. gap .. pay .. (brief.item and (string.char(10) .. "Reward: " .. brief.item) or "")
+			.. (brief.text ~= "" and (gap .. brief.text) or "")
+	elseif brief and brief.text ~= "" then
+		tip = tip .. gap .. brief.text
+	else
+		tip = tip .. gap .. "Ctrl-click to look at it once; its pay and reward then show here."
+	end
+	ui.tooltip(row.hit, tip)
 	ui.selected(row.hit, offer.selected == true)
 	if not ui.in_combat() and row.reference ~= offer.reference then
 		row.reference = offer.reference

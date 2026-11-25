@@ -4,7 +4,8 @@
 Near-black navy panels, steel-blue frames, a blue accent, square buttons. The classic ndGUI feel, rebuilt for the new client, and everything can be moved.
 
 > 🐛 **Bugs, issues, ideas? Ask `thedenis` on the Project Rubi-Ka Discord.**
-> A screenshot plus the `ndgui` lines from the newest file in `PRK-AO-Native\logs\` help a lot.
+> Something broken or gone stock? Type **`/uidebug`** in chat: it lists every UI package, failed ones with
+> their error. A screenshot of that (click the failed row) plus a screenshot of the problem helps a lot.
 
 > Fan project. Not affiliated with Funcom or the Project Rubi-Ka team. Inspired by the classic
 > ndGUI (Kitao's Dovvetech GUI, continued by Misat0 and Honorbound). It contains none of their
@@ -34,8 +35,7 @@ Inventory, Wear, Stats, Skills, Nano Programs, Team, Raid, Friends, Pets, Perks,
 **Missions, Mission Terminal and Info** (AI-hand-made, one package: Mission Hub)
 - **Info keeps every mission briefing you look at** (cash, XP, zone, item reward, description), shared by all your characters.
 - **Missions**: the list with time-left bars (blue, yellow under 30 min, red under 10) and a side pane with the chosen mission's briefing, pay, zone and reward. Folds to its title bar (`Missions (2) - 1:20`).
-- **Mission Terminal**: offer rows instead of six bare icons; once you've Ctrl-clicked an offer its row shows `2,827 credits · 486 XP · RomeBlue` and the reward. A **watch list** lights matching offers gold (it searches the briefing and reward too) and logs them; four slider **presets** (left-click applies, right-click saves); roll counter and what chosen-reward rolls cost.
-- The client hands an offer's details only to Info, and only on a real Ctrl-click, so each new offer needs that one click.
+- **Mission Terminal**: offer rows instead of six bare icons, each with its pay, XP, playfield, QL and reward right away (`2,827 credits · 486 XP · Rome Blue · QL 120`, `Reward: Carbonum Plate Helmet (QL 118)`). A **watch list** lights matching offers gold (it searches the summary, playfield and reward, plus the full briefing once you've looked at one in Info) and logs them; four slider **presets** (left-click applies, right-click saves); roll counter and what chosen-reward rolls cost.
 
 **Damage Meter** (AI-hand-made; Control Center > Actions > **Addons** > Damage Meter)
 - **Damage / Healing / Taken / Targets / Deaths** as bars: amount, per second, share. **Me / Team / Raid / All**.
@@ -116,7 +116,7 @@ Spiritech loads Lua/XML UI packages from `client/UI/Addons`. This repo holds **1
 
 ## Status
 
-`0.3.6`: playable, in daily use, with rough edges.
+`0.3.7`: playable, in daily use, with rough edges.
 
 ## Bugs, issues, ideas
 

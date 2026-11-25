@@ -14,7 +14,7 @@ ndGUI is already installed), so your live game is never touched:
 
 Rebuild after a game patch so the shipped windows match the new client version.
 """
-import argparse, filecmp, glob, hashlib, os, shutil, subprocess, sys, zipfile
+import argparse, filecmp, glob, hashlib, os, re, shutil, subprocess, sys, zipfile
 
 REPO = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, REPO)
@@ -73,6 +73,32 @@ def client_version(client):
     return " / ".join(parts) or "unknown"
 
 
+def api_version(client):
+    """The addon API revision the client ships (client/addon-api.version.txt), e.g. 0.2.0."""
+    try:
+        with open(os.path.join(client, "addon-api.version.txt"), encoding="utf-8") as f:
+            return f.read().strip() or None
+    except OSError:
+        return None
+
+
+def stamp(manifest, api):
+    """Published-package format: version="<release>" apiVersion="<addon API>" on <Package>.
+    The launcher warns when apiVersion's major/minor differs from the client's."""
+    if not os.path.isfile(manifest):
+        return
+    with open(manifest, encoding="utf-8") as f:
+        xml = f.read()
+    attrs = f' version="{VERSION}"' + (f' apiVersion="{api}"' if api else "")
+
+    def tag(m):  # only the <Package> tag: an <?xml version="1.0"?> header must stay
+        head = re.sub(r'\s(?:version|apiVersion)="[^"]*"', "", m.group(1))
+        return "<Package" + head + attrs + m.group(2)
+    xml = re.sub(r"<Package\b([^>]*?)(\s*/?>)", tag, xml, count=1)
+    with open(manifest, "w", encoding="utf-8", newline="\n") as f:
+        f.write(xml)
+
+
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--client")
@@ -100,6 +126,7 @@ def main():
         ignore = shutil.ignore_patterns("__pycache__", "*.pyc", *DEV_ONLY) if os.path.basename(folder) == "ndgui" \
             else shutil.ignore_patterns("__pycache__", "*.pyc")
         shutil.copytree(folder, dest, ignore=ignore)
+        stamp(os.path.join(dest, "package.xml"), api_version(client))
     # patched game screens: only files that differ from stock
     os.makedirs(os.path.join(game, "Layouts"))
     shipped = 0
