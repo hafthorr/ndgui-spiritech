@@ -466,7 +466,7 @@ function control_center_apply(state, perks, attacks)
 	end
 	ui.text(ncu, "NCU " .. number(state.used_ncu) .. "/" .. number(state.max_ncu))
 	ui.text(credits, "CRED " .. grouped(state.credits))
-	show_aggdef_advanced(state.aggdef_advanced)
+	show_aggdef_advanced(state.aggdef_advanced == true)
 	if state.aggdef >= AGGDEF_MIN then
 		ui.progress(aggdef, aggdef_progress(state.aggdef))
 		show_aggdef(state.aggdef)
