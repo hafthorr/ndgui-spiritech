@@ -15,9 +15,11 @@ Needs Python 3.8+ and Pillow:
     python install.py --check              only check the client and requirements
     python install.py --pull               copy edited packages from the client back into addons/
 
-Install option:
-    --stock-screens   leave the client's own screens stock (Options, login, character select...);
-                      ndGUI's windows still get square buttons
+Install options:
+    --stock-screens    leave the client's own screens stock (Options, login, character select...);
+                       ndGUI's windows still get square buttons
+    --keep-providers   leave the client's current HUD/window UI package choices alone
+                       (do not rewrite Client.xml providers to ndGUI)
 
 Quit the game first: the client reads the skin at start and rewrites prefs on exit.
 Every client file the installer changes keeps a backup (*.stock / Client.xml.ndgui-backup-*),
@@ -278,7 +280,7 @@ def ask_grid(client):
 
 
 # ---- actions ---------------------------------------------------------------------------
-def install(client, stock_screens=False, grid=None):
+def install(client, stock_screens=False, grid=None, keep_providers=False):
     if not check(client):
         raise SystemExit("\nFix the items above and run the installer again.")
     say("\n[1/5] Copying ndGUI packages")
@@ -298,9 +300,12 @@ def install(client, stock_screens=False, grid=None):
         tool(client, "square_buttons.py")
     say("\n[4/5] DarkTech skin (button art, slots, tabs, sliders, map markers, steel retint)")
     tool(client, "skin.py")
-    say("\n[5/5] Switching the HUD and windows to ndGUI")
-    if not tool(client, "select_providers.py", optional=True):
-        say("  Pick them by hand in the game: Options > Interface & HUD > UI packages.")
+    if keep_providers:
+        say("\n[5/5] Keeping current HUD/window providers (as asked)")
+    else:
+        say("\n[5/5] Switching the HUD and windows to ndGUI")
+        if not tool(client, "select_providers.py", optional=True):
+            say("  Pick them by hand in the game: Options > Interface & HUD > UI packages.")
     with open(os.path.join(client, MARKER), "w", encoding="utf-8", newline="\n") as marker:
         marker.write(VERSION)
     say("\nDone! Start the game. If something still looks stock, log out to character select and back in once.")
@@ -333,9 +338,11 @@ def latest_release():
                          f"https://github.com/{PROJECT}/releases")
 
 
-def run_installer(folder, client):
+def run_installer(folder, client, keep_providers=False):
     """Run the install.py of the new copy: this process still has the old code loaded."""
     command = [sys.executable, os.path.join(folder, "install.py"), "--install", "--client", client]
+    if keep_providers:
+        command.append("--keep-providers")
     if subprocess.run(command).returncode != 0:
         raise SystemExit("Installing the new version failed (see above).")
 
@@ -367,7 +374,7 @@ def download_source(tag):
     return os.path.dirname(found[0])
 
 
-def update(client):
+def update(client, keep_providers=False):
     installed = installed_version(client)
     say(f"Installed: {installed or 'nothing yet'}")
     say("Checking GitHub for the newest release...")
@@ -388,10 +395,10 @@ def update(client):
         pulled = subprocess.run(["git", "-C", REPO, "pull", "--ff-only"])
         if pulled.returncode != 0:
             raise SystemExit("git pull failed (local changes?). Fix the checkout, then run: python install.py --install")
-        run_installer(REPO, client)
+        run_installer(REPO, client, keep_providers=keep_providers)
     else:
         folder = download_source(tag)
-        run_installer(folder, client)
+        run_installer(folder, client, keep_providers=keep_providers)
         say(f"\nThe {latest} files are in: {folder}")
         say("Use that folder (or a fresh download) for future installs and uninstalls.")
 
@@ -438,13 +445,15 @@ def pull(client):
 interactive = False
 
 
-def menu(client):
+def menu(client, keep_providers=False):
     say(f"ndGUI for Spiritech {VERSION}\n")
     client = client or find_client() or ask_for_client()
     say(f"Game folder: {client}\n")
     installed = installed_version(client)
     if installed:
         say(f"Installed: ndGUI {installed}\n")
+    if keep_providers:
+        say("  (--keep-providers: install/update will leave current HUD/window providers alone)\n")
     say(f"  1) Install / update to {VERSION} (this folder)")
     say("  2) Update to the newest version (from GitHub)")
     say(f"  3) Install {VERSION}, but keep the game's own screens stock (Options, login...)")
@@ -454,11 +463,11 @@ def menu(client):
     choice = input("\nPick 1-6 [1]: ").strip() or "1"
     say()
     if choice == "1":
-        install(client)
+        install(client, keep_providers=keep_providers)
     elif choice == "2":
-        update(client)
+        update(client, keep_providers=keep_providers)
     elif choice == "3":
-        install(client, stock_screens=True)
+        install(client, stock_screens=True, keep_providers=keep_providers)
     elif choice == "4":
         uninstall(client)
     elif choice == "5":
@@ -475,6 +484,8 @@ def main():
     parser.add_argument("--check", action="store_true")
     parser.add_argument("--pull", action="store_true", help=argparse.SUPPRESS)
     parser.add_argument("--stock-screens", action="store_true")
+    parser.add_argument("--keep-providers", action="store_true",
+                        help="leave current HUD/window UI package choices alone")
     parser.add_argument("--grid", type=grid_size, metavar="PX",
                         help="snap-to-grid size in pixels, 0 = off (default: keep; 10 on a first install)")
     args = parser.parse_args()
@@ -488,7 +499,8 @@ def main():
     if not actions:
         interactive = True
         try:
-            menu(find_client(args.client) if args.client else None)
+            menu(find_client(args.client) if args.client else None,
+                 keep_providers=args.keep_providers)
         except SystemExit as stop:
             if stop.code not in (None, 0):
                 say(f"\n{stop.code}")
@@ -503,13 +515,14 @@ def main():
     if args.check:
         sys.exit(0 if check(client) else 1)
     if args.update:
-        update(client)
+        update(client, keep_providers=args.keep_providers)
     elif args.uninstall:
         uninstall(client)
     elif args.pull:
         pull(client)
     else:
-        install(client, stock_screens=args.stock_screens, grid=args.grid)
+        install(client, stock_screens=args.stock_screens, grid=args.grid,
+                keep_providers=args.keep_providers)
 
 
 if __name__ == "__main__":

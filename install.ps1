@@ -6,6 +6,8 @@
     .\install.ps1 -Install             install / update from this folder, no questions
     .\install.ps1 -Update              download the newest release from GitHub and install it
     .\install.ps1 -Install -StockScreens   keep the game's own screens (Options, login...) stock
+    .\install.ps1 -Install -KeepProviders  leave current HUD/window UI package choices alone
+    .\install.ps1 -Update -KeepProviders   update from GitHub without rewriting providers
     .\install.ps1 -Uninstall           back to the stock UI
     .\install.ps1 -Install -Client "D:\Games\PRK-AO-Native\client"
     .\install.ps1 -Grid 20             snap-to-grid size in pixels (0 = off); kept across updates
@@ -18,6 +20,7 @@ param(
     [switch]$Install,
     [switch]$Uninstall,
     [switch]$StockScreens,
+    [switch]$KeepProviders,
     [switch]$Update,
     [int]$Grid = -1
 )
@@ -384,7 +387,7 @@ function Invoke-GridMenu([string]$ClientDir) {
 }
 
 # ---- actions ------------------------------------------------------------------------------
-function Invoke-Install([string]$ClientDir, [bool]$KeepScreens) {
+function Invoke-Install([string]$ClientDir, [bool]$KeepScreens, [bool]$KeepProviders = $false) {
     if (-not (Test-Path -LiteralPath (Join-Path $Game 'Addons'))) {
         throw "No 'game' folder next to install.ps1. Unpack the whole release zip and run install.bat from it."
     }
@@ -413,8 +416,12 @@ function Invoke-Install([string]$ClientDir, [bool]$KeepScreens) {
     if ($KeepScreens) { Restore-Screens $ClientDir; Say '  kept stock (as asked)' } else { Install-Screens $ClientDir }
     Say "`n[3/4] DarkTech skin"
     Install-Skin $ClientDir
-    Say "`n[4/4] Switching the HUD and windows to ndGUI"
-    Set-Providers (Get-Providers $addons) $false
+    if ($KeepProviders) {
+        Say "`n[4/4] Keeping current HUD/window providers (as asked)"
+    } else {
+        Say "`n[4/4] Switching the HUD and windows to ndGUI"
+        Set-Providers (Get-Providers $addons) $false
+    }
     Say ''
     Write-Host 'Done! Start the game.' -ForegroundColor Green
     Say 'If something still looks stock, log out to character select and back in once.'
@@ -468,7 +475,9 @@ function Invoke-Update([string]$ClientDir) {
     $next = @(Get-ChildItem -LiteralPath $work -Recurse -Filter 'install.ps1')[0]
     if (-not $next) { throw 'The downloaded zip has no install.ps1.' }
     Say "Installing ndGUI $latest...`n"
-    & powershell.exe -NoProfile -ExecutionPolicy Bypass -File $next.FullName -Install -Client $ClientDir
+    $installArgs = @('-NoProfile', '-ExecutionPolicy', 'Bypass', '-File', $next.FullName, '-Install', '-Client', $ClientDir)
+    if ($KeepProviders) { $installArgs += '-KeepProviders' }
+    & powershell.exe @installArgs
     if ($LASTEXITCODE -ne 0) { throw "Installing $latest failed (see above)." }
     Say "`nThe $latest installer (for Uninstall later) is in: $(Split-Path -Parent $next.FullName)"
 }
@@ -498,7 +507,7 @@ try {
         }
     }
     Say "Game folder: $dir"
-    if ($Install) { Invoke-Install $dir ([bool]$StockScreens) }
+    if ($Install) { Invoke-Install $dir ([bool]$StockScreens) ([bool]$KeepProviders) }
     elseif ($Grid -ge 0) { Set-Grid $dir $Grid; Say 'Restart the game to use it.' }
     elseif ($Update) { Invoke-Update $dir }
     elseif ($Uninstall) { Invoke-Uninstall $dir }
@@ -506,6 +515,10 @@ try {
         $installed = Get-InstalledVersion $dir
         if ($installed) { Say "Installed: ndGUI $installed" }
         Say ''
+        if ($KeepProviders) {
+            Say '  (-KeepProviders: install/update will leave current HUD/window providers alone)'
+            Say ''
+        }
         Say "  1) Install / update to $Version (this folder)"
         Say '  2) Update to the newest version (downloads from GitHub)'
         Say "  3) Install $Version, but keep the game's own screens stock (Options, login...)"
@@ -515,9 +528,9 @@ try {
         $choice = (Read-Host "`nPick 1-6 [1]").Trim()
         if (-not $choice) { $choice = '1' }
         switch ($choice) {
-            '1' { Invoke-Install $dir $false }
+            '1' { Invoke-Install $dir $false ([bool]$KeepProviders) }
             '2' { Invoke-Update $dir }
-            '3' { Invoke-Install $dir $true }
+            '3' { Invoke-Install $dir $true ([bool]$KeepProviders) }
             '4' { Invoke-Uninstall $dir }
             '5' { Invoke-GridMenu $dir }
         }

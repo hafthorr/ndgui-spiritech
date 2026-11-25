@@ -36,9 +36,13 @@ From a PowerShell window you can also point it at the game directly:
 ```powershell
 .\install.ps1 -Install -Client "D:\Games\PRK-AO-Native\client"
 .\install.ps1 -Install -StockScreens      # keep Options/login screens stock
+.\install.ps1 -Install -KeepProviders     # leave current HUD/window UI package choices alone
 .\install.ps1 -Uninstall
 .\install.ps1 -Update                    # download the newest release from GitHub and install it
+.\install.ps1 -Update -KeepProviders     # update packages without rewriting providers
 ```
+
+`-KeepProviders` skips rewriting Options → Interface & HUD → UI packages in `Client.xml`, so a hybrid mix of providers stays as you set it. Packages, skin, and screens still update.
 
 ### "Windows protected your PC" / "Do you want to run this file?"
 
@@ -79,9 +83,11 @@ python install.py                         # menu
 python install.py --install               # no questions
 python install.py --install --client "/path/to/PRK-AO-Native/client"
 python install.py --install --stock-screens
+python install.py --install --keep-providers   # leave current HUD/window UI package choices alone
 python install.py --uninstall
 python install.py --grid 20               # snap-to-grid size in px (0 = off); kept across updates
 python install.py --update                # newest GitHub release: git pull in a checkout, else downloads the source
+python install.py --update --keep-providers
 python install.py --check                 # only check game folder + requirements
 ```
 
