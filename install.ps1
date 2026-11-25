@@ -515,6 +515,10 @@ try {
         $installed = Get-InstalledVersion $dir
         if ($installed) { Say "Installed: ndGUI $installed" }
         Say ''
+        if ($KeepProviders) {
+            Say '  (-KeepProviders: install/update will leave current HUD/window providers alone)'
+            Say ''
+        }
         Say "  1) Install / update to $Version (this folder)"
         Say '  2) Update to the newest version (downloads from GitHub)'
         Say "  3) Install $Version, but keep the game's own screens stock (Options, login...)"
@@ -524,9 +528,9 @@ try {
         $choice = (Read-Host "`nPick 1-6 [1]").Trim()
         if (-not $choice) { $choice = '1' }
         switch ($choice) {
-            '1' { Invoke-Install $dir $false }
+            '1' { Invoke-Install $dir $false ([bool]$KeepProviders) }
             '2' { Invoke-Update $dir }
-            '3' { Invoke-Install $dir $true }
+            '3' { Invoke-Install $dir $true ([bool]$KeepProviders) }
             '4' { Invoke-Uninstall $dir }
             '5' { Invoke-GridMenu $dir }
         }

@@ -445,13 +445,15 @@ def pull(client):
 interactive = False
 
 
-def menu(client):
+def menu(client, keep_providers=False):
     say(f"ndGUI for Spiritech {VERSION}\n")
     client = client or find_client() or ask_for_client()
     say(f"Game folder: {client}\n")
     installed = installed_version(client)
     if installed:
         say(f"Installed: ndGUI {installed}\n")
+    if keep_providers:
+        say("  (--keep-providers: install/update will leave current HUD/window providers alone)\n")
     say(f"  1) Install / update to {VERSION} (this folder)")
     say("  2) Update to the newest version (from GitHub)")
     say(f"  3) Install {VERSION}, but keep the game's own screens stock (Options, login...)")
@@ -461,11 +463,11 @@ def menu(client):
     choice = input("\nPick 1-6 [1]: ").strip() or "1"
     say()
     if choice == "1":
-        install(client)
+        install(client, keep_providers=keep_providers)
     elif choice == "2":
-        update(client)
+        update(client, keep_providers=keep_providers)
     elif choice == "3":
-        install(client, stock_screens=True)
+        install(client, stock_screens=True, keep_providers=keep_providers)
     elif choice == "4":
         uninstall(client)
     elif choice == "5":
@@ -497,7 +499,8 @@ def main():
     if not actions:
         interactive = True
         try:
-            menu(find_client(args.client) if args.client else None)
+            menu(find_client(args.client) if args.client else None,
+                 keep_providers=args.keep_providers)
         except SystemExit as stop:
             if stop.code not in (None, 0):
                 say(f"\n{stop.code}")
