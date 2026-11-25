@@ -134,7 +134,15 @@ local function measure(plate)
 	return layout
 end
 
--- Stock placement: grow with distance up to the font limit, keep the plate on screen at the top edge.
+-- Client 0.3.5+ places plates natively: declare once how they sit in the world, then place() per plate.
+local native_placement = canvas.placement ~= nil
+if native_placement then
+	canvas.placement(style.anchored_height, style.pixels_per_world_unit, style.full_size_distance,
+		style.font_limit_margin, math.max(style.font, style.organization_font))
+end
+
+-- Older clients: stock placement in Lua: grow with distance up to the font limit, keep the plate on
+-- screen at the top edge.
 local function top_overflow(offset, half_height, depth, up_y)
 	if up_y == 0 then
 		return 0
@@ -145,6 +153,10 @@ local function top_overflow(offset, half_height, depth, up_y)
 end
 
 local function place(layout, frame)
+	if native_placement then
+		canvas.place()
+		return true
+	end
 	local world_scale = 1 / style.pixels_per_world_unit
 	local offset = 0
 	if frame.world then

@@ -610,7 +610,8 @@ function playfield_map_update(facts)
 		resizing = true
 	end
 	local old_width, old_height = shown_width, shown_height
-	frame:resize(wanted_width, wanted_height)
+	-- relayout, not resize: resize re-derives a docked page's height every update (stock does the same)
+	if frame.relayout then frame:relayout(wanted_width, wanted_height) else frame:resize(wanted_width, wanted_height) end
 	resizing = resizing or old_width ~= shown_width or old_height ~= shown_height
 	ui.enabled(areas_button, facts.land_control)
 	if not facts.land_control then

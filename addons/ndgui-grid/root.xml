@@ -1,4 +1,4 @@
 <?xml version="1.0"?>
 <root>
-  <View name="ndgui_grid_addon" view_layout="stacked" />
+  <View name="ndgui_grid_addon" view_layout="stacked" capture_input="false" />
 </root>

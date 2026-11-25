@@ -38,13 +38,13 @@ local function sprite(graphic, x, y, facing)
 		if not graphic then
 			return
 		end
-		pcall(surface.sprite, graphic, x, y, facing)
+		pcall(surface.sprite, graphic, x, y, facing, 1)
 		return
 	end
-	if not pcall(surface.sprite, graphic, x, y, facing) then
+	if not pcall(surface.sprite, graphic, x, y, facing, 1) then
 		rejected[graphic] = true
 		if FALLBACK[graphic] then
-			pcall(surface.sprite, FALLBACK[graphic], x, y, facing)
+			pcall(surface.sprite, FALLBACK[graphic], x, y, facing, 1)
 		end
 	end
 end

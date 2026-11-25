@@ -35,3 +35,6 @@ missions_apply = route("missions", "missions_apply")
 mission_terminal_configure = route("terminal", "mission_terminal_configure")
 mission_terminal_sliders = route("terminal", "mission_terminal_sliders")
 mission_terminal_apply = route("terminal", "mission_terminal_apply")
+-- client 0.3.5+: the stock terminal draws an offer map; ndGUI's has none yet, so these are no-ops
+mission_terminal_map = route("terminal", "mission_terminal_map")
+mission_terminal_map_wheel = route("terminal", "mission_terminal_map_wheel")

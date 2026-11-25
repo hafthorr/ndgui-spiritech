@@ -7,6 +7,18 @@ Versions follow Semantic Versioning 2.0.0: `MAJOR.MINOR.PATCH`.
 - PATCH bumps fix tokens, scale math, or docs without a config change.
 - While the major version is 0, the client view layer is still incomplete. The Lua model is safe to load offline.
 
+## 0.3.6
+
+Needs the game client 0.3.5 (addon API 0.2.0) or newer.
+
+- **Control Center works again on client 0.3.5.** The update no longer sends the minibar / rollup / advanced Agg/Def options to the Control Center, which broke ndGUI's (gone from the screen, and players reported the camera stuck). Those four options are now ndGUI's own Options settings, read the new way. Thanks matty-jones for the first fix (#2).
+- **Installer: `--keep-providers` / `-KeepProviders`** updates ndGUI's packages, skin and screens but leaves your Options > Interface & HUD > UI packages choices alone (for mixed setups). Thanks matty-jones (#1).
+- **Nameplates** draw again: the client now places plates itself.
+- **Planet Map and Local Map** markers are back (you, mission, route, rings, playfield markers): the marker call takes a new scale argument.
+- **Mission Terminal** takes the client's new offer-map callbacks (ndGUI's terminal has no map yet).
+- Raid bars and target NCU keep their Options (Lock raid bar positions, nano/fight target NCU).
+- Grid Overlay and Damage Meter never take mouse input outside their own windows.
+
 ## 0.3.5
 
 - **Hotbar:** perk timers really show big in the slot centre now, like item cooldowns. The client sends them as badge text, which 0.3.3 didn't move.

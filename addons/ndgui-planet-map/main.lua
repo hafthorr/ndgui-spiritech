@@ -83,14 +83,14 @@ local rejected = {}
 local function sprite(graphic, x, y)
 	if rejected[graphic] then
 		if FALLBACK[graphic] then
-			pcall(view.sprite, FALLBACK[graphic], x, y, 0)
+			pcall(view.sprite, FALLBACK[graphic], x, y, 0, 1)
 		end
 		return
 	end
-	if not pcall(view.sprite, graphic, x, y, 0) then
+	if not pcall(view.sprite, graphic, x, y, 0, 1) then
 		rejected[graphic] = true
 		if FALLBACK[graphic] then
-			pcall(view.sprite, FALLBACK[graphic], x, y, 0)
+			pcall(view.sprite, FALLBACK[graphic], x, y, 0, 1)
 		end
 	end
 end
