@@ -97,6 +97,28 @@ def special(src, ddir):
         extra.append(vendor(ddir, "ncu_view.lua", "ncu.view", module,
                             [("self.frame = Window.create({", f'self.frame = Window.create({{\n\t\t\ttemplate = "{LIB}window.xml",')], src))
         code = must(code, 'ui.require("ncu.view")', f'ui.require("{module}")', src)
+        # Package-local NCU cell: library:// well behind the ItemSlotView (not atlas slot_gfx).
+        open(os.path.join(ddir, "ncu_slot.xml"), "w", encoding="utf-8", newline="\n").write(
+            '<?xml version="1.0" encoding="utf-8"?>\n<root>\n'
+            '  <View name="ndgui_slotcell" view_layout="stacked" '
+            'min_size="Point(46,30)" max_size="Point(46,30)">\n'
+            '    <BitmapView name="ndgui_slot_back" interactive="false" '
+            f'image="{LIB}slots/open_46x30.png" '
+            'min_size="Point(46,30)" max_size="Point(46,30)" />\n'
+            '    <ItemSlotView name="ndgui_slot" min_size="Point(46,30)" max_size="Point(46,30)" '
+            'slot_gfx="" icon_inset="5" icon_inset_y="7" icon_fit="cover" overlay_inset="3" />\n'
+            '  </View>\n</root>\n'
+        )
+        view_path = os.path.join(ddir, "ndgui_ncu_view.lua")
+        view = open(view_path, encoding="utf-8").read()
+        if 'template = "ncu_slot.xml"' in view and "shared = true" in view:
+            view = must(view, "template = \"ncu_slot.xml\",\n\t\t\tshared = true,",
+                        "template = \"ncu_slot.xml\",", src + " ncu shared")
+        # Template root is the well; slot_cells binds the inner ndgui_slot.
+        if 'ui.require("core.icon_grid")' in view:
+            view = must(view, 'ui.require("core.icon_grid")',
+                        'ui.require("notum.ndgui-lib/slot_cells")', src + " slot_cells")
+        open(view_path, "w", encoding="utf-8", newline="\n").write(view)
     elif src == "Faction":
         extra.append(vendor(ddir, "rollup.lua", "core.rollup", "ndgui.rollup",
                             [('ui.shared_layout("rollup.xml")', f'ui.load("{LIB}rollup.xml")')], src))

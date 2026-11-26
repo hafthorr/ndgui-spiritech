@@ -84,4 +84,7 @@ if ok and type(Snapping) == "table" and type(Snapping.offset) == "function" and 
 	end)
 end
 
+-- Marketplace-safe DarkTech buttons/pin: wrap Window.create in this package VM.
+pcall(ui.require, "notum.ndgui-lib/boot")
+
 return M

@@ -1,8 +1,18 @@
 # Installing ndGUI for Spiritech
 
-## Windows (the normal way)
+You can install from the **Spiritech Marketplace** (in-game HUD) or with the **install script** (same HUD, plus a fuller atlas merge for Login/Options and native chrome). Use either, or Marketplace first and the script's `-SkinLayouts` later for the extra skin.
 
-You don't need Python or an exe. The installer is a PowerShell script (`install.ps1`), and `install.bat` just starts it. Both are plain text, so open them in Notepad if you want to see what they do.
+## Spiritech Marketplace
+
+1. Quit the game.
+2. Install **ndGUI** from the Launcher **Addons** page (packages land as `notum.ndgui*` under `client/UI/Addons`).
+3. Options → Interface & HUD → **UI packages** → select the Notum Dovvetech providers; re-enter the character.
+
+That covers the in-game HUD, DarkTech buttons, slot wells, compass, and maps. Login / Options / character screens stay stock until you also run the install script (or `-SkinLayouts` below). Details: [docs/marketplace-listing.md](docs/marketplace-listing.md).
+
+## Windows install script (full atlas)
+
+Merges DarkTech art into the game's graphics atlas and squares Login / Options / character screens. You don't need Python or an exe: `install.ps1` is plain PowerShell, and `install.bat` just starts it. Open either in Notepad if you want to see what they do.
 
 1. **Quit the game.** The game reads its skin at start and rewrites its settings on exit. If it's running, the installer waits until you close it.
 2. Download **`ndgui-spiritech-<version>.zip`** from the [Releases page](../../releases).
@@ -25,6 +35,13 @@ You don't need Python or an exe. The installer is a PowerShell script (`install.
    Press **Enter** to install.
 5. Start the game.
 
+**Already installed from Marketplace?** For atlas + Login/Options only, without touching packages or providers:
+
+```powershell
+.\install.ps1 -SkinLayouts
+.\install.ps1 -SkinLayouts -KeepProviders   # keep providers you already chose
+```
+
 ### It can't find my game
 
 It looks around itself, in the launcher's `LauncherSettings.json`, and in the usual places (`C:\Games\PRK-AO-Native`, the same on other drives, your user folder). If that fails, it opens a folder picker. Pick **the folder that holds `PRK.Client.exe`**, usually `...\PRK-AO-Native\client`. The launcher folder, which contains `client`, works too.
@@ -37,6 +54,8 @@ From a PowerShell window you can also point it at the game directly:
 .\install.ps1 -Install -Client "D:\Games\PRK-AO-Native\client"
 .\install.ps1 -Install -StockScreens      # keep Options/login screens stock
 .\install.ps1 -Install -KeepProviders     # leave current HUD/window UI package choices alone
+.\install.ps1 -SkinLayouts                # skin + screens only (marketplace packages already present)
+.\install.ps1 -SkinLayouts -KeepProviders
 .\install.ps1 -Uninstall
 .\install.ps1 -Update                    # download the newest release from GitHub and install it
 .\install.ps1 -Update -KeepProviders     # update packages without rewriting providers
@@ -52,7 +71,7 @@ Windows asks about scripts that came from the internet. Click **Run** (or **More
 
 | Step | What | Where | Undo |
 | --- | --- | --- | --- |
-| 1 | Copies the 39 ndGUI packages (HUD, windows, maps, library) | `client\UI\Addons\ndgui*` | removed |
+| 1 | Copies the ndGUI packages (HUD, windows, maps, library) | `client\UI\Addons\ndgui*` (player zip) or `notum.ndgui*` (marketplace) | removed |
 | 2 | Square buttons on the game's own screens (Options, login, character select, loading) and pin state on stock windows | 8 files in `client\UI\Layouts\`, `client\UI\Packages\Core\window.xml` | `*.stock` copies put back |
 | 3 | DarkTech skin: merges ~475 images (button art, slots, tabs, scrollbars, sliders, map markers, steel retint) into the game's graphics file | `client\cd_image\gui\Default\Graphics.uvg*`, `GUIColors.xml` | `*.stock` copies put back |
 | 4 | Switches every HUD/window role to the ndGUI provider | `%LOCALAPPDATA%\ProjectRubiKa\prefs\Client.xml` | roles reset; `Client.xml.ndgui-backup-*` kept |
@@ -70,7 +89,7 @@ If step 4 says there are no game settings yet (it's your first-ever start), star
 
 ## Uninstalling
 
-Run `install.bat` → **4**. It resets the providers to the built-ins, puts back the stock skin, screens and window file from the `*.stock` copies, and removes every `ndgui*` package. Window positions saved by ndGUI stay in the game settings, where they're harmless.
+Run `install.bat` → **4**. It resets the providers to the built-ins, puts back the stock skin, screens and window file from the `*.stock` copies, and removes every ndGUI package (`ndgui*` and marketplace `notum.ndgui*`). Window positions saved by ndGUI stay in the game settings, where they're harmless. If you installed from the Launcher Addons page, also remove the listing there so it does not reappear as an unmanaged conflict later.
 
 ## Linux / Mac / from source (Python)
 
@@ -84,12 +103,15 @@ python install.py --install               # no questions
 python install.py --install --client "/path/to/PRK-AO-Native/client"
 python install.py --install --stock-screens
 python install.py --install --keep-providers   # leave current HUD/window UI package choices alone
+python install.py --skin-layouts          # residual skin + screens (marketplace packages already present)
+python install.py --skin-layouts --keep-providers
 python install.py --uninstall
 python install.py --grid 20               # snap-to-grid size in px (0 = off); kept across updates
 python install.py --update                # newest GitHub release: git pull in a checkout, else downloads the source
 python install.py --update --keep-providers
 python install.py --check                 # only check game folder + requirements
 ```
+
 
 Settings are looked for under `~/.local/share/ProjectRubiKa/prefs/Client.xml`. Set `NDGUI_PREFS=/full/path/Client.xml` if yours is elsewhere. Linux and Mac are untested so far. Reports welcome: ask **thedenis** on the PRK Discord.
 

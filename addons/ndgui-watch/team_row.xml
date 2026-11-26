@@ -7,6 +7,6 @@
       <TextView name="member_name" value="" color="E6EEF5" font_size="11" size_to_text="false" v_alignment="center" layout_borders="Rect(4,0,0,0)" />
       <View name="member_cells" view_layout="horizontal" />
     </View>
-    <Button name="member_hit" flat="true" label="" selection_color="0x40789FBF" />
+    <View name="ndgui_btnwrap" view_layout="stacked" min_size="Point(-1,28)" max_size="Point(-1,28)"><View name="ndgui_chrome" interactive="false" view_layout="horizontal"><BitmapView name="ndgui_btn_l" interactive="false" image="library://notum.ndgui-lib/buttons/btn28_raised_left.png" min_size="Point(4,28)" max_size="Point(4,28)" /><BitmapView name="ndgui_btn_m" interactive="false" image="library://notum.ndgui-lib/buttons/btn28_raised_middle.png" weight="1" min_size="Point(0,28)" max_size="Point(-1,28)" /><BitmapView name="ndgui_btn_r" interactive="false" image="library://notum.ndgui-lib/buttons/btn28_raised_right.png" min_size="Point(4,28)" max_size="Point(4,28)" /></View><Button name="member_hit" label="" selection_color="0x40789FBF" flat="true" text_alignment="center" /></View>
   </View>
 </root>

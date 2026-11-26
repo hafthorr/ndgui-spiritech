@@ -4,7 +4,7 @@
     <View name="offer_back" />
     <View name="offer_stripe" h_alignment="left" />
     <View view_layout="horizontal" layout_borders="Rect(6,3,4,3)">
-      <ItemSlotView name="offer_icon" interactive="false" min_size="Point(40,40)" max_size="Point(40,40)" icon_fit="center" icon_inset="3" v_alignment="top" />
+      <View name="ndgui_slotcell" view_layout="stacked" min_size="Point(40,40)" max_size="Point(40,40)"><BitmapView name="ndgui_slot_back" interactive="false" image="library://notum.ndgui-lib/slots/open_36.png" min_size="Point(40,40)" max_size="Point(40,40)" /><ItemSlotView name="offer_icon" interactive="false" min_size="Point(40,40)" max_size="Point(40,40)" icon_fit="center" icon_inset="3" slot_gfx="" /></View>
       <View view_layout="vertical" layout_borders="Rect(7,0,0,0)">
         <TextView name="offer_badge" value="" font_size="10" color="FFD84A" size_to_text="false" visible="false" />
         <TextView name="offer_text" value="" font_size="11" color="C5D7E6" word_wrap="true" size_to_text="false" />
@@ -14,6 +14,6 @@
       </View>
     </View>
     <!-- flat button on top: takes the click and carries the native choose action -->
-    <Button name="offer_hit" flat="true" label="" selection_color="0x40789FBF" />
+    <View name="ndgui_btnwrap" view_layout="stacked" min_size="Point(-1,28)" max_size="Point(-1,28)"><View name="ndgui_chrome" interactive="false" view_layout="horizontal"><BitmapView name="ndgui_btn_l" interactive="false" image="library://notum.ndgui-lib/buttons/btn28_raised_left.png" min_size="Point(4,28)" max_size="Point(4,28)" /><BitmapView name="ndgui_btn_m" interactive="false" image="library://notum.ndgui-lib/buttons/btn28_raised_middle.png" weight="1" min_size="Point(0,28)" max_size="Point(-1,28)" /><BitmapView name="ndgui_btn_r" interactive="false" image="library://notum.ndgui-lib/buttons/btn28_raised_right.png" min_size="Point(4,28)" max_size="Point(4,28)" /></View><Button name="offer_hit" label="" selection_color="0x40789FBF" flat="true" text_alignment="center" /></View>
   </View>
 </root>

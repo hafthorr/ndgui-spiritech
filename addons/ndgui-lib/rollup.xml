@@ -12,14 +12,20 @@
     <View view_layout="vertical" layout_borders="Rect(3,3,3,3)">
       <View name="rollup_header" view_layout="horizontal" capture_input="true" min_size="Point(-1,19)" max_size="Point(-1,19)">
         <View name="rollup_icon_slot" view_layout="stacked">
-          <BitmapView name="rollup_icon" interactive="true" image="gfx://GFX_GUI_WINDOW_ICON_I" min_size="Point(15,15)" max_size="Point(15,15)" v_alignment="center" layout_borders="Rect(2,0,0,0)" />
+          <BitmapView name="rollup_icon" interactive="true" image="library://notum.ndgui-lib/window/info.png" min_size="Point(15,15)" max_size="Point(15,15)" v_alignment="center" layout_borders="Rect(2,0,0,0)" />
         </View>
         <BitmapView name="ndgui_accent" image="library://notum.ndgui-lib/window/accent.png" min_size="Point(3,15)" max_size="Point(3,15)" v_alignment="center" layout_borders="Rect(5,0,0,0)" />
         <TextView name="rollup_title" font_size="12" color="C5D7E6" v_alignment="center" layout_borders="Rect(5,0,2,0)" />
         <HLayoutSpacer />
-        <Button name="rollup_collapse" min_size="Point(15,15)" max_size="Point(15,15)" v_alignment="center" layout_borders="Rect(2,0,0,0)" gfxid_raised="GFX_GUI_ROLLUP_COLLAPSE_STATE1" gfxid_hover="GFX_GUI_ROLLUP_COLLAPSE_STATE2" gfxid_pressed="GFX_GUI_ROLLUP_COLLAPSE_STATE3" />
-        <Button name="rollup_expand" visible="false" min_size="Point(15,15)" max_size="Point(15,15)" v_alignment="center" layout_borders="Rect(2,0,0,0)" gfxid_raised="GFX_GUI_ROLLUP_EXPAND_STATE1" gfxid_hover="GFX_GUI_ROLLUP_EXPAND_STATE2" gfxid_pressed="GFX_GUI_ROLLUP_EXPAND_STATE3" />
-        <Button name="rollup_close" min_size="Point(15,15)" max_size="Point(15,15)" v_alignment="center" layout_borders="Rect(2,0,2,0)" gfxid_raised="GFX_GUI_WINDOW_CLOSE_X" gfxid_hover="GFX_GUI_WINDOW_CLOSE_X_STATE2" gfxid_pressed="GFX_GUI_WINDOW_CLOSE_X_STATE3" />
+        <Button name="rollup_collapse" flat="true" fill_color="0x00000000" min_size="Point(15,15)" max_size="Point(15,15)" v_alignment="center" layout_borders="Rect(2,0,0,0)" view_layout="stacked">
+          <BitmapView interactive="false" image="library://notum.ndgui-lib/window/fold.png" min_size="Point(15,15)" max_size="Point(15,15)" h_alignment="center" v_alignment="center" />
+        </Button>
+        <Button name="rollup_expand" visible="false" flat="true" fill_color="0x00000000" min_size="Point(15,15)" max_size="Point(15,15)" v_alignment="center" layout_borders="Rect(2,0,0,0)" view_layout="stacked">
+          <BitmapView interactive="false" image="library://notum.ndgui-lib/window/expand.png" min_size="Point(15,15)" max_size="Point(15,15)" h_alignment="center" v_alignment="center" />
+        </Button>
+        <Button name="rollup_close" flat="true" fill_color="0x00000000" min_size="Point(15,15)" max_size="Point(15,15)" v_alignment="center" layout_borders="Rect(2,0,2,0)" view_layout="stacked">
+          <BitmapView interactive="false" image="library://notum.ndgui-lib/window/close.png" min_size="Point(15,15)" max_size="Point(15,15)" h_alignment="center" v_alignment="center" />
+        </Button>
       </View>
       <View name="rollup_body" view_layout="vertical" layout_borders="Rect(0,6,0,4)" />
     </View>

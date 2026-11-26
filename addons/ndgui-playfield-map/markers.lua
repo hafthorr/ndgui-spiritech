@@ -1,55 +1,57 @@
--- ndGUI Local Map: marker + overlay composition (DarkTech sprites from tools/skin.py).
--- Everything is drawn in projected content coordinates on the native map surface.
+-- ndGUI Local Map: marketplace-safe markers (stock atlas ids + primitives only).
+-- Facing / recognition sprites use stock GFX_GUI_MAP_*; rings, trail, route and
+-- reticle use DarkTech-colored fan/line primitives.
 local surface = game.map_surface
 
 local SPRITE = {
-	marked = "GFX_GUI_NDGUI_MAP_MARKED",
-	selected = "GFX_GUI_NDGUI_MAP_SELECTED",
-	monster = "GFX_GUI_NDGUI_MAP_MONSTER",
-	team = "GFX_GUI_NDGUI_MAP_TEAM",
-	clan = "GFX_GUI_NDGUI_MAP_CLAN",
-	omni = "GFX_GUI_NDGUI_MAP_OMNI",
-	neutral = "GFX_GUI_NDGUI_MAP_NEUTRAL",
-	door = "GFX_GUI_NDGUI_MAP_DOOR",
-	shop = "GFX_GUI_NDGUI_MAP_SHOP",
-	mission = "GFX_GUI_NDGUI_MAP_MISSION",
-	player = "GFX_GUI_NDGUI_MAP_PLAYER",
+	marked = "GFX_GUI_MAP_BIG_ARROW",
+	selected = "GFX_GUI_MAP_ARROW_SELECTED",
+	monster = "GFX_GUI_MAPSQUARE_MONSTER",
+	team = "GFX_GUI_MAPSQUARE_TEAMMEMBER",
+	clan = "GFX_GUI_MAPSQUARE_CLAN",
+	omni = "GFX_GUI_MAPSQUARE_OMNI",
+	neutral = "GFX_GUI_MAPSQUARE_NEUTRAL",
+	door = "GFX_GUI_MAPFLAG_CYAN",
+	shop = "GFX_GUI_MAPSQUARE_SHOP",
+	mission = "GFX_GUI_MAPSQUARE_MISSION",
+	player = "GFX_GUI_MAP_ARROW",
 }
 local FACING = { selected = true, player = true }
 
--- If the client rejects one of our sprites (skin not installed, renamed upstream...), draw
--- the stock marker instead and never take the map down.
-local FALLBACK = {
-	GFX_GUI_NDGUI_MAP_PLAYER = "GFX_GUI_MAP_ARROW", GFX_GUI_NDGUI_MAP_MARKED = "GFX_GUI_MAP_BIG_ARROW",
-	GFX_GUI_NDGUI_MAP_SELECTED = "GFX_GUI_MAP_ARROW_SELECTED", GFX_GUI_NDGUI_MAP_MONSTER = "GFX_GUI_MAPSQUARE_MONSTER",
-	GFX_GUI_NDGUI_MAP_TEAM = "GFX_GUI_MAPSQUARE_TEAMMEMBER", GFX_GUI_NDGUI_MAP_CLAN = "GFX_GUI_MAPSQUARE_CLAN",
-	GFX_GUI_NDGUI_MAP_OMNI = "GFX_GUI_MAPSQUARE_OMNI", GFX_GUI_NDGUI_MAP_NEUTRAL = "GFX_GUI_MAPSQUARE_NEUTRAL",
-	GFX_GUI_NDGUI_MAP_DOOR = "GFX_GUI_MAPFLAG_CYAN", GFX_GUI_NDGUI_MAP_SHOP = "GFX_GUI_MAPSQUARE_SHOP",
-	GFX_GUI_NDGUI_MAP_MISSION = "GFX_GUI_MAPSQUARE_MISSION", GFX_GUI_NDGUI_MAP_TRAIL = "GFX_GUI_MAPSQUARE_NEUTRAL",
-	GFX_GUI_NDGUI_MAP_TRAIL_NEW = "GFX_GUI_MAPSQUARE_TEAMMEMBER", GFX_GUI_NDGUI_MAP_RING = "GFX_GUI_MAPSQUARE_NEUTRAL",
-	GFX_GUI_NDGUI_MAP_ROUTE = "GFX_GUI_MAPSQUARE_SHOP",
+local C = {
+	trail = "#6CB6FF",
+	trail_new = "#C5E2FF",
+	ring = "#6CB6FF",
+	route = "#E8C05A",
+	reticle = "#6CB6FF",
 }
+
 local rejected = {}
 MapSpriteRejected = rejected
 
 local function sprite(graphic, x, y, facing)
 	if rejected[graphic] then
-		graphic = FALLBACK[graphic]
-		if not graphic then
-			return
-		end
-		pcall(surface.sprite, graphic, x, y, facing, 1)
 		return
 	end
-	if not pcall(surface.sprite, graphic, x, y, facing, 1) then
+	if not pcall(surface.sprite, graphic, x, y, facing or 0, 1) then
 		rejected[graphic] = true
-		if FALLBACK[graphic] then
-			pcall(surface.sprite, FALLBACK[graphic], x, y, facing, 1)
-		end
 	end
 end
 
--- Filter groups shown in the "Show" menu, in menu order. Player/waypoint/selection always draw.
+local function dot(x, y, radius, color)
+	surface.fan(x, y, radius, 0, math.pi * 2, color)
+end
+
+local function reticle(x, y)
+	local c, r = C.reticle, 4
+	surface.line(x - r, y, x + r, y, 1, c)
+	surface.line(x, y - r, x, y + r, 1, c)
+	surface.line(x - 2, y - 2, x + 2, y - 2, 1, c)
+	surface.line(x + 2, y - 2, x + 2, y + 2, 1, c)
+	surface.line(x + 2, y + 2, x - 2, y + 2, 1, c)
+	surface.line(x - 2, y + 2, x - 2, y - 2, 1, c)
+end
+
 MAP_FILTERS = {
 	{ key = "monster", label = "Monsters", kinds = { monster = true } },
 	{ key = "players", label = "Other players", kinds = { clan = true, omni = true, neutral = true } },
@@ -67,14 +69,14 @@ for _, filter in ipairs(MAP_FILTERS) do
 end
 
 MapOverlay = {
-	shown = {},          -- filter key -> bool
-	readings = {},       -- last native marker list
-	counts = {},         -- filter key -> visible count
-	trail = {},          -- { {x, y}, ... } content coordinates, oldest first
-	rings = nil,         -- { x, y, radius_per_metre, metres = {...} } or nil
-	reticle = nil,       -- { x, y } content coordinates or nil
-	dot_step = 6,        -- content units between ring dots (set from zoom)
-	waypoint = nil,      -- { x, y } content coordinates of the native waypoint, or nil
+	shown = {},
+	readings = {},
+	counts = {},
+	trail = {},
+	rings = nil,
+	reticle = nil,
+	dot_step = 6,
+	waypoint = nil,
 }
 for _, filter in ipairs(MAP_FILTERS) do
 	MapOverlay.shown[filter.key] = true
@@ -87,17 +89,17 @@ local function ring(cx, cy, radius, step)
 	local count = math.max(24, math.min(160, math.floor(2 * math.pi * radius / math.max(1, step))))
 	for i = 0, count - 1 do
 		local a = 2 * math.pi * i / count
-		sprite("GFX_GUI_NDGUI_MAP_RING", cx + radius * math.cos(a), cy + radius * math.sin(a), 0)
+		dot(cx + radius * math.cos(a), cy + radius * math.sin(a), 1, C.ring)
 	end
 end
 
 function MapOverlay.compose()
 	local self = MapOverlay
 	surface.markers_begin()
-	-- Underlay first: trail, then range rings.
 	local trail = self.trail
 	for i = 1, #trail do
-		sprite(i > #trail - 8 and "GFX_GUI_NDGUI_MAP_TRAIL_NEW" or "GFX_GUI_NDGUI_MAP_TRAIL", trail[i][1], trail[i][2], 0)
+		local color = i > #trail - 8 and C.trail_new or C.trail
+		dot(trail[i][1], trail[i][2], i > #trail - 8 and 1.5 or 1, color)
 	end
 	local rings = self.rings
 	if rings then
@@ -109,7 +111,6 @@ function MapOverlay.compose()
 	for _, filter in ipairs(MAP_FILTERS) do
 		counts[filter.key] = 0
 	end
-	-- The native waypoint is the "marked" subject: route line from me to it underneath.
 	local player, waypoint
 	for _, marker in ipairs(self.readings) do
 		if marker.kind == "player" then
@@ -125,7 +126,7 @@ function MapOverlay.compose()
 		local step = math.max(1, self.dot_step * 1.5)
 		local count = math.min(200, math.floor(length / step))
 		for i = 1, count - 1 do
-			sprite("GFX_GUI_NDGUI_MAP_ROUTE", player.x + dx * i / count, player.y + dy * i / count, 0)
+			dot(player.x + dx * i / count, player.y + dy * i / count, 1, C.route)
 		end
 	end
 	for _, marker in ipairs(self.readings) do
@@ -142,15 +143,13 @@ function MapOverlay.compose()
 					direction - marker.half_angle, direction + marker.half_angle, "#383D8FD4")
 			else
 				local graphic = SPRITE[marker.kind]
-				-- Unknown native kinds still show (as a neutral dot) instead of vanishing.
 				sprite(graphic or SPRITE.neutral, marker.x, marker.y, FACING[marker.kind] and marker.facing or 0)
 			end
 		end
 	end
 	if self.reticle then
-		sprite("GFX_GUI_NDGUI_MAP_RETICLE", self.reticle[1], self.reticle[2], 0)
+		reticle(self.reticle[1], self.reticle[2])
 	end
-	-- Waypoint, then the player arrow, always on top of everything.
 	if waypoint then
 		sprite(SPRITE.marked, waypoint.x, waypoint.y, 0)
 	end

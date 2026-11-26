@@ -417,10 +417,11 @@ def uninstall(client):
     tool(client, "skin.py", "--restore", optional=True)
     tool(client, "square_buttons.py", "--restore", optional=True)
     removed = 0
-    for folder in glob.glob(os.path.join(addons, "ndgui*")):
-        if os.path.isdir(folder) and ours(folder):
-            shutil.rmtree(folder)
-            removed += 1
+    for pattern in ("ndgui*", "notum.ndgui*"):
+        for folder in glob.glob(os.path.join(addons, pattern)):
+            if os.path.isdir(folder) and ours(folder):
+                shutil.rmtree(folder)
+                removed += 1
     say(f"Removed {removed} ndGUI packages. The stock UI is back on the next start.")
 
 

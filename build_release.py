@@ -11,6 +11,8 @@ ndGUI is already installed), so your live game is never touched:
   3. renders the DarkTech skin as an overlay (only changed/new graphics, skin.py --overlay),
   4. packs  game/Addons (39 packages), game/Layouts + game/Packages (patched screens),
      game/skin (overlay), install.ps1 + install.bat + docs  into one zip.
+  5. builds release/ndgui-<version>.zip for the Spiritech Addons marketplace
+     (packages only; see build_marketplace.py / docs/marketplace-listing.md).
 
 Rebuild after a game patch so the shipped windows match the new client version.
 """
@@ -167,6 +169,12 @@ def main():
     shutil.rmtree(stage, ignore_errors=True)
     print(f"\n{packages} packages, {shipped} game screens, {graphics} skin graphics")
     print(f"built {archive} ({os.path.getsize(archive) / 1e6:.1f} MB); unpacked copy in {out}")
+
+    print("\nBuilding marketplace suite zip...")
+    subprocess.run(
+        [sys.executable, os.path.join(REPO, "build_marketplace.py"), "--from-zip", archive],
+        check=True,
+    )
 
 
 if __name__ == "__main__":

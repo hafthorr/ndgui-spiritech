@@ -22,8 +22,8 @@
         <!-- titlebar furniture outside window_title_tab must total Core's TITLEBAR_FURNITURE (66): frame 6, icon 2+15, accent 3+3, tabs 0, pin 15+3, close 15+4 -->
         <View name="window_titlebar" view_layout="horizontal" capture_input="true" min_size="Point(-1,24)" max_size="Point(-1,24)">
           <View name="window_icon_slot" view_layout="stacked">
-            <BitmapView name="window_icon" interactive="true" image="gfx://GFX_GUI_WINDOW_ICON_I" min_size="Point(15,15)" max_size="Point(15,15)" v_alignment="center" layout_borders="Rect(2,0,0,1)" />
-          </View>
+          <BitmapView name="window_icon" interactive="true" image="library://notum.ndgui-lib/window/info.png" min_size="Point(15,15)" max_size="Point(15,15)" v_alignment="center" layout_borders="Rect(2,0,0,1)" />
+        </View>
           <BitmapView name="ndgui_accent" image="library://notum.ndgui-lib/window/accent.png" min_size="Point(3,18)" max_size="Point(3,18)" v_alignment="center" layout_borders="Rect(3,0,0,0)" />
           <View name="window_title_tab" view_layout="stacked" min_size="Point(-1,18)" max_size="Point(-1,18)" v_alignment="center" layout_borders="Rect(0,0,0,0)">
             <BitmapView name="ndgui_tab" image="library://notum.ndgui-lib/window/tab.png" />
@@ -34,10 +34,20 @@
           </View>
           <View name="window_tabs" view_layout="horizontal" selected_on_top="true" v_alignment="top" min_size="Point(-1,17)" max_size="Point(-1,17)" layout_borders="Rect(0,7,0,0)" />
           <HLayoutSpacer />
-          <!-- fold to the title bar: only windows that ask for it show this (ndgui-missions) -->
-          <Button name="window_fold" visible="false" alpha="0.8" active_alpha="1" min_size="Point(15,15)" max_size="Point(15,15)" v_alignment="center" layout_borders="Rect(0,0,3,1)" tooltip="Fold to the title bar" gfxid_raised="GFX_GUI_ROLLUP_COLLAPSE_STATE1" gfxid_hover="GFX_GUI_ROLLUP_COLLAPSE_STATE2" gfxid_pressed="GFX_GUI_ROLLUP_COLLAPSE_STATE3" gfxid_selected="GFX_GUI_ROLLUP_EXPAND_STATE1" />
-          <Button name="window_pin" visible="false" alpha="0.6" active_alpha="1" min_size="Point(15,15)" max_size="Point(15,15)" v_alignment="center" layout_borders="Rect(0,0,3,1)" gfxid_raised="GFX_GUI_WINDOW_PIN" gfxid_hover="GFX_GUI_WINDOW_PIN_STATE2" gfxid_pressed="GFX_GUI_WINDOW_PIN_STATE3" gfxid_selected="GFX_NDGUI_PIN_ON" />
-          <Button name="window_close" visible="false" alpha="0.9" active_alpha="1" min_size="Point(15,15)" max_size="Point(15,15)" v_alignment="center" layout_borders="Rect(0,0,4,1)" gfxid_raised="GFX_GUI_WINDOW_CLOSE_X" gfxid_hover="GFX_GUI_WINDOW_CLOSE_X_STATE2" gfxid_pressed="GFX_GUI_WINDOW_CLOSE_X_STATE3" />
+          <!-- Package glyphs as Button children so Core visibility toggles hide the art too. -->
+          <Button name="window_fold" visible="false" flat="true" fill_color="0x00000000" alpha="0.8" active_alpha="1" min_size="Point(15,15)" max_size="Point(15,15)" v_alignment="center" layout_borders="Rect(0,0,3,1)" tooltip="Fold to the title bar" view_layout="stacked">
+            <BitmapView interactive="false" image="library://notum.ndgui-lib/window/fold.png" min_size="Point(15,15)" max_size="Point(15,15)" h_alignment="center" v_alignment="center" />
+          </Button>
+          <!-- Pin selected art is package-local (ndgui_pin_on). Core toggles window_pin; slot stays laid out. -->
+          <View name="window_pin_slot" view_layout="stacked" min_size="Point(15,15)" max_size="Point(15,15)" v_alignment="center" layout_borders="Rect(0,0,3,1)">
+            <Button name="window_pin" visible="false" flat="true" fill_color="0x00000000" alpha="0.6" active_alpha="1" min_size="Point(15,15)" max_size="Point(15,15)" view_layout="stacked">
+              <BitmapView interactive="false" image="library://notum.ndgui-lib/window/pin.png" min_size="Point(15,15)" max_size="Point(15,15)" h_alignment="center" v_alignment="center" />
+            </Button>
+            <BitmapView name="ndgui_pin_on" interactive="false" visible="false" image="library://notum.ndgui-lib/window/pin_on.png" min_size="Point(15,15)" max_size="Point(15,15)" />
+          </View>
+          <Button name="window_close" visible="false" flat="true" fill_color="0x00000000" alpha="0.9" active_alpha="1" min_size="Point(15,15)" max_size="Point(15,15)" v_alignment="center" layout_borders="Rect(0,0,4,1)" view_layout="stacked">
+            <BitmapView interactive="false" image="library://notum.ndgui-lib/window/close.png" min_size="Point(15,15)" max_size="Point(15,15)" h_alignment="center" v_alignment="center" />
+          </Button>
         </View>
         <!-- content borders must match Core (2,1,2,2): the game sizes grid windows with Window.CONTENT_SIDES/ENDS -->
         <View name="window_content" view_layout="vertical" weight="1" layout_borders="Rect(2,1,2,2)" />
