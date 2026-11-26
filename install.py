@@ -25,7 +25,7 @@ Quit the game first: the client reads the skin at start and rewrites prefs on ex
 Every client file the installer changes keeps a backup (*.stock / Client.xml.ndgui-backup-*),
 and --uninstall restores them. See INSTALL.md.
 """
-import argparse, glob, json, os, re, runpy, shutil, string, subprocess, sys, traceback
+import argparse, glob, hashlib, json, os, re, runpy, shutil, string, subprocess, sys, traceback
 
 VERSION = "0.3.7"
 REPO = os.path.dirname(os.path.abspath(__file__))
@@ -147,13 +147,13 @@ def have_pillow():
         return False
 
 
-def check(client):
+def check(client, need_pillow=True):
     say(f"Game folder: {client}")
     ok = True
     if sys.version_info < (3, 8):
         say("  ! Python 3.8 or newer is needed.")
         ok = False
-    if not have_pillow():
+    if need_pillow and not have_pillow():
         say("  ! Pillow is missing (needed for the skin). Install it with:")
         say(f"      \"{sys.executable}\" -m pip install pillow")
         ok = False
@@ -232,6 +232,299 @@ def copy_packages(client):
     say(f"  copied {len(names)} packages into {addons}")
 
 
+# ---- player zip (game/ next to this script; no generators, no Pillow) --------------------
+GAME = os.path.join(REPO, "game")
+
+
+def player_zip():
+    return os.path.isdir(os.path.join(GAME, "Addons")) and not os.path.isdir(os.path.join(REPO, ".git"))
+
+
+def prefs_path():
+    if os.environ.get("NDGUI_PREFS"):
+        return os.environ["NDGUI_PREFS"]
+    if os.environ.get("LOCALAPPDATA"):
+        root = os.environ["LOCALAPPDATA"]
+    else:
+        root = os.environ.get("XDG_DATA_HOME") or os.path.expanduser("~/.local/share")
+    return os.path.join(root, "ProjectRubiKa", "prefs", "Client.xml")
+
+
+def marked(path):
+    try:
+        return b"NDGUI" in open(path, "rb").read()
+    except OSError:
+        return False
+
+
+def save_stock(path, probe=None):
+    if not os.path.exists(path):
+        return
+    if not os.path.exists(path + ".stock") or not marked(probe or path):
+        shutil.copy2(path, path + ".stock")
+
+
+def file_sha(path):
+    return hashlib.sha256(open(path, "rb").read()).hexdigest().upper()
+
+
+def built_from_map():
+    found = {}
+    path = os.path.join(GAME, "built-from.txt")
+    if os.path.exists(path):
+        for line in open(path, encoding="utf-8"):
+            parts = line.split()
+            if len(parts) == 2:
+                found[parts[0]] = parts[1]
+    return found
+
+
+def same_game(table, key, path):
+    stock = path + ".stock"
+    return key in table and os.path.exists(stock) and file_sha(stock) == table[key]
+
+
+def release_providers(addons):
+    found = {}
+    for folder in glob.glob(os.path.join(addons, "ndgui*")):
+        manifest = os.path.join(folder, "package.xml")
+        if not os.path.isfile(manifest):
+            continue
+        text = open(manifest, encoding="utf-8").read()
+        pid = re.search(r'<Package id="([^"]+)"', text)
+        if not pid or not pid.group(1).startswith("notum.ndgui"):
+            continue
+        for role in re.findall(r'<Provides role="([^"]+)"', text):
+            found[role] = pid.group(1)
+    return found
+
+
+def set_release_providers(chosen, reset=False):
+    prefs = prefs_path()
+    if not os.path.exists(prefs):
+        say(f"  No game settings yet ({prefs}).")
+        say("  Start the game once, quit, and run this again, or pick them in game:")
+        say("  Options > Interface & HUD > UI packages.")
+        return
+    shutil.copy2(prefs, prefs + time_backup())
+    xml = open(prefs, encoding="utf-8").read()
+    lines = []
+    for role in sorted(chosen):
+        key = "UiPackageProvider_" + role[4:].replace("-", "_")
+        xml = re.sub(r'\s*<Value name="%s" value="[^"]*" />' % re.escape(key), "", xml)
+        if not reset:
+            lines.append('    <Value name="%s" value="&quot;%s&quot;" />' % (key, chosen[role]))
+    if not reset:
+        at = xml.find("<Root>")
+        if at < 0:
+            say("  Unexpected settings file (no <Root>); pick the providers in game.")
+            return
+        xml = xml[:at + 6] + "\n" + "\n".join(lines) + xml[at + 6:]
+    open(prefs, "w", encoding="utf-8", newline="\n").write(xml)
+    if reset:
+        say(f"  reset {len(chosen)} roles to the built-in UI")
+    else:
+        say(f"  selected ndGUI for {len(chosen)} roles")
+
+
+def time_backup():
+    import time
+    return time.strftime(".ndgui-backup-%Y%m%d-%H%M%S")
+
+
+def install_release_skin(client):
+    directory = os.path.join(client, "cd_image", "gui", "Default")
+    overlay = os.path.join(GAME, "skin")
+    uvgi = os.path.join(directory, "Graphics.uvgi")
+    uvga = os.path.join(directory, "Graphics.uvga")
+    colors = os.path.join(directory, "GUIColors.xml")
+    for path in (uvgi, uvga, colors):
+        if not os.path.exists(path):
+            raise SystemExit(f"Game skin file missing: {path}")
+        save_stock(path, uvgi)
+    index = open(uvgi + ".stock", "rb").read().decode("latin-1").splitlines()
+    blob = open(uvga + ".stock", "rb").read()
+    out = bytearray()
+    entries, seen = [], set()
+    replaced = 0
+    for line in index[1:]:
+        parts = line.split()
+        if len(parts) != 3:
+            continue
+        name, offset, length = parts[0], int(parts[1]), int(parts[2])
+        file = os.path.join(overlay, name + ".png")
+        if os.path.exists(file):
+            data = open(file, "rb").read()
+            replaced += 1
+        else:
+            data = blob[offset:offset + length]
+        entries.append(f"{name} {len(out)} {len(data)}")
+        out += data
+        seen.add(name)
+    added = 0
+    for name in open(os.path.join(overlay, "new.txt"), encoding="utf-8"):
+        name = name.strip()
+        if not name or name in seen:
+            continue
+        data = open(os.path.join(overlay, name + ".png"), "rb").read()
+        entries.append(f"{name} {len(out)} {len(data)}")
+        out += data
+        added += 1
+    open(uvga, "wb").write(out)
+    text = str(len(entries)) + "\r\n" + "\r\n".join(entries) + "\r\n"
+    open(uvgi, "wb").write(text.encode("latin-1"))
+    xml = open(colors + ".stock", "rb").read().decode("latin-1")
+    for line in open(os.path.join(overlay, "colors.txt"), encoding="utf-8"):
+        if "=" not in line:
+            continue
+        key, value = line.strip().split("=", 1)
+        xml = re.sub(r'(<Color name="' + re.escape(key) + r'"\s+color=")[^"]*"', r"\g<1>" + value + '"', xml)
+    open(colors, "wb").write(xml.encode("latin-1"))
+    say(f"  skin: {len(entries)} graphics ({added} new, {replaced} restyled)")
+
+
+def install_release_screens(client):
+    count = stale = 0
+    table = built_from_map()
+    layouts = os.path.join(GAME, "Layouts")
+    for name in sorted(os.listdir(layouts)):
+        if not name.endswith(".xml"):
+            continue
+        target = os.path.join(client, "UI", "Layouts", name)
+        if not os.path.exists(target):
+            say(f"  skipped {name} (not in this game version)")
+            continue
+        save_stock(target)
+        if not same_game(table, f"Layouts/{name}", target):
+            shutil.copy2(target + ".stock", target)
+            stale += 1
+            continue
+        shutil.copy2(os.path.join(layouts, name), target)
+        count += 1
+    window = os.path.join(client, "UI", "Packages", "Core", "window.xml")
+    save_stock(window)
+    if same_game(table, "Packages/Core/window.xml", window):
+        shutil.copy2(os.path.join(GAME, "Packages", "Core", "window.xml"), window)
+    else:
+        shutil.copy2(window + ".stock", window)
+        stale += 1
+    if stale:
+        say(f"  kept {stale} game screen(s) stock: this ndGUI was built for another game version.")
+    say(f"  square buttons on {count} game screens + window pins")
+
+
+def restore_release_screens(client):
+    restored = 0
+    layouts = os.path.join(client, "UI", "Layouts")
+    if os.path.isdir(layouts):
+        for name in os.listdir(layouts):
+            if not name.endswith(".xml.stock"):
+                continue
+            live = os.path.join(layouts, name[:-6])
+            if os.path.exists(live) and not marked(live):
+                continue
+            shutil.copy2(os.path.join(layouts, name), live)
+            restored += 1
+    window = os.path.join(client, "UI", "Packages", "Core", "window.xml")
+    if os.path.exists(window + ".stock") and marked(window):
+        shutil.copy2(window + ".stock", window)
+        restored += 1
+    say(f"  restored {restored} stock game screens")
+
+
+def restore_release_skin(client):
+    directory = os.path.join(client, "cd_image", "gui", "Default")
+    uvgi = os.path.join(directory, "Graphics.uvgi")
+    if os.path.exists(uvgi) and not marked(uvgi):
+        say("  skin is already the game's own")
+        return
+    restored = 0
+    for name in ("Graphics.uvgi", "Graphics.uvga", "GUIColors.xml"):
+        path = os.path.join(directory, name)
+        if os.path.exists(path + ".stock"):
+            shutil.copy2(path + ".stock", path)
+            restored += 1
+    say("  stock skin restored" if restored else "  skin was never changed")
+
+
+def remove_release_packages(addons):
+    removed = 0
+    for pattern in ("ndgui*", "notum.ndgui*"):
+        for folder in glob.glob(os.path.join(addons, pattern)):
+            if os.path.isdir(folder) and ours(folder):
+                shutil.rmtree(folder)
+                removed += 1
+    return removed
+
+
+def client_version_text(client):
+    parts = []
+    for name in ("spiritech.version.txt", "version.txt"):
+        path = os.path.join(client, name)
+        if os.path.exists(path):
+            parts.append(open(path, encoding="utf-8", errors="replace").read().strip())
+    return " / ".join(parts) or "unknown"
+
+
+def install_release(client, stock_screens=False, grid=None, keep_providers=False):
+    if not check(client, need_pillow=False):
+        raise SystemExit("\nFix the items above and run the installer again.")
+    info = {}
+    info_path = os.path.join(GAME, "build-info.txt")
+    if os.path.exists(info_path):
+        for line in open(info_path, encoding="utf-8"):
+            if "=" in line:
+                key, value = line.strip().split("=", 1)
+                info[key] = value
+    built, have = info.get("client"), client_version_text(client)
+    if built and built != have:
+        say(f"This ndGUI build was made for game version {built}; you have {have}.")
+        say("It usually works; anything that does not falls back to the stock UI.")
+    addons = os.path.join(client, "UI", "Addons")
+    os.makedirs(addons, exist_ok=True)
+    say("\n[1/4] ndGUI packages")
+    kept_grid = read_grid(client)
+    old = remove_release_packages(addons)
+    names = sorted(n for n in os.listdir(os.path.join(GAME, "Addons")) if os.path.isdir(os.path.join(GAME, "Addons", n)))
+    for name in names:
+        shutil.copytree(os.path.join(GAME, "Addons", name), os.path.join(addons, name))
+    if grid is not None or (kept_grid is not None and kept_grid != read_grid(client)):
+        write_grid(client, grid if grid is not None else kept_grid)
+    marker = os.path.join(addons, "ndgui", "installed-version.txt")
+    if os.path.isdir(os.path.join(addons, "ndgui")):
+        open(marker, "w", encoding="utf-8", newline="\n").write(VERSION)
+    say(f"  {'updated' if old else 'installed'} {len(names)} packages")
+    say("\n[2/4] Square DarkTech buttons on the game's own screens")
+    if stock_screens:
+        restore_release_screens(client)
+        say("  kept stock (as asked)")
+    else:
+        install_release_screens(client)
+    say("\n[3/4] DarkTech skin")
+    install_release_skin(client)
+    if keep_providers:
+        say("\n[4/4] Keeping current HUD/window providers (as asked)")
+    else:
+        say("\n[4/4] Switching the HUD and windows to ndGUI")
+        set_release_providers(release_providers(addons), reset=False)
+    say("\nDone! Start the game. If something still looks stock, log out to character select and back in once.")
+    say("To undo everything: python install.py --uninstall")
+
+
+def uninstall_release(client):
+    while client_running():
+        if not interactive:
+            raise SystemExit("The game (PRK.Client.exe) is running. Quit it first.")
+        input("The game is running. Quit it, then press Enter... ")
+    addons = os.path.join(client, "UI", "Addons")
+    say("Restoring built-in providers, stock skin and stock layouts")
+    set_release_providers(release_providers(addons), reset=True)
+    restore_release_skin(client)
+    restore_release_screens(client)
+    removed = remove_release_packages(addons)
+    say(f"Removed {removed} ndGUI packages. The stock UI is back on the next start.")
+
+
 # ---- snap-to-grid size (ndgui-lib/lua/grid.lua) ------------------------------------------
 GRID_FILE = os.path.join("UI", "Addons", "ndgui-lib", "lua", "grid.lua")
 GRID_RE = re.compile(r"^local SIZE = (\d+)", re.M)
@@ -288,6 +581,9 @@ def ask_grid(client):
 
 # ---- actions ---------------------------------------------------------------------------
 def install(client, stock_screens=False, grid=None, keep_providers=False):
+    if player_zip():
+        install_release(client, stock_screens=stock_screens, grid=grid, keep_providers=keep_providers)
+        return
     if not check(client):
         raise SystemExit("\nFix the items above and run the installer again.")
     say("\n[1/5] Copying ndGUI packages")
@@ -411,6 +707,9 @@ def update(client, keep_providers=False):
 
 
 def uninstall(client):
+    if player_zip():
+        uninstall_release(client)
+        return
     while client_running():
         if not interactive:
             raise SystemExit("The game (PRK.Client.exe) is running. Quit it first.")
@@ -521,7 +820,7 @@ def main():
     if not client:
         raise SystemExit("Could not find the Spiritech client. Run again with --client \"<folder with PRK.Client.exe>\".")
     if args.check:
-        sys.exit(0 if check(client) else 1)
+        sys.exit(0 if check(client, need_pillow=not player_zip()) else 1)
     if args.update:
         update(client, keep_providers=args.keep_providers)
     elif args.uninstall:

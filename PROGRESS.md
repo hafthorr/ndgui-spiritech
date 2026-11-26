@@ -35,6 +35,9 @@ with that merge. Changelog section is still `## Unreleased`, and `VERSION` is st
 A tag `vX.Y.Z` publishes the committed player zip and CI rebuilds `release/ndgui-<version>.zip`
 from it for the Spiritech portal. CI cannot build the player zip; that still needs a client.
 
+The player zip ships `install.py` beside `install.bat`. From that unpacked folder it installs
+the prebuilt `game/` tree (no Pillow, no generators). A git checkout still builds from source.
+
 ## Hub bundling — rolled back (2026-11-25)
 
 ### What was working

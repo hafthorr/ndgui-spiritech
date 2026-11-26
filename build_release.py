@@ -10,7 +10,7 @@ ndGUI is already installed), so your live game is never touched:
   2. runs the generators: fork_windows.py, fork_hud.py, lib_table.py, square_buttons.py,
   3. renders the DarkTech skin as an overlay (only changed/new graphics, skin.py --overlay),
   4. packs  game/Addons (39 packages), game/Layouts + game/Packages (patched screens),
-     game/skin (overlay), install.ps1 + install.bat + docs  into one zip.
+     game/skin (overlay), install.ps1 + install.bat + install.py + docs  into one zip.
   5. builds release/ndgui-<version>.zip for the Spiritech Addons marketplace
      (packages only; see build_marketplace.py / docs/marketplace-listing.md).
 
@@ -149,7 +149,7 @@ def main():
     with open(os.path.join(game, "built-from.txt"), "w", encoding="utf-8", newline="\n") as manifest:
         manifest.write("\n".join(built_from) + "\n")
     # installer + docs
-    for doc in ("install.ps1", "install.bat", "README.md", "INSTALL.md", "LICENSE", "CHANGELOG.md"):
+    for doc in ("install.ps1", "install.bat", "install.py", "README.md", "INSTALL.md", "LICENSE", "CHANGELOG.md"):
         shutil.copyfile(os.path.join(REPO, doc), os.path.join(out, doc))
     with open(os.path.join(game, "build-info.txt"), "w", encoding="utf-8", newline="\n") as info:
         info.write(f"version={VERSION}\nclient={client_version(client)}\n")
