@@ -1,5 +1,31 @@
 # Progress
 
+## Title plate and tab faces (2026-11-26)
+
+### Dark box under the window text
+
+Removed `ndgui_tab` (`tab.png`) from `addons/ndgui-lib/window.xml`. The title word stays
+in `window_title_tab`. `glass.png` and `inner.png` were not touched. After a full client
+restart every ndGUI window title has no rectangle around the word.
+
+### Wear tabs
+
+`square_buttons.skin_wear_tabs` turns the four Wear `TabButton`s into ordinary buttons and
+the existing wrap pass draws `btn19` chrome. Names stay `wear_*_tab`. `main.lua` is unchanged.
+`button.lua` updates that chrome when `ui.selected` runs. Perks and chat tabs are still
+engine `TabButton`s. Do not add `Button.paint` or `ui.child` indexing in Wear; that is what
+aborted the package last time.
+
+Running `square_buttons.py` peels `ndgui_slotcell` wraps and refuses to put back slots whose
+shorter side is under 24 (team 16px, pet 26x18). That pass used to delete those wells. It now
+leaves a sub-24 well in place. Do not "fix" team/pet NCU slots by re-wrapping them in the
+under-24 branch.
+
+### Marketplace cap
+
+Leave all 40 `notum.ndgui*` packages. No hubs and no dropped roles until this visual pass is
+confirmed in game. Do not run `bundle_hubs.py`. Local zip only; no push and no PR.
+
 ## Hub bundling — rolled back (2026-11-25)
 
 ### What was working
@@ -86,35 +112,12 @@ by structure (button-row wraps in order: Compact, NCU, Leave, Recruit). Pets
 Attack/Follow/Wait do the same when Show buttons is off. Restart the client
 after copying `notum.ndgui-team`, `notum.ndgui-pets`, and `notum.ndgui-lib`.
 
-The dark box under window text is in the original non-package screenshots too
-(`~/Downloads/AOUI/Original.png`), so it is not a package-parity gap. Recoloring
-`glass.png` / clearing `inner.png` did not change it and those edits were
-reverted. Tomorrow: find what actually paints that box.
+The dark box under the window text and the Wear tab buttons are recorded at the top of
+this file (2026-11-26). An earlier Wear tab swap aborted the package because it also
+rewrote `main.lua`. The current buttons keep the original script.
 
-`TabButton` always draws engine `GFX_GUI_TAB_*` (stock teal). The original
-suite replaced those GFX ids in the global skin; a package cannot. Swapping
-Wear's tabs for ordinary Buttons made the Wear package fail and the client
-fell back to stock Wear. That swap was reverted: Wear is the ndGUI window
-again, tabs still teal. Tomorrow: skin every `TabButton` without dropping the
-`target` behavior that keeps the package alive. Current ones:
-
-- Wear: Weap, Cloth, Impl, Social
-- Perks: Profession, Group, General
-- Chat frame: `chat_frame_tab` (the chat host creates these; do not replace the widget)
-
-### Tomorrow
-
-1. **TabButton chrome** — Wear, Perks, and chat-frame tabs. Do not replace the
-   widget in a way that aborts the package (that sent Wear back to stock).
-2. **Dark content box** — present in the original screenshots too. Find the
-   real paint source. Do not recolor `glass.png` / `inner.png` again until that
-   source is known.
-3. **Marketplace 32-cap** — proper Mission-Hub-style hubs, or omit roles to
-   stay at 32, or wait on Spiritech. Do not run `bundle_hubs.py`.
-4. **Ship** — regenerate the marketplace zip at 0.3.7 (do not bump), then
-   push and open the PR when asked.
-
-You should be able to launch and test the pre-hub UI again.
+You should be able to launch and test the pre-hub UI again. Restart the client after
+copying `notum.ndgui-lib` and `notum.ndgui-wear`.
 
 ### Marketplace 32-cap (open)
 

@@ -48,10 +48,11 @@ python build_marketplace.py --addons-dir /path/to/client/UI/Addons
 Suite rules (match modern-ui): top-level folders only, folder name == package id
 (`notum.ndgui-hotbar/`), every `package.xml` stamped with the same `version` and
 `apiVersion` (default `0.1.0`), each folder contains `LICENSE`, no `tools/`.
-The portal allows **at most 32 packages** per suite: `bundle_hubs.py` (invoked by
-`build_marketplace.py`) merges related roles into multi-Provide hubs
-(chat / NCU / maps / raid / team / HUD indicators) while keeping one Options row
-per role. Legacy `notum.ndgui` (no Provides) is excluded.
+The portal allows **at most 32 packages** per suite. This suite is larger than that
+on purpose: every role stays its own package until a later, hand-authored hub pass.
+`build_marketplace.py` warns when the count is over 32 and still writes the zip.
+It does **not** run `bundle_hubs.py` (that bundler crashed the client; do not run it).
+Legacy `notum.ndgui` (no Provides) is excluded.
 
 ## Portal listing metadata (upload outside this repo)
 

@@ -6,7 +6,9 @@ ui.define("notum.ndgui-lib/button", function()
 	-- A wrapped button hides only its label when Lua calls ui.visible on the Button.
 	-- Remember each Button -> ndgui_btnwrap (identity, no ui.find) and hide the wrap too.
 	local maps = {}
+	local paints = {}
 	local raw_visible = ui.visible
+	local raw_selected = ui.selected
 	local raw_load = ui.load
 
 	local function leaf(view)
@@ -68,6 +70,31 @@ ui.define("notum.ndgui-lib/button", function()
 				end
 			end
 		end
+	end
+
+	local function remember_paint(btn, show)
+		paints[#paints + 1] = { btn = btn, show = show }
+	end
+
+	local function paint_for(view)
+		for i = 1, #paints do
+			local entry = paints[i]
+			if entry.btn == view then
+				entry.btn = view
+				return entry.show
+			end
+		end
+	end
+
+	function ui.selected(view, on)
+		local result = raw_selected(view, on)
+		if on ~= nil then
+			local show = paint_for(view)
+			if show then
+				pcall(show, on and "selected" or "raised")
+			end
+		end
+		return result
 	end
 
 	function ui.visible(view, on)
@@ -169,6 +196,7 @@ ui.define("notum.ndgui-lib/button", function()
 			set_slices(chrome, h, state)
 		end
 		show(ui.is_selected(btn) and "selected" or "raised")
+		remember_paint(btn, show)
 		ui.on_pointer(btn, function(phase)
 			if ui.is_selected(btn) then
 				show("selected")
