@@ -101,6 +101,22 @@ def copy_addons_dir(source: str, dest: str) -> None:
         )
 
 
+# Legacy theme package has no <Provides>.
+EXCLUDE_IDS = {"notum.ndgui"}
+OBSOLETE_MEMBERS: set[str] = set()
+
+
+def bundle_hubs_in(addons_dir: str) -> None:
+    """Merge related role packages so the suite fits the portal's 32-package cap."""
+    tools = os.path.join(REPO, "addons", "ndgui", "tools")
+    if tools not in sys.path:
+        sys.path.insert(0, tools)
+    os.environ["NDGUI_ADDONS"] = addons_dir
+    import bundle_hubs  # noqa: WPS433
+
+    bundle_hubs.main()
+
+
 def stage_suite(addons_src: str, stage: str, version: str, api_version: str, license_path: str) -> list[str]:
     ids: list[str] = []
     for folder in sorted(glob.glob(os.path.join(addons_src, "*"))):
@@ -113,6 +129,8 @@ def stage_suite(addons_src: str, stage: str, version: str, api_version: str, lic
         pkg_id = package_id(text)
         if not pkg_id.startswith("notum.ndgui"):
             raise SystemExit(f"{manifest_path}: expected notum.ndgui* id, got {pkg_id}")
+        if pkg_id in EXCLUDE_IDS or os.path.basename(folder) in OBSOLETE_MEMBERS:
+            continue
         dest = os.path.join(stage, pkg_id)
         if os.path.exists(dest):
             raise SystemExit(f"duplicate package id {pkg_id}")
@@ -121,6 +139,12 @@ def stage_suite(addons_src: str, stage: str, version: str, api_version: str, lic
         open(os.path.join(dest, "package.xml"), "w", encoding="utf-8", newline="\n").write(stamped)
         shutil.copyfile(license_path, os.path.join(dest, "LICENSE"))
         ids.append(pkg_id)
+    if len(ids) > 32:
+        # Portal cap is 32; full role coverage needs a working hub design (see PROGRESS.md).
+        print(
+            f"warning: marketplace suite has {len(ids)} packages; portal allows at most 32",
+            file=sys.stderr,
+        )
     return ids
 
 
@@ -233,6 +257,11 @@ def main() -> None:
                     f"missing {archive}; run build_release.py first or pass --from-zip / --addons-dir"
                 )
             extract_addons_from_player_zip(archive, extracted)
+
+        # Hub bundling is disabled: the embed/deferred-boot approach crashed the client.
+        # Mission Hub works because members are real modules that adopt a load-time shell;
+        # bundle_hubs.py did not. Do not re-enable until redesigned to that pattern.
+        # bundle_hubs_in(extracted)
 
         stage = os.path.join(work, "stage")
         os.makedirs(stage)

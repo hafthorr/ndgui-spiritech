@@ -6,7 +6,7 @@ ui.require("notum.ndgui-lib/grid") -- ndGUI: snap to grid while moving/resizing 
 -- Kept from stock: left-click a member to target them, right-click for Leave / Kick / Make leader,
 -- the NCU toggle with each member's buff strip, Leave and Recruit.
 local Window = ui.require("core.window")
-local Strip = ui.require("ncu.strip")
+local Strip = ui.require("notum.ndgui-lib/ncu_strip")
 local Effects = ui.require("effects.presentation")
 local Unit = ui.require("notum.ndgui-lib/unit")
 local content = ui.load("content.xml")
@@ -15,6 +15,28 @@ local toggle = ui.find(content, "ncu_toggle")
 local compact_toggle = ui.find(content, "compact_toggle")
 local invite = ui.find(content, "invite_button")
 local leave = ui.find(content, "leave_button")
+-- marketplace chrome wraps Buttons; size the wrap (View.name is not reliable on userdata)
+local function chrome_of(btn)
+	local function walk(host)
+		for i = 1, ui.child_count(host) do
+			local kid = ui.child(host, i)
+			for j = 1, ui.child_count(kid) do
+				if ui.child(kid, j) == btn then
+					return kid
+				end
+			end
+			local deeper = walk(kid)
+			if deeper then
+				return deeper
+			end
+		end
+	end
+	return walk(content) or btn
+end
+local toggle_chrome = chrome_of(toggle)
+local compact_chrome = chrome_of(compact_toggle)
+local invite_chrome = chrome_of(invite)
+local leave_chrome = chrome_of(leave)
 local rows, members, nanos = {}, {}, {}
 local shows_ncu = false
 local frame, state
@@ -78,9 +100,12 @@ local function layout(window, width, height)
 		end
 	end
 	local button_width, invite_width
+	local leave_h = 28 -- content.xml leave/recruit chrome
 	if docked then
 		-- narrow Compact / NCU; Leave and Recruit share the rest (Recruit alone when not in a team)
+		ui.limits(compact_chrome, DOCKED_COMPACT_W, BUTTON_HEIGHT, DOCKED_COMPACT_W, BUTTON_HEIGHT)
 		ui.limits(compact_toggle, DOCKED_COMPACT_W, BUTTON_HEIGHT, DOCKED_COMPACT_W, BUTTON_HEIGHT)
+		ui.limits(toggle_chrome, DOCKED_NCU_W, BUTTON_HEIGHT, DOCKED_NCU_W, BUTTON_HEIGHT)
 		ui.limits(toggle, DOCKED_NCU_W, BUTTON_HEIGHT, DOCKED_NCU_W, BUTTON_HEIGHT)
 		local room = width - BUTTON_ROW_BORDERS - DOCKED_COMPACT_W - DOCKED_NCU_W - DOCKED_GAP * 3
 		if ui.requested_visible(leave) then
@@ -90,14 +115,18 @@ local function layout(window, width, height)
 			button_width, invite_width = 1, room
 		end
 	else
+		ui.limits(compact_chrome, compact_button_w, BUTTON_HEIGHT, compact_button_w, BUTTON_HEIGHT)
 		ui.limits(compact_toggle, compact_button_w, BUTTON_HEIGHT, compact_button_w, BUTTON_HEIGHT)
+		ui.limits(toggle_chrome, ncu_button_w, BUTTON_HEIGHT, ncu_button_w, BUTTON_HEIGHT)
 		ui.limits(toggle, ncu_button_w, BUTTON_HEIGHT, ncu_button_w, BUTTON_HEIGHT)
 		local fixed = Window.CONTENT_SIDES + BUTTON_ROW_BORDERS + NCU_BUTTON_WITH_GAPS
 		button_width = math.min(BUTTON_WIDTH, (width - fixed) / 2)
 		invite_width = button_width
 	end
-	ui.size(leave, button_width, BUTTON_HEIGHT)
-	ui.size(invite, invite_width, BUTTON_HEIGHT)
+	ui.size(leave_chrome, button_width, leave_h)
+	ui.size(leave, button_width, leave_h)
+	ui.size(invite_chrome, invite_width, leave_h)
+	ui.size(invite, invite_width, leave_h)
 	local minimum_height = HEADER_H + rows_height() + fit_strips(width)
 	if docked then
 		-- the docked page follows its content (no empty floating height below the members)

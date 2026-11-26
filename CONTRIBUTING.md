@@ -3,9 +3,9 @@
 ## Layout of the repo
 
 ```
-addons/                     the 14 hand-made packages, copied into client/UI/Addons as-is
+addons/                     hand-made packages, copied into client/UI/Addons as-is
   ndgui/                    settings host + all the tools and tests
-    tools/                  generators (Python 3.8+, Pillow)
+    tools/                  generators (Python 3.8+, Pillow); bundle_hubs.py merges roles for the 32-cap
     tests/                  offline Lua 5.4 tests against a mock client host
   ndgui-lib/                shared library: window frame, art kit (assets/), Lua modules (lua/)
   ndgui-control-center/     prk.control-center   bottom strip
@@ -13,15 +13,16 @@ addons/                     the 14 hand-made packages, copied into client/UI/Add
   ndgui-compass/            prk.compass
   ndgui-target-panels/      prk.target-panels
   ndgui-hotbar/             prk.hotbar
-  ndgui-playfield-map/      prk.playfield-map    Local Map
-  ndgui-planet-map/         prk.planet-map       Planet Map
+  ndgui-maps/               prk.playfield-map + prk.planet-map (hub)
+  ndgui-team-hub/           prk.team + prk.team-invite (hub)
+  ndgui-mission-hub/        info + missions + terminal
 install.ps1, install.bat    the player installer (PowerShell; ships in the release zip)
 install.py                  install straight from this checkout (developers, Linux/Mac)
 build_release.py            builds release/ndgui-spiritech-<version>.zip (committed; CI publishes it)
 docs/background/            original research and design notes
 ```
 
-The other 26 packages (`ndgui-inventory`, `ndgui-ncu`, …) are **generated** from the game's own `UI/Packages`. They aren't in git: generate them with the tools below. `ndgui-lib/lua/table.lua` is generated too.
+The other packages (`ndgui-inventory`, chat/ncu/raid/hud hubs, …) are **generated** from the game's own `UI/Packages` (then hub-bundled). They aren't in git: generate them with the tools below. `ndgui-lib/lua/table.lua` is generated too.
 
 ## Tools (`addons/ndgui/tools`, run from the installed `client/UI/Addons/ndgui`)
 
@@ -29,6 +30,7 @@ The other 26 packages (`ndgui-inventory`, `ndgui-ncu`, …) are **generated** fr
 | --- | --- |
 | `fork_windows.py` | 20 `core.window` windows → `ndgui-<window>` with the ndGUI frame |
 | `fork_hud.py` | NCU, target NCU, faction, chat, chat config, raid bars, timer bars, team invite, sneak, logout |
+| `bundle_hubs.py` | Merge related roles into multi-Provide hubs (chat/ncu/maps/raid/team/hud-indicators) for the portal 32-package cap |
 | `lib_table.py` | `ndgui-lib/lua/table.lua` from Core's table: movable and hideable list columns |
 | `square_buttons.py` | square 3-slice buttons in every ndgui package and the game's `UI/Layouts`; `--restore`, `--addons-only` |
 | `skin.py` | DarkTech skin into `cd_image/gui/Default` (from `*.stock`); `--restore`, `--preview DIR`, `--overlay DIR` |

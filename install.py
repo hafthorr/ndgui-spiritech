@@ -204,9 +204,14 @@ def ours(folder):
     return bool(re.search(r'<Package id="notum\.ndgui', open(manifest, encoding="utf-8").read()))
 
 
-# Packages earlier releases installed that a newer one replaced (0.2.7: ndgui-mission-hub provides
-# Info, Missions and Mission Terminal). Left installed they would claim those roles again.
-OBSOLETE = ("ndgui-info", "ndgui-missions", "ndgui-mission-terminal")
+# Packages earlier releases installed that a newer one replaced. Left installed they would
+# claim those roles again (0.2.7 → mission-hub).
+OBSOLETE = (
+    "ndgui-info",
+    "ndgui-missions",
+    "ndgui-mission-terminal",
+    "notum.ndgui",  # legacy theme package with no Provides
+)
 
 
 def copy_packages(client):

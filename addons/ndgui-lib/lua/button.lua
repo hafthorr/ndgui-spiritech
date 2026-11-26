@@ -106,13 +106,27 @@ ui.define("notum.ndgui-lib/button", function()
 		end
 	end
 
+	local function is_btnwrap(view)
+		-- ui.find resolves XML names; View.name on userdata is not reliable.
+		local ok, chrome = pcall(ui.find, view, "ndgui_chrome")
+		if not ok or not chrome then
+			return false
+		end
+		for i = 1, ui.child_count(view) do
+			if ui.child(view, i) == chrome then
+				return true
+			end
+		end
+		return false
+	end
+
 	-- Skin every ndgui_btnwrap under root (wrappers from square_buttons.py).
 	function M.skin_tree(root)
 		if not root then
 			return
 		end
 		walk(root, function(view)
-			if view.name == "ndgui_btnwrap" then
+			if is_btnwrap(view) then
 				local ok = pcall(bind_wrap, view)
 				if not ok then
 					-- Missing chrome / unexpected XML: leave the flat Button usable.

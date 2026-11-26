@@ -94,6 +94,146 @@ def fork(src, role, title):
         if n:
             code = code.replace("Window.create({", 'Window.create({\n\ttemplate = "%s",' % TEMPLATE)
             creates += n
+        if src == "Skills" and fn == first_script:
+            # square_buttons wraps category Buttons; reparent the wrap with the Button.
+            # Match by child identity — View userdata may not expose XML name via .name.
+            old = (
+                "\tvalue.button = ui.find(tree, value.name)\n"
+                '\tvalue.root = ui.load("category.xml")\n'
+                '\tui.add(ui.find(value.root, "button_host"), value.button)\n'
+            )
+            new = (
+                "\tvalue.button = ui.find(tree, value.name)\n"
+                "\t-- A wrap is the 2-child view holding ndgui_chrome and this button.\n"
+                "\t-- View.name and view equality are not reliable on userdata.\n"
+                "\tlocal function wrap_holding(host, name)\n"
+                "\t\tfor i = 1, ui.child_count(host) do\n"
+                "\t\t\tlocal kid = ui.child(host, i)\n"
+                "\t\t\tlocal ok_b, btn = pcall(ui.find, kid, name)\n"
+                "\t\t\tlocal ok_c, chrome = pcall(ui.find, kid, \"ndgui_chrome\")\n"
+                "\t\t\tif ok_b and btn and ok_c and chrome and ui.child_count(kid) == 2 then\n"
+                "\t\t\t\treturn kid, btn\n"
+                "\t\t\tend\n"
+                "\t\t\tlocal deeper, deep_btn = wrap_holding(kid, name)\n"
+                "\t\t\tif deeper then\n"
+                "\t\t\t\treturn deeper, deep_btn\n"
+                "\t\t\tend\n"
+                "\t\tend\n"
+                "\tend\n"
+                "\tlocal move, button = wrap_holding(tree, value.name)\n"
+                "\tif button then\n"
+                "\t\tvalue.button = button\n"
+                "\tend\n"
+                "\tmove = move or value.button\n"
+                '\tvalue.root = ui.load("category.xml")\n'
+                '\tui.add(ui.find(value.root, "button_host"), move)\n'
+            )
+            if old not in code:
+                raise SystemExit(f"{src}: category button reparent block changed shape")
+            code = code.replace(old, new, 1)
+            vis_old = (
+                "\tfor _, name in ipairs({ \"reset_all\", \"accept\", \"quit\" }) do\n"
+                "\t\tui.visible(ui.find(expanded, name), not priorities)\n"
+                "\tend\n"
+                "\tfor _, name in ipairs({ \"restore_priorities\", \"save_priorities\", \"cancel_priorities\" }) do\n"
+                "\t\tui.visible(ui.find(expanded, name), priorities)\n"
+                "\tend\n"
+            )
+            vis_new = (
+                "\tlocal function chrome_target(root, name)\n"
+                "\t\tlocal function walk(host)\n"
+                "\t\t\tfor i = 1, ui.child_count(host) do\n"
+                "\t\t\t\tlocal kid = ui.child(host, i)\n"
+                "\t\t\t\tlocal ok_b, btn = pcall(ui.find, kid, name)\n"
+                "\t\t\t\tlocal ok_c, chrome = pcall(ui.find, kid, \"ndgui_chrome\")\n"
+                "\t\t\t\tif ok_b and btn and ok_c and chrome and ui.child_count(kid) == 2 then\n"
+                "\t\t\t\t\treturn kid\n"
+                "\t\t\t\tend\n"
+                "\t\t\t\tlocal deeper = walk(kid)\n"
+                "\t\t\t\tif deeper then\n"
+                "\t\t\t\t\treturn deeper\n"
+                "\t\t\t\tend\n"
+                "\t\t\tend\n"
+                "\t\tend\n"
+                "\t\treturn walk(root) or ui.find(root, name)\n"
+                "\tend\n"
+                "\tfor _, name in ipairs({ \"reset_all\", \"accept\", \"quit\" }) do\n"
+                "\t\tui.visible(chrome_target(expanded, name), not priorities)\n"
+                "\tend\n"
+                "\tfor _, name in ipairs({ \"restore_priorities\", \"save_priorities\", \"cancel_priorities\" }) do\n"
+                "\t\tui.visible(chrome_target(expanded, name), priorities)\n"
+                "\tend\n"
+            )
+            if vis_old not in code:
+                raise SystemExit(f"{src}: button visibility block changed shape")
+            code = code.replace(vis_old, vis_new, 1)
+        if src == "NanoPrograms" and fn == first_script:
+            old = (
+                "local toolbar_buttons = {\n"
+                "\t{ view = favorites, width = 121, row = 1 },\n"
+                "\t{ view = schools[1], width = 75, row = 1 },\n"
+                "\t{ view = schools[2], width = 77, row = 1 },\n"
+                "\t{ view = schools[3], width = 54, row = 1 },\n"
+                "\t{ view = schools[4], width = 53, row = 1 },\n"
+                "\t{ view = schools[5], width = 54, row = 1 },\n"
+                "}\n"
+            )
+            new = (
+                "-- marketplace chrome wraps school Buttons; reflow must move the wrap, not the bare Button\n"
+                "-- (do not key on View.name — userdata may not expose the XML name attribute)\n"
+                "local function chrome_or(btn)\n"
+                "\tfor i = 1, ui.child_count(first_row) do\n"
+                "\t\tlocal kid = ui.child(first_row, i)\n"
+                "\t\tfor j = 1, ui.child_count(kid) do\n"
+                "\t\t\tif ui.child(kid, j) == btn then\n"
+                "\t\t\t\treturn kid\n"
+                "\t\t\tend\n"
+                "\t\tend\n"
+                "\tend\n"
+                "\treturn btn\n"
+                "end\n"
+                "local toolbar_buttons = {\n"
+                "\t{ view = chrome_or(favorites), width = 121, row = 1 },\n"
+                "\t{ view = chrome_or(schools[1]), width = 75, row = 1 },\n"
+                "\t{ view = chrome_or(schools[2]), width = 77, row = 1 },\n"
+                "\t{ view = chrome_or(schools[3]), width = 54, row = 1 },\n"
+                "\t{ view = chrome_or(schools[4]), width = 53, row = 1 },\n"
+                "\t{ view = chrome_or(schools[5]), width = 54, row = 1 },\n"
+                "}\n"
+            )
+            if old not in code:
+                raise SystemExit(f"{src}: toolbar_buttons block changed shape")
+            code = code.replace(old, new, 1)
+            # Stock sizes bare 16px buttons; wrapped chrome is CONTROL_HEIGHT (22).
+            code = code.replace(
+                "local SEARCH_LABEL_WIDTH, SEARCH_FIELD_MINIMUM, CONTROL_HEIGHT, BUTTON_HEIGHT, BUTTON_GAP, ROW_GAP = 50, 100, 22, 16, 8, 4\n",
+                "local SEARCH_LABEL_WIDTH, SEARCH_FIELD_MINIMUM, CONTROL_HEIGHT, BUTTON_GAP, ROW_GAP = 50, 100, 22, 8, 4\n",
+                1,
+            )
+            code = code.replace(
+                "\tui.size(button.view, button.width, BUTTON_HEIGHT)\n",
+                "\tui.size(button.view, button.width, CONTROL_HEIGHT)\n",
+                1,
+            )
+        if src == "Pets" and fn == first_script:
+            if 'ui.require("ncu.strip")' not in code:
+                raise SystemExit(f"{src}: expected ncu.strip require")
+            code = code.replace(
+                'ui.require("ncu.strip")',
+                'ui.require("notum.ndgui-lib/ncu_strip")',
+                1,
+            )
+            open(os.path.join(ddir, "pet_ncu_slot.xml"), "w", encoding="utf-8", newline="\n").write(
+                '<?xml version="1.0" encoding="utf-8"?>\n<root>\n'
+                '  <View name="ndgui_slotcell" view_layout="stacked" '
+                'min_size="Point(26,18)" max_size="Point(26,18)">\n'
+                '    <BitmapView name="ndgui_slot_back" interactive="false" '
+                'image="library://notum.ndgui-lib/slots/open_46x30.png" '
+                'min_size="Point(26,18)" max_size="Point(26,18)" />\n'
+                '    <ItemSlotView name="ndgui_slot" min_size="Point(26,18)" max_size="Point(26,18)" '
+                'slot_gfx="" icon_inset="4" icon_inset_y="5" icon_fit="cover" overlay_inset="3" />\n'
+                "  </View>\n</root>\n"
+            )
         open(path, "w", encoding="utf-8", newline="\n").write(MARK.format(src=src) + code)
     if creates < 1:
         raise SystemExit(f"{src}: no Window.create({{ found")

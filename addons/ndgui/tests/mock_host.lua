@@ -1,6 +1,7 @@
 -- Offline mock of the Spiritech package host. Loads a package directory the way the
 -- client does: package.xml <Script> order, <Requires> libraries with <Modules root>,
--- sandboxed env (no debug/load/require), real Core/vitals.lua, stubbed core.move.
+-- sandboxed env (no debug/package.require; load is allowed for hub embeds), real
+-- Core/vitals.lua, stubbed core.move.
 local M = {}
 
 local function read(path)
@@ -208,8 +209,8 @@ function M.new(addons_dir, core_dir, opts)
 
   local env = { ui = ui, game = game, math = math, string = string, table = table, pairs = pairs, ipairs = ipairs,
     type = type, tostring = tostring, tonumber = tonumber, pcall = pcall, error = error, select = select,
-    next = next, assert = assert, setmetatable = setmetatable, getmetatable = getmetatable, rawget = rawget,
-    rawset = rawset, print = print, os = { time = os.time, clock = os.clock, date = os.date } }
+    next = next, assert = assert, load = load, setmetatable = setmetatable, getmetatable = getmetatable,
+    rawget = rawget, rawset = rawset, print = print, os = { time = os.time, clock = os.clock, date = os.date } }
   env._G = env
   H.env = env
 

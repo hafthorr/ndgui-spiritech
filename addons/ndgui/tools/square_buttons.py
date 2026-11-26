@@ -79,11 +79,28 @@ def attr(tag, name):
 
 
 def unwrap_buttons(text):
-    """Peel ndgui_btnwrap layers until none remain (fixes nested wraps)."""
+    """Peel ndgui_btnwrap layers until none remain (fixes nested wraps).
+
+    Spacing and visibility live on the wrap after skinning. Put them back on
+    the Button so the next skin pass can move them again.
+    """
     total = 0
+
+    def peel(m):
+        nonlocal total
+        total += 1
+        wrap = m.group(0)
+        btn = m.group(1)
+        open_end = wrap.find(">")
+        open_tag = wrap[:open_end]
+        for name in ("weight", "layout_borders", "v_alignment", "h_alignment", "visible"):
+            val = re.search(r'\b' + name + r'="([^"]*)"', open_tag)
+            if val and not re.search(r'\b' + name + r'="', btn):
+                btn = btn.replace("<Button", f'<Button {name}="{val.group(1)}"', 1)
+        return btn
+
     while True:
-        text, n = WRAP.subn(r"\1", text)
-        total += n
+        text, n = WRAP.subn(peel, text)
         if n == 0:
             break
     return text, total
