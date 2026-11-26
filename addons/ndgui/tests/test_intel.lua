@@ -178,6 +178,25 @@ check(#fct.released == 1 and fct.released[1] == 2, "the merged-away event's anch
 fct.env.floating_text_tick({ { token = 1, visible = true, x = 500, y = 400, distance = 10 } }, 9.0)
 check(#fct.released == 2, "expired text releases its anchor")
 
+-- an anchor past the host limit used to place the shadow at 16385 and unload the package
+do
+  local LIMIT = 16384
+  local raw = fct.ui.place
+  fct.ui.place = function(v, x, y)
+    assert(type(x) == "number" and x == x and x >= -LIMIT and x <= LIMIT, "place x " .. tostring(x))
+    assert(type(y) == "number" and y == y and y >= -LIMIT and y <= LIMIT, "place y " .. tostring(y))
+    return raw(v, x, y)
+  end
+  fct.env.floating_text_spawn({ { token = 9, text = "50", rgb = 0xFFFFFF, random = 0.5 } }, 9.1)
+  local ok, err = pcall(fct.env.floating_text_tick, { { token = 9, visible = true, x = 100000, y = 0/0, distance = 10 } }, 9.2)
+  check(ok, "an out-of-range anchor does not unload floating combat text: " .. tostring(err))
+  local placed = false
+  for _, kid in ipairs(fct.root.kids) do
+    if kid.text == "50" and kid.x and kid.x <= LIMIT and kid.y and kid.y <= LIMIT then placed = true end
+  end
+  check(placed, "that text is still placed inside the host extent")
+end
+
 -- chat -> bus -> HUD
 chat.env.chat_present({
   msg({ kind = "tell", structured = true, sender = "Alice", body = "u there?" }),

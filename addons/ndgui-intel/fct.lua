@@ -23,7 +23,17 @@ ui.define("intel.fct", function()
 	local BIG_SHARE = 0.8 -- of the session's biggest number
 	local GOLD = "#FFD24A"
 	local SHADOW = "#000000"
+	local LIMIT = 16384 -- ui.place rejects anything outside this; one step past it unloads the package
 	F.MERGE_S, F.MERGE_PX = MERGE_S, MERGE_PX
+
+	-- finite and inside the host's place extent. A non-finite anchor becomes 0 rather than NaN,
+	-- which math.min would otherwise turn into the positive edge.
+	local function axis(n)
+		if type(n) ~= "number" or n ~= n or n == math.huge or n == -math.huge then
+			return 0
+		end
+		return math.max(-LIMIT, math.min(LIMIT, math.floor(n)))
+	end
 
 	-- the first number in a text: "Hit 1,234 points" -> 1234; nil without one
 	function F.number(text)
@@ -104,6 +114,9 @@ ui.define("intel.fct", function()
 
 	function F.spawn(events, now)
 		local size = math.floor(setting("number", "text-size", 16) + 0.5)
+		if not (size >= 1) then
+			size = 16
+		end
 		local pop = setting("toggle", "big-hits", true)
 		for _, event in ipairs(events) do
 			local value = F.number(event.text)
@@ -170,13 +183,12 @@ ui.define("intel.fct", function()
 						local font = math.max(MIN_SIZE, math.min(96, math.floor(event.size * scale + 0.5)))
 						ui.font_size(event.view, font)
 						ui.font_size(event.shadow, font)
-						local k = font / event.size
+						local k = event.size >= 1 and (font / event.size) or 1
 						local eased = 1 - (1 - age) * (1 - age) -- fast up, then settling
 						local x = anchor.x + event.offset * k - ui.desired_width(event.view) / 2
 						local y = anchor.y - ui.desired_height(event.view) - RISE * k * eased
-						x = math.max(-16384, math.min(16384, math.floor(x)))
-						y = math.max(-16384, math.min(16384, math.floor(y)))
-						ui.place(event.shadow, x + 1, y + 1)
+						x, y = axis(x), axis(y)
+						ui.place(event.shadow, math.min(LIMIT, x + 1), math.min(LIMIT, y + 1))
 						ui.place(event.view, x, y)
 					end
 					local opacity = age <= 0.6 and 1 or math.max(0, (1 - age) / 0.4)

@@ -38,6 +38,13 @@ from it for the Spiritech portal. CI cannot build the player zip; that still nee
 The player zip ships `install.py` beside `install.bat`. From that unpacked folder it installs
 the prebuilt `game/` tree (no Pillow, no generators). A git checkout still builds from source.
 
+### Floating combat text (2026-11-26)
+
+The first overhead number unloaded the package. `ui.place` only accepts coordinates from
+-16384 to 16384. `fct.lua` clamped the text, then placed the shadow one pixel further, and
+that error is fatal for the whole role. The shadow is now clamped too, and a non-finite
+anchor becomes 0. Confirmed in game on 2026-11-26. The 0.3.7 zips do not include this fix.
+
 ## Hub bundling — rolled back (2026-11-25)
 
 ### What was working
