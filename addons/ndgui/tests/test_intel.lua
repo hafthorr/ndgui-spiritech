@@ -237,6 +237,7 @@ do
   local Z = vm().ui.require("intel.zone")
   check(Z.zone_name({ "Suppression field at 75%. Wildlife may attack you.", "Omni-1 Trade" }) == "Omni-1 Trade", "zone name skips the gas sentence")
   check(Z.zone_name({ "Suppression field at 75%. Wildlife may attack you." }) == nil, "no name when there is only a notice")
+  check(Z.zone_name({ "Suppression field at 75%. Wildlife may attack you.", "Entering 'Newland City'." }) == "Newland City", "zone name from Entering '...' (as the client sends it)")
 end
 
 -- ---- alt items (ndgui-inventory's "which character has it") ----------------------------------

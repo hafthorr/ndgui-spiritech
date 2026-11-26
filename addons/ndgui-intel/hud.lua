@@ -157,6 +157,7 @@ ui.define("intel.hud", function()
 		function w.resize(height)
 			w.height = height
 			ui.size(view, w.width, height)
+			ui.size(w.title, w.width - 46, 24) -- a weight-only TextView gets no width here
 			local p = pos[key]
 			if p then
 				put(key, view, p.x, p.y, w.width, height)
@@ -316,6 +317,7 @@ ui.define("intel.hud", function()
 			local view = ui.load("log_row.xml")
 			ui.add(logw.content, view)
 			logw.rows[index] = { root = view, time = ui.find(view, "log_time"), kind = ui.find(view, "log_kind"), text = ui.find(view, "log_text") }
+			ui.size(logw.rows[index].text, LOG_W - 110, 18)
 			ui.visible(view, false)
 		end
 		place("log", logw.root, LOG_W, 200, function(sw, sh) return sw - LOG_W - 40, sh * 0.35 end)
@@ -381,6 +383,7 @@ ui.define("intel.hud", function()
 			kind = ui.find(view, "alert_kind"), text = ui.find(view, "alert_text"), hit = ui.find(view, "alert_hit") }
 		ui.add(layer, view)
 		ui.visible(view, false)
+		ui.size(alert.text, ALERT_W - 70, ALERT_H)
 		place("alert", view, ALERT_W, ALERT_H, function(sw) return (sw - ALERT_W) / 2, 212 end)
 		ui.on_click(alert.hit, function()
 			alert_state.until_ms = 0
@@ -397,6 +400,9 @@ ui.define("intel.hud", function()
 			return
 		end
 		local old = Ledger.parse(Bus.get("alt:" .. me.id))
+		if old.z and old.z:find("%", 1, true) then
+			old.z = nil -- 0.4 dev builds saved a gas notice as the zone
+		end
 		local fields = {
 			n = me.name, l = me.level or old.l, p = me.profession or old.p, o = me.org or old.o,
 			cr = me.cash or old.cr, xp = me.xp_permille or old.xp,
@@ -545,6 +551,7 @@ ui.define("intel.hud", function()
 		build_alts()
 		build_log()
 		built = true
+		Bus.set("diag:hud_error", "")
 		game.character.subscribe("self", "61,169", on_self)
 	end
 

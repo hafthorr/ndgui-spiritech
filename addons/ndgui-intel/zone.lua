@@ -88,6 +88,12 @@ ui.define("intel.zone", function()
 	-- may attack you."), not a countdown
 	function Z.zone_name(lines)
 		for _, line in ipairs(lines or {}) do
+			local entering = (line or ""):match("Entering '(.-)'") or (line or ""):match('Entering "(.-)"')
+			if entering and entering ~= "" then
+				return entering
+			end
+		end
+		for _, line in ipairs(lines or {}) do
 			local text = (line or ""):gsub("^%s+", ""):gsub("%s+$", "")
 			if text ~= "" and #text <= 60 and not text:find("[%.!%%:]") and not text:lower():find("suppression", 1, true) then
 				return text
