@@ -15,6 +15,7 @@ addons/                     the 14 hand-made packages, copied into client/UI/Add
   ndgui-hotbar/             prk.hotbar
   ndgui-playfield-map/      prk.playfield-map    Local Map
   ndgui-planet-map/         prk.planet-map       Planet Map
+  ndgui-intel/              prk.chat + prk.floating-combat-text + prk.zone-notice: Intel HUD, alerts, alts
 install.ps1, install.bat    the player installer (PowerShell; ships in the release zip)
 install.py                  install straight from this checkout (developers, Linux/Mac)
 build_release.py            builds release/ndgui-spiritech-<version>.zip (committed; CI publishes it)
@@ -72,6 +73,10 @@ All three must print `ALL PASS`. CI only syntax-checks (it has no game client).
 4. Commit (including the zip), `git tag v<version>`, `git push --follow-tags`.
 
 The GitHub release workflow (`.github/workflows/release.yml`) then creates the release by itself: notes from the changelog, the zip as the download. It fails loudly if the zip, `VERSION` or changelog section doesn't match the tag. CI can't build the zip itself because that needs a game client.
+
+## Sharing data between roles (`ndgui-lib/lua/bus.lua`)
+
+A package can provide several roles, but the client runs each in its own Lua VM, and they all load the same scripts. A VM learns its role from its first callback (see `ndgui-intel/main.lua` and `ndgui-mission-hub/main.lua`). The VMs share the package's `ui.storage`, so `bus.lua` puts an event ring (`publish` / `reader().poll`), last-value state (`set` / `get`) and a lease (`lease(name, owner, now, ttl)`, for "only one VM draws this") on top of it. Storage is per package id, so only roles of the same package can talk. `tests/test_intel.lua` runs several mock VMs over one storage table.
 
 ## Rules of thumb
 

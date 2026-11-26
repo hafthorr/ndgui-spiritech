@@ -1,0 +1,17 @@
+<?xml version="1.0"?>
+<root>
+  <View name="alt_row" view_layout="stacked" min_size="Point(-1,20)" max_size="Point(-1,20)" layout_borders="Rect(0,0,0,1)">
+    <BorderView name="alt_back" fill_color="0x900A1016" />
+    <View view_layout="horizontal">
+      <BitmapView name="alt_prof" min_size="Point(16,16)" max_size="Point(16,16)" v_alignment="center" layout_borders="Rect(3,0,4,0)" />
+      <TextView name="alt_name" value="" color="E6EEF5" font_size="12" size_to_text="false" interactive="true" min_size="Point(124,20)" max_size="Point(124,20)" v_alignment="center" />
+      <TextView name="alt_level" value="" color="C6A24E" font_size="12" size_to_text="false" text_alignment="right" min_size="Point(34,20)" max_size="Point(34,20)" v_alignment="center" layout_borders="Rect(0,0,8,0)" />
+      <TextView name="alt_xp" value="" color="7F9BB0" font_size="11" size_to_text="false" min_size="Point(40,20)" max_size="Point(40,20)" v_alignment="center" />
+      <TextView name="alt_cash" value="" color="9CD69C" font_size="12" size_to_text="false" text_alignment="right" min_size="Point(70,20)" max_size="Point(70,20)" v_alignment="center" layout_borders="Rect(0,0,10,0)" />
+      <TextView name="alt_zone" value="" color="C5D7E6" font_size="11" size_to_text="false" interactive="true" min_size="Point(150,20)" max_size="Point(150,20)" v_alignment="center" />
+      <TextView name="alt_seen" value="" color="7F9BB0" font_size="11" size_to_text="false" min_size="Point(62,20)" max_size="Point(62,20)" v_alignment="center" />
+      <TextView name="alt_locks" value="" color="E08A3C" font_size="11" size_to_text="false" interactive="true" min_size="Point(150,20)" max_size="Point(150,20)" v_alignment="center" />
+      <Button name="alt_forget" label="x" flat="true" font_size="11" min_size="Point(18,18)" max_size="Point(18,18)" v_alignment="center" tooltip="Forget this character (click twice)" />
+    </View>
+  </View>
+</root>

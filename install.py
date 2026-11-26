@@ -205,8 +205,9 @@ def ours(folder):
 
 
 # Packages earlier releases installed that a newer one replaced (0.2.7: ndgui-mission-hub provides
-# Info, Missions and Mission Terminal). Left installed they would claim those roles again.
-OBSOLETE = ("ndgui-info", "ndgui-missions", "ndgui-mission-terminal")
+# Info, Missions and Mission Terminal; 0.4.0: ndgui-intel provides Chat). Left installed they would
+# claim those roles again.
+OBSOLETE = ("ndgui-info", "ndgui-missions", "ndgui-mission-terminal", "ndgui-chat")
 
 
 def copy_packages(client):

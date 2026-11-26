@@ -709,7 +709,7 @@ check(same, "library colors match theme.lua darktech")
 -- fork_hud.py packages: each loads under the mock host and declares its role.
 for _, case in ipairs({
   { "ndgui-ncu", "prk.ncu" }, { "ndgui-target-ncu", "prk.target-ncu" }, { "ndgui-faction", "prk.faction" },
-  { "ndgui-chat", "prk.chat" }, { "ndgui-chat-config", "prk.chat-config" }, { "ndgui-raid-bar", "prk.raid-bars" },
+  { "ndgui-intel", "prk.chat" }, { "ndgui-chat-config", "prk.chat-config" }, { "ndgui-raid-bar", "prk.raid-bars" },
   { "ndgui-timer-bars", "prk.timer-bars" }, { "ndgui-team-invite", "prk.team-invite" },
   { "ndgui-sneak-indicator", "prk.sneak-indicator" }, { "ndgui-logout-progress", "prk.logout-progress" },
 }) do

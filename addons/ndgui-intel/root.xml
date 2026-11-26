@@ -1,0 +1,16 @@
+<?xml version="1.0" standalone="yes"?>
+<root>
+  <!-- One root for every role of this package (each role runs in its own VM): the chat content
+       (shown only in the chat VM), and the layer the floating texts, zone notice and HUD go on. -->
+  <View name="ndgui_intel" view_layout="stacked" capture_input="false">
+    <View name="chat_content" view_layout="vertical" weight="1" layout_borders="Rect(2,2,2,2)">
+      <BorderView name="chat_log_frame" view_layout="vertical" border_gfx="GFX_GUI_INSET" tint="C5D7E6" draw_background="false" weight="1" layout_borders="Rect(0,0,0,3)">
+        <ScrollView name="chat_log" view_layout="vertical" capture_input="true" v_scrollbar_mode="auto" weight="1" layout_borders="Rect(5,3,5,3)" />
+      </BorderView>
+      <BorderView name="chat_entry" view_layout="horizontal" border_style="input" hidden_border_divider="0x50A0A0A0" min_size="Point(-1,28)" max_size="Point(-1,28)">
+        <TextButton name="chat_target" label="Vicinity" color="7F9BB0" hover_color="C5D7E6" font_size="13" v_alignment="center" layout_borders="Rect(6,0,2,0)" />
+        <TextInputView name="chat_input" draw_border="false" weight="1" font_size="13" max_length="255" min_size="Point(0,28)" max_size="Point(-1,28)" v_alignment="center" />
+      </BorderView>
+    </View>
+  </View>
+</root>

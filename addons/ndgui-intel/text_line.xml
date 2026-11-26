@@ -1,0 +1,4 @@
+<?xml version="1.0"?>
+<root>
+  <TextView name="line" value="" color="7F9BB0" font_size="11" size_to_text="false" min_size="Point(-1,18)" max_size="Point(-1,18)" v_alignment="center" />
+</root>
