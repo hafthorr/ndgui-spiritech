@@ -23,8 +23,17 @@ under-24 branch.
 
 ### Marketplace cap
 
-Leave all 40 `notum.ndgui*` packages. No hubs and no dropped roles until this visual pass is
-confirmed in game. Do not run `bundle_hubs.py`. Local zip only; no push and no PR.
+The portal cap was raised. Ship every role. Do not run `bundle_hubs.py`.
+
+### Intel (merged from `feature/intel`, 2026-11-26)
+
+Denis's unreleased Intel package provides chat, floating combat text, and the zone
+notice. `fork_hud.py` no longer generates `ndgui-chat`. The installer deletes a leftover
+`ndgui-chat` / `notum.ndgui-chat`. Inventory search and Buff Watch Target Debuffs come
+with that merge. Changelog section is still `## Unreleased`, and `VERSION` is still 0.3.7.
+
+A tag `vX.Y.Z` publishes the committed player zip and CI rebuilds `release/ndgui-<version>.zip`
+from it for the Spiritech portal. CI cannot build the player zip; that still needs a client.
 
 ## Hub bundling — rolled back (2026-11-25)
 

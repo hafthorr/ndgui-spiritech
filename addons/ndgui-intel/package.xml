@@ -1,0 +1,18 @@
+<Package id="notum.ndgui-intel" name="Notum Dovvetech Intel">
+  <Requires package="notum.ndgui-lib" />
+  <Provides role="prk.chat" />
+  <Provides role="prk.floating-combat-text" />
+  <Provides role="prk.zone-notice" />
+  <Options category="combat" section="floating-combat-text">
+    <Slider key="text-size" label="Combat text size" scope="machine" default="16" hint="Logical pixels up close." min="8" max="64" steps="56" unit=" px" />
+    <Toggle key="merge-hits" label="Merge quick hits" scope="machine" default="true" hint="Hits landing on one target within half a second add up: 2,340 x5." />
+    <Toggle key="big-hits" label="Pop big hits" scope="machine" default="true" hint="Criticals and hits near your best of the session start big, in gold." />
+  </Options>
+  <Script src="sniff.lua" />
+  <Script src="ledger.lua" />
+  <Script src="chat.lua" />
+  <Script src="fct.lua" />
+  <Script src="zone.lua" />
+  <Script src="hud.lua" />
+  <Script src="main.lua" />
+</Package>

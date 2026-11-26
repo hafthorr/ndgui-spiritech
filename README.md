@@ -25,7 +25,7 @@ Near-black navy panels, steel-blue frames, a blue accent, square buttons. The cl
 - **Docking column and minibar** (Options > Interface & HUD): right-click a window's title, move to the right-edge column, left-click to dock it.
 - Smooth bar fills everywhere (no segment blocks).
 - **Hotbars** with a DarkTech plate, recessed slots, a lit rail on the active bar, and a spinner that doubles as the drag handle.
-- Restyled **NCU, target NCU, faction, chat, chat config, raid bars, timer bars, team invite, sneak indicator, logout countdown**.
+- Restyled **NCU, target NCU, faction, chat config, raid bars, timer bars, team invite, sneak indicator, logout countdown**.
 
 **Windows** (every `core.window` window gets the ndGUI frame)
 Inventory, Wear, Stats, Skills, Nano Programs, Team, Raid, Friends, Pets, Perks, Trade, Tradeskills, Market, Info, NPC dialogue, Actions, Agg/Def, chat windows.
@@ -46,6 +46,17 @@ Inventory, Wear, Stats, Skills, Nano Programs, Team, Raid, Friends, Pets, Perks,
 - **Buff Watch**: your buffs and debuffs with icons, time left and draining bars (debuffs first in red, then soonest to end; amber under 1 min, red and blinking at the end), and what *you* put on your target (your DoTs, debuffs, or buffs on a friend). Right-click a buff: **Always show as a row**, **Don't warn about this buff** (team auras), **Hide this buff**.
 - **Team Buffs**: one row per member, one column per buff anyone has; red cells are missing buffs (`Bob  -1`). Click a member to target them, then cast as usual (addons can't cast).
 - **Alerts** under the compass: low health, a debuff landing, low nano, a long buff about to end. Toggle it from Buff Watch's title icon menu.
+
+**Intel** (AI-hand-made; one package for chat, overhead combat text and zone notices, so they can share what they see)
+- **Intel strip** (top left, drag by its grip): XP / alien XP / credits **per hour** this session, **time to your next level** (from the last 10 minutes), session clock. Hover for totals. **Alts**, **Log** and **0** (start the counters over) buttons.
+- **Alerts**: a banner for a **tell**, **your name** said in any channel, or a **watch word** (`WTS`, an item name…). The chat line gets a coloured `>` in front. Click the banner for the **Log**: this session's alerts and loot, newest first.
+- **Alts**: every character you've played with ndGUI on this PC: profession, level, XP %, credits (and the total over all of them), last zone, when you last played it, and its **raid locks** (press **Raid Locks** in the Raid window once on each character; ndGUI reads the answer from chat). Click `x` twice to forget one.
+- **"Which character has it?"**: every bag and bank window you open is remembered per character. Type in a bag's search box and a gold **`Alts: 2`** beside it lists where else that item is (hover it): other characters, your bank.
+- **Overhead combat numbers** in ndGUI style with a shadow: quick hits on the same target **merge** into one growing number (`2,340 x5`), criticals and hits near your best of the session **pop** big and gold. Both toggles and the size are in Options > Combat > Floating combat text.
+- **Zone notice** in ndGUI colours (it also tells Alts where you are).
+- **Commands**, typed where only you see them: `/ndgui alts`, `/ndgui log`, `/ndgui hud` (hide/show the strip), `/ndgui reset`, `/ndgui watch <word>`, `/ndgui unwatch <word>`, `/ndgui words`. If the game sends unknown slash commands to the server instead of answering locally, send them as a tell to yourself (`/tell <you> ndgui alts`).
+
+**Target Debuffs** (in Buff Watch; Control Center > Actions > **Addons** > Target Debuffs): your effects on the target as draining bars, red at the end. It **learns your rotation**: an effect of yours seen on two different enemies is one you keep up, and when your enemy target lacks it a pulsing red **REAPPLY** row shows. Right-click a row to stop (or start) tracking it; the title icon menu forgets the lot.
 
 **Local Map** (AI-hand-made)
 - Toolbar: zoom −/+ (and the mouse wheel), Me, Follow, Trail, Rings, Show (marker filters), Mini.
@@ -118,12 +129,14 @@ The Grid Overlay always draws the size you set (a small grid shows every 2nd / 3
 
 ## How it works (one paragraph)
 
-Spiritech loads Lua/XML UI packages from `client/UI/Addons`. This repo holds **15 totally AI-hand-made packages** ([`addons/`](addons)) and the Python tools that derive the other **26** from the game's own UI. They also square every button and paint the DarkTech skin. `build_release.py` runs all of that once, on a developer's machine, and zips the result (player zip plus a packages-only marketplace suite for the Spiritech Addons page). The Marketplace install is packages only; `install.ps1` also swaps in patched screen layouts, merges skin images into the game's graphics atlas (`cd_image/gui/Default`), and can select the ndGUI providers. It keeps `*.stock` backups of everything it touches. Details are in [CONTRIBUTING.md](CONTRIBUTING.md) and [docs/marketplace-listing.md](docs/marketplace-listing.md).
+Spiritech loads Lua/XML UI packages from `client/UI/Addons`. This repo holds **16 totally AI-hand-made packages** ([`addons/`](addons)) and the Python tools that derive the other **25** from the game's own UI. They also square every button and paint the DarkTech skin. `build_release.py` runs all of that once, on a developer's machine, and zips the result (player zip plus a packages-only marketplace suite for the Spiritech Addons page). The Marketplace install is packages only; `install.ps1` also swaps in patched screen layouts, merges skin images into the game's graphics atlas (`cd_image/gui/Default`), and can select the ndGUI providers. It keeps `*.stock` backups of everything it touches. Details are in [CONTRIBUTING.md](CONTRIBUTING.md) and [docs/marketplace-listing.md](docs/marketplace-listing.md).
 
 ## Known limits
 
 - **Waypoints from the Local Map are parked.** The client's native "add waypoint" did nothing in testing. Mission waypoints from the game itself still work.
-- The client draws some things itself, and those can't be restyled: Options dropdowns, On/Off toggles, the scale slider, nameplates, floating combat text.
+- The client draws some things itself, and those can't be restyled: Options dropdowns, On/Off toggles, the scale slider.
+- Intel only sees chat lines the client delivers to a chat window: a message type you filtered out of every window raises no alert. Loot lines are recognised by their wording (`You received ...`); a wording it doesn't know isn't logged.
+- Two backpacks with the same name share one entry in "which character has it".
 - Login, character select, character creation and loading screens: the buttons are square, but the art is still stock.
 - Inventory list and NCU apply a new column order after a restart. The client builds their rows itself.
 - Windows is what's tested. Linux and Mac should work (the tools are plain Python), but nobody has tried yet.

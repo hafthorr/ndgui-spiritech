@@ -5,7 +5,7 @@
 ```
 addons/                     hand-made packages, copied into client/UI/Addons as-is
   ndgui/                    settings host + all the tools and tests
-    tools/                  generators (Python 3.8+, Pillow); bundle_hubs.py merges roles for the 32-cap
+    tools/                  generators (Python 3.8+, Pillow)
     tests/                  offline Lua 5.4 tests against a mock client host
   ndgui-lib/                shared library: window frame, art kit (assets/), Lua modules (lua/)
   ndgui-control-center/     prk.control-center   bottom strip
@@ -13,24 +13,25 @@ addons/                     hand-made packages, copied into client/UI/Addons as-
   ndgui-compass/            prk.compass
   ndgui-target-panels/      prk.target-panels
   ndgui-hotbar/             prk.hotbar
-  ndgui-maps/               prk.playfield-map + prk.planet-map (hub)
-  ndgui-team-hub/           prk.team + prk.team-invite (hub)
+  ndgui-playfield-map/      prk.playfield-map    Local Map
+  ndgui-planet-map/         prk.planet-map       Planet Map
   ndgui-mission-hub/        info + missions + terminal
+  ndgui-intel/              prk.chat + prk.floating-combat-text + prk.zone-notice: Intel HUD, alerts, alts
 install.ps1, install.bat    the player installer (PowerShell; ships in the release zip)
 install.py                  install straight from this checkout (developers, Linux/Mac)
 build_release.py            builds release/ndgui-spiritech-<version>.zip (committed; CI publishes it)
 docs/background/            original research and design notes
 ```
 
-The other packages (`ndgui-inventory`, chat/ncu/raid/hud hubs, …) are **generated** from the game's own `UI/Packages` (then hub-bundled). They aren't in git: generate them with the tools below. `ndgui-lib/lua/table.lua` is generated too.
+The other packages (`ndgui-inventory`, `ndgui-wear`, …) are **generated** from the game's own `UI/Packages`. They aren't in git: generate them with the tools below. Chat is not generated; `ndgui-intel` provides that role. `ndgui-lib/lua/table.lua` is generated too.
 
 ## Tools (`addons/ndgui/tools`, run from the installed `client/UI/Addons/ndgui`)
 
 | Tool | Does |
 | --- | --- |
 | `fork_windows.py` | 20 `core.window` windows → `ndgui-<window>` with the ndGUI frame |
-| `fork_hud.py` | NCU, target NCU, faction, chat, chat config, raid bars, timer bars, team invite, sneak, logout |
-| `bundle_hubs.py` | Merge related roles into multi-Provide hubs (chat/ncu/maps/raid/team/hud-indicators) for the portal 32-package cap |
+| `fork_hud.py` | NCU, target NCU, faction, chat config, raid bars, timer bars, team invite, sneak, logout (not chat; Intel provides it) |
+| `bundle_hubs.py` | Old 32-package bundler. Do not run it; it crashed the client, and the portal cap is no longer binding |
 | `lib_table.py` | `ndgui-lib/lua/table.lua` from Core's table: movable and hideable list columns |
 | `square_buttons.py` | square 3-slice buttons in every ndgui package and the game's `UI/Layouts`; `--restore`, `--addons-only` |
 | `skin.py` | DarkTech skin into `cd_image/gui/Default` (from `*.stock`); `--restore`, `--preview DIR`, `--overlay DIR` |
@@ -69,11 +70,15 @@ All three must print `ALL PASS`. CI only syntax-checks (it has no game client).
 ## Making a release
 
 1. Bump `VERSION` in `install.py` and add a `## <version>` section to `CHANGELOG.md` (it becomes the release notes).
-2. `python build_release.py` (game closed or not; it works on a staged copy of your client's stock files). It replaces the zip in `release/`.
+2. `python build_release.py` (game closed or not; it works on a staged copy of your client's stock files). It replaces the zips in `release/`: the player zip and `ndgui-<version>.zip` for the marketplace.
 3. Smoke-test: unpack `release/ndgui-spiritech-<version>.zip`, run `install.bat`, play.
-4. Commit (including the zip), `git tag v<version>`, `git push --follow-tags`.
+4. Commit (including both zips), `git tag v<version>`, `git push --follow-tags`.
 
-The GitHub release workflow (`.github/workflows/release.yml`) then creates the release by itself: notes from the changelog, the zip as the download. It fails loudly if the zip, `VERSION` or changelog section doesn't match the tag. CI can't build the zip itself because that needs a game client.
+The release job in `.github/workflows/ci.yml` then creates the GitHub release: notes from the changelog, the player zip as the download. It also rebuilds `ndgui-<version>.zip` from that player zip (no game client needed) and attaches it to the same release, which is the file to upload to the Spiritech portal. It fails if the player zip, `VERSION`, or changelog section doesn't match the tag. CI still cannot build the player zip itself, because that needs a game client.
+
+## Sharing data between roles (`ndgui-lib/lua/bus.lua`)
+
+A package can provide several roles, but the client runs each in its own Lua VM, and they all load the same scripts. A VM learns its role from its first callback (see `ndgui-intel/main.lua` and `ndgui-mission-hub/main.lua`). The VMs share the package's `ui.storage`, so `bus.lua` puts an event ring (`publish` / `reader().poll`), last-value state (`set` / `get`) and a lease (`lease(name, owner, now, ttl)`, for "only one VM draws this") on top of it. Storage is per package id, so only roles of the same package can talk. `tests/test_intel.lua` runs several mock VMs over one storage table.
 
 ## Rules of thumb
 

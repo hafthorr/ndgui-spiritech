@@ -1,0 +1,22 @@
+<?xml version="1.0"?>
+<root>
+  <!-- ndGUI frame for the Intel windows (Alts, Log). Drag by the title bar, X closes. -->
+  <View name="frame" view_layout="stacked" capture_input="true" composite_layer="true" interaction_scope="true">
+    <BitmapView image="library://notum.ndgui-lib/window/glass.png" />
+    <BitmapView image="library://notum.ndgui-lib/window/titlebar.png" min_size="Point(1,27)" max_size="Point(-1,27)" v_alignment="top" />
+    <BitmapView image="library://notum.ndgui-lib/window/edge_top.png" min_size="Point(1,3)" max_size="Point(-1,3)" v_alignment="top" />
+    <BitmapView image="library://notum.ndgui-lib/window/edge_h.png" min_size="Point(1,3)" max_size="Point(-1,3)" v_alignment="bottom" />
+    <BitmapView image="library://notum.ndgui-lib/window/edge_v.png" min_size="Point(3,1)" max_size="Point(3,-1)" h_alignment="left" />
+    <BitmapView image="library://notum.ndgui-lib/window/edge_v_r.png" min_size="Point(3,1)" max_size="Point(3,-1)" h_alignment="right" />
+    <BitmapView image="library://notum.ndgui-lib/window/corner_tl.png" min_size="Point(7,7)" max_size="Point(7,7)" h_alignment="left" v_alignment="top" layout_borders="Rect(3,3,0,0)" />
+    <BitmapView image="library://notum.ndgui-lib/window/corner_br.png" min_size="Point(7,7)" max_size="Point(7,7)" h_alignment="right" v_alignment="bottom" layout_borders="Rect(0,0,3,3)" />
+    <View view_layout="vertical" layout_borders="Rect(3,3,3,3)">
+      <View name="frame_titlebar" view_layout="horizontal" capture_input="true" interactive="true" min_size="Point(-1,24)" max_size="Point(-1,24)">
+        <BitmapView image="library://notum.ndgui-lib/window/accent.png" min_size="Point(3,18)" max_size="Point(3,18)" v_alignment="center" layout_borders="Rect(5,0,0,0)" />
+        <TextView name="frame_title" value="" color="C5D7E6" font_size="13" size_to_text="false" weight="1" v_alignment="center" layout_borders="Rect(6,0,0,0)" />
+        <Button name="frame_close" alpha="0.9" active_alpha="1" min_size="Point(15,15)" max_size="Point(15,15)" v_alignment="center" layout_borders="Rect(0,0,4,1)" tooltip="Close" gfxid_raised="GFX_GUI_WINDOW_CLOSE_X" gfxid_hover="GFX_GUI_WINDOW_CLOSE_X_STATE2" gfxid_pressed="GFX_GUI_WINDOW_CLOSE_X_STATE3" />
+      </View>
+      <View name="frame_content" view_layout="vertical" layout_borders="Rect(6,4,6,6)" />
+    </View>
+  </View>
+</root>

@@ -139,12 +139,6 @@ def stage_suite(addons_src: str, stage: str, version: str, api_version: str, lic
         open(os.path.join(dest, "package.xml"), "w", encoding="utf-8", newline="\n").write(stamped)
         shutil.copyfile(license_path, os.path.join(dest, "LICENSE"))
         ids.append(pkg_id)
-    if len(ids) > 32:
-        # Portal cap is 32; full role coverage needs a working hub design (see PROGRESS.md).
-        print(
-            f"warning: marketplace suite has {len(ids)} packages; portal allows at most 32",
-            file=sys.stderr,
-        )
     return ids
 
 

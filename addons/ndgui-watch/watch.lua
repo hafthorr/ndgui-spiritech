@@ -9,6 +9,7 @@
 --                                        client reports no casters)
 --   M.team_grid(members, collections)    columns = buffs seen on the team, cells = time left / missing
 --   M.alerts(state, now)                 the alerts worth showing right now, most urgent first
+--   M.learn(...), M.missing(...)         Target Debuffs: your learned rotation, and what of it is missing
 ui.define("ndgui.watch", function()
 	local M = {}
 
@@ -261,6 +262,53 @@ ui.define("ndgui.watch", function()
 			end
 		end
 		return fresh, now_refs
+	end
+
+	-- Target Debuffs: learn your rotation. An effect of yours (a debuff, or anything you put on an
+	-- NPC) seen on LEARN_TARGETS different targets joins `rotation` (name -> true). Returns the names
+	-- that just joined. `seen` is the session's name -> { target id -> true }.
+	M.LEARN_TARGETS = 2
+
+	function M.learn(seen, effects, self_id, target_id, target_npc, rotation, ignored)
+		local joined = {}
+		if self_id == nil or target_id == nil or target_id == self_id then
+			return joined
+		end
+		for _, effect in ipairs(effects or {}) do
+			local name = effect.name
+			if name and name ~= "" and effect.caster == self_id and not effect.hidden and not effect.permanent
+				and (effect.hostile or target_npc) and not rotation[name] and not ignored[name] then
+				seen[name] = seen[name] or {}
+				if not seen[name][target_id] then
+					seen[name][target_id] = true
+					local count = 0
+					for _ in pairs(seen[name]) do
+						count = count + 1
+					end
+					if count >= M.LEARN_TARGETS then
+						rotation[name] = true
+						joined[#joined + 1] = name
+					end
+				end
+			end
+		end
+		return joined
+	end
+
+	-- rotation names not among `mine` (M.on_target entries), sorted
+	function M.missing(mine, rotation)
+		local have = {}
+		for _, entry in ipairs(mine or {}) do
+			have[entry.effect.name or ""] = true
+		end
+		local out = {}
+		for name in pairs(rotation or {}) do
+			if not have[name] then
+				out[#out + 1] = name
+			end
+		end
+		table.sort(out)
+		return out
 	end
 
 	return M

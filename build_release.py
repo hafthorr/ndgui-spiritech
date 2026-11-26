@@ -171,10 +171,11 @@ def main():
     print(f"built {archive} ({os.path.getsize(archive) / 1e6:.1f} MB); unpacked copy in {out}")
 
     print("\nBuilding marketplace suite zip...")
-    subprocess.run(
-        [sys.executable, os.path.join(REPO, "build_marketplace.py"), "--from-zip", archive],
-        check=True,
-    )
+    market_cmd = [sys.executable, os.path.join(REPO, "build_marketplace.py"), "--from-zip", archive]
+    api = api_version(client)
+    if api:
+        market_cmd += ["--api-version", api]
+    subprocess.run(market_cmd, check=True)
 
 
 if __name__ == "__main__":
