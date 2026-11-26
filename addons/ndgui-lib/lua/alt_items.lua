@@ -102,6 +102,11 @@ function A.skipped(title)
 	return false
 end
 
+-- containers every character of the account sees (the account bank)
+function A.shared(title)
+	return string.lower(title or ""):find("account", 1, true) ~= nil
+end
+
 local function index_add(entry)
 	local index = read("invidx")
 	for item in index:gmatch("[^,]+") do
@@ -151,7 +156,7 @@ local function boxes()
 	for entry in read("invidx"):gmatch("[^,]+") do
 		local who, box = entry:match("^(.-):(.+)$")
 		local base = "inv:" .. entry
-		local title, count = read(base):match("^(.-)" .. US .. "(%d+)" .. US)
+		local title, count, saved = read(base):match("^(.-)" .. US .. "(%d+)" .. US .. "(%d*)")
 		if who and title then
 			local items = {}
 			for n = 1, tonumber(count) do
@@ -160,9 +165,25 @@ local function boxes()
 					items[#items + 1] = item
 				end
 			end
-			cache.boxes[#cache.boxes + 1] = { who = who, name = read("who:" .. who), title = title, items = items }
+			local box = { who = who, name = read("who:" .. who), title = title, items = items, saved = tonumber(saved) or 0,
+				shared = A.shared(title) }
+			cache.boxes[#cache.boxes + 1] = box
 		end
 	end
+	-- a shared container (the account bank) counts once: the copy saved last, whoever opened it
+	local newest = {}
+	for _, box in ipairs(cache.boxes) do
+		if box.shared and (not newest[box.title] or box.saved > newest[box.title].saved) then
+			newest[box.title] = box
+		end
+	end
+	local kept = {}
+	for _, box in ipairs(cache.boxes) do
+		if not box.shared or newest[box.title] == box then
+			kept[#kept + 1] = box
+		end
+	end
+	cache.boxes = kept
 	return cache.boxes
 end
 
@@ -174,11 +195,12 @@ function A.find(query, here_title)
 		return found
 	end
 	for _, box in ipairs(boxes()) do
-		if not (box.who == me.id and box.title == here_title) then
+		local here = box.title == here_title and (box.who == me.id or box.shared)
+		if not here then
 			for _, item in ipairs(box.items) do
 				if item.lower:find(q, 1, true) then
-					found[#found + 1] = { who = box.who, name = box.name ~= "" and box.name or "?", title = box.title, item = item,
-						mine = box.who == me.id }
+					found[#found + 1] = { who = box.shared and "" or box.who, name = box.name ~= "" and box.name or "?", title = box.title,
+						item = item, mine = box.who == me.id and not box.shared, shared = box.shared }
 				end
 			end
 		end
@@ -211,7 +233,8 @@ function A.search(value)
 	for index, hit in ipairs(found) do
 		places[hit.who .. hit.title] = true
 		if index <= MAX_TIP then
-			lines[#lines + 1] = string.format("%s - %s: %s (QL %d)%s", hit.mine and "You" or hit.name, hit.title, hit.item.name,
+			local where = hit.shared and hit.title or ((hit.mine and "You" or hit.name) .. " - " .. hit.title)
+			lines[#lines + 1] = string.format("%s: %s (QL %d)%s", where, hit.item.name,
 				hit.item.ql or 0, (hit.item.count or 1) > 1 and (" x" .. hit.item.count) or "")
 		end
 	end
@@ -220,8 +243,8 @@ function A.search(value)
 	end
 	local n = 0
 	for _ in pairs(places) do n = n + 1 end
-	ui.text(hits_view, "Alts: " .. n)
-	ui.tooltip(hits_view, "Also found (saved when that container was last open):" .. string.char(10) .. table.concat(lines, string.char(10)))
+	ui.text(hits_view, "+" .. n)
+	ui.tooltip(hits_view, "Also in " .. n .. (n == 1 and " other place" or " other places") .. " (as saved when that container was last open):" .. string.char(10) .. table.concat(lines, string.char(10)))
 end
 
 function A.mount(content)

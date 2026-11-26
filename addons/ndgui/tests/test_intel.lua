@@ -266,6 +266,14 @@ do
   A.record("Inventory", { slot("Implant number 001 with a long descriptive name", 1, 1) })
   check(#A.find("implant number", "x") == 1, "re-saving a container drops its old chunks")
   check(#A.find("ri", "x") == 0, "fewer than three letters search nothing")
+  -- the account bank is shared: one entry (the newest save), shown without a character name
+  H.now = NOW + 1000
+  A.me("alice", "Alice"); A.record("Account Bank", { slot("Desert Reet", 15, 1) })
+  H.now = NOW + 2000
+  A.me("bob", "Bob"); A.record("Account Bank", { slot("Desert Reet", 15, 1), slot("Reet Shell", 1, 1) })
+  local reets = A.find("reet", "Inventory")
+  check(#reets == 2 and reets[1].shared and reets[1].title == "Account Bank", "account bank counted once, newest save (" .. #reets .. ")")
+  check(#A.find("reet", "Account Bank") == 0, "searching inside the account bank skips it for every character")
 end
 
 -- ---- Target Debuffs rotation learning (ndgui-watch/watch.lua) ---------------------------------

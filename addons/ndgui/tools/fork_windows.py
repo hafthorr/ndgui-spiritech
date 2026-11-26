@@ -66,7 +66,7 @@ def must(text, old, new, what):
 # Inventory: remember every container per character, and search your other characters' too
 # (ndgui-lib/lua/alt_items.lua). Applied to the stock files before the generic patches.
 ALT_HITS = ('<TextView name="ndgui_alt_hits" value="" visible="false" color="C6A24E" font_size="11" interactive="true" '
-            'size_to_text="false" min_size="Point(64,22)" max_size="Point(64,22)" v_alignment="center" '
+            'size_to_text="false" text_alignment="center" min_size="Point(30,22)" max_size="Point(30,22)" v_alignment="center" '
             'layout_borders="Rect(4,0,0,0)" tooltip="" />')
 
 
