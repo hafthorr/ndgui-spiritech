@@ -103,27 +103,38 @@ def fork(src, role, title):
                 '\tui.add(ui.find(value.root, "button_host"), value.button)\n'
             )
             new = (
-                "\tvalue.button = ui.find(tree, value.name)\n"
-                "\t-- A wrap is the 2-child view holding ndgui_chrome and this button.\n"
-                "\t-- View.name and view equality are not reliable on userdata.\n"
-                "\tlocal function wrap_holding(host, name)\n"
-                "\t\tfor i = 1, ui.child_count(host) do\n"
-                "\t\t\tlocal kid = ui.child(host, i)\n"
-                "\t\t\tlocal ok_b, btn = pcall(ui.find, kid, name)\n"
-                "\t\t\tlocal ok_c, chrome = pcall(ui.find, kid, \"ndgui_chrome\")\n"
-                "\t\t\tif ok_b and btn and ok_c and chrome and ui.child_count(kid) == 2 then\n"
-                "\t\t\t\treturn kid, btn\n"
-                "\t\t\tend\n"
-                "\t\t\tlocal deeper, deep_btn = wrap_holding(kid, name)\n"
-                "\t\t\tif deeper then\n"
-                "\t\t\t\treturn deeper, deep_btn\n"
-                "\t\t\tend\n"
+                "\t-- Next direct child is this category's wrap (chrome view + button). Do not ui.find\n"
+                "\t-- through unrelated views: a missing name aborts the script and the window never fills.\n"
+                "\tlocal function take_wrap(host)\n"
+                "\t\tif ui.child_count(host) < 1 then\n"
+                "\t\t\treturn nil, nil\n"
                 "\t\tend\n"
+                "\t\tlocal kid = ui.child(host, 1)\n"
+                "\t\tif ui.child_count(kid) ~= 2 then\n"
+                "\t\t\treturn nil, nil\n"
+                "\t\tend\n"
+                "\t\tlocal a, b = ui.child(kid, 1), ui.child(kid, 2)\n"
+                "\t\tlocal function chrome(view)\n"
+                "\t\t\tif ui.child_count(view) ~= 3 then\n"
+                "\t\t\t\treturn false\n"
+                "\t\t\tend\n"
+                "\t\t\tfor i = 1, 3 do\n"
+                "\t\t\t\tif ui.child_count(ui.child(view, i)) ~= 0 then\n"
+                "\t\t\t\t\treturn false\n"
+                "\t\t\t\tend\n"
+                "\t\t\tend\n"
+                "\t\t\treturn true\n"
+                "\t\tend\n"
+                "\t\tif chrome(a) then\n"
+                "\t\t\treturn kid, b\n"
+                "\t\tend\n"
+                "\t\tif chrome(b) then\n"
+                "\t\t\treturn kid, a\n"
+                "\t\tend\n"
+                "\t\treturn nil, nil\n"
                 "\tend\n"
-                "\tlocal move, button = wrap_holding(tree, value.name)\n"
-                "\tif button then\n"
-                "\t\tvalue.button = button\n"
-                "\tend\n"
+                "\tlocal move, button = take_wrap(tree)\n"
+                "\tvalue.button = button or ui.find(tree, value.name)\n"
                 "\tmove = move or value.button\n"
                 '\tvalue.root = ui.load("category.xml")\n'
                 '\tui.add(ui.find(value.root, "button_host"), move)\n'
@@ -131,42 +142,6 @@ def fork(src, role, title):
             if old not in code:
                 raise SystemExit(f"{src}: category button reparent block changed shape")
             code = code.replace(old, new, 1)
-            vis_old = (
-                "\tfor _, name in ipairs({ \"reset_all\", \"accept\", \"quit\" }) do\n"
-                "\t\tui.visible(ui.find(expanded, name), not priorities)\n"
-                "\tend\n"
-                "\tfor _, name in ipairs({ \"restore_priorities\", \"save_priorities\", \"cancel_priorities\" }) do\n"
-                "\t\tui.visible(ui.find(expanded, name), priorities)\n"
-                "\tend\n"
-            )
-            vis_new = (
-                "\tlocal function chrome_target(root, name)\n"
-                "\t\tlocal function walk(host)\n"
-                "\t\t\tfor i = 1, ui.child_count(host) do\n"
-                "\t\t\t\tlocal kid = ui.child(host, i)\n"
-                "\t\t\t\tlocal ok_b, btn = pcall(ui.find, kid, name)\n"
-                "\t\t\t\tlocal ok_c, chrome = pcall(ui.find, kid, \"ndgui_chrome\")\n"
-                "\t\t\t\tif ok_b and btn and ok_c and chrome and ui.child_count(kid) == 2 then\n"
-                "\t\t\t\t\treturn kid\n"
-                "\t\t\t\tend\n"
-                "\t\t\t\tlocal deeper = walk(kid)\n"
-                "\t\t\t\tif deeper then\n"
-                "\t\t\t\t\treturn deeper\n"
-                "\t\t\t\tend\n"
-                "\t\t\tend\n"
-                "\t\tend\n"
-                "\t\treturn walk(root) or ui.find(root, name)\n"
-                "\tend\n"
-                "\tfor _, name in ipairs({ \"reset_all\", \"accept\", \"quit\" }) do\n"
-                "\t\tui.visible(chrome_target(expanded, name), not priorities)\n"
-                "\tend\n"
-                "\tfor _, name in ipairs({ \"restore_priorities\", \"save_priorities\", \"cancel_priorities\" }) do\n"
-                "\t\tui.visible(chrome_target(expanded, name), priorities)\n"
-                "\tend\n"
-            )
-            if vis_old not in code:
-                raise SystemExit(f"{src}: button visibility block changed shape")
-            code = code.replace(vis_old, vis_new, 1)
         if src == "NanoPrograms" and fn == first_script:
             old = (
                 "local toolbar_buttons = {\n"
@@ -223,6 +198,52 @@ def fork(src, role, title):
                 'ui.require("notum.ndgui-lib/ncu_strip")',
                 1,
             )
+            # Show buttons hides the Button only; the chrome wrap would stay as an empty frame.
+            old_buttons = "    row.buttons = { row.pet_primary, row.pet_follow, row.pet_wait }\n"
+            new_buttons = (
+                "    row.buttons = { row.pet_primary, row.pet_follow, row.pet_wait }\n"
+                "    row.chrome = {}\n"
+                "    local function take_wraps(host)\n"
+                "        for i = 1, ui.child_count(host) do\n"
+                "            local kid = ui.child(host, i)\n"
+                "            if ui.child_count(kid) == 2 then\n"
+                "                local a, b = ui.child(kid, 1), ui.child(kid, 2)\n"
+                "                local function chrome(view)\n"
+                "                    if ui.child_count(view) ~= 3 then return false end\n"
+                "                    for n = 1, 3 do\n"
+                "                        if ui.child_count(ui.child(view, n)) ~= 0 then return false end\n"
+                "                    end\n"
+                "                    return true\n"
+                "                end\n"
+                "                if chrome(a) or chrome(b) then\n"
+                "                    row.chrome[#row.chrome + 1] = kid\n"
+                "                end\n"
+                "            elseif ui.child_count(kid) > 0 then\n"
+                "                take_wraps(kid)\n"
+                "            end\n"
+                "        end\n"
+                "    end\n"
+                "    take_wraps(root)\n"
+            )
+            if old_buttons not in code:
+                raise SystemExit(f"{src}: pet button list changed shape")
+            code = code.replace(old_buttons, new_buttons, 1)
+            old_vis = (
+                "        for _, button in ipairs(row.buttons) do\n"
+                "            ui.visible(button, show_buttons)\n"
+                "        end\n"
+            )
+            new_vis = (
+                "        for index, button in ipairs(row.buttons) do\n"
+                "            ui.visible(button, show_buttons)\n"
+                "            if row.chrome[index] then\n"
+                "                ui.visible(row.chrome[index], show_buttons)\n"
+                "            end\n"
+                "        end\n"
+            )
+            if old_vis not in code:
+                raise SystemExit(f"{src}: pet button visibility changed shape")
+            code = code.replace(old_vis, new_vis, 1)
             open(os.path.join(ddir, "pet_ncu_slot.xml"), "w", encoding="utf-8", newline="\n").write(
                 '<?xml version="1.0" encoding="utf-8"?>\n<root>\n'
                 '  <View name="ndgui_slotcell" view_layout="stacked" '

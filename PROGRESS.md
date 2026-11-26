@@ -69,6 +69,51 @@ Live client `notum.ndgui-skills` XML has the stock borders back on the wraps,
 and hidden controls start `visible="false"` on the wrap. `square_buttons.py`
 unwrap copies `layout_borders` back onto the Button so a later reskin keeps them.
 
+Do not search for a wrap with `ui.find` on views that may not contain that name.
+A missing view aborts the Skills script and the window opens with only the
+top-left panel. Category reparent takes the next direct child (`take_wrap`).
+
+Ghost buttons are one pattern: `ui.visible` on a Button leaves `ndgui_btnwrap`
+on screen (Team Leave, Pets Attack/Follow/Wait, Market confirm/keep, Mission
+Terminal Map, Skills priority buttons). `button.lua` records Button to wrap
+when the layout loads and hides the wrap with the Button. `boot.lua` installs
+that hook from `grid.lua` before `ui.load`. Layouts that start hidden put
+`visible="false"` on the wrap, not the Button. The hook keys the map by the
+Button userdata from `ui.child` during load; `ui.find` later can be a different
+proxy, so a table lookup misses and Team Leave still ghosted. `ui.visible` now
+also matches with `==` and remembers that proxy. Team still hides the Leave wrap
+by structure (button-row wraps in order: Compact, NCU, Leave, Recruit). Pets
+Attack/Follow/Wait do the same when Show buttons is off. Restart the client
+after copying `notum.ndgui-team`, `notum.ndgui-pets`, and `notum.ndgui-lib`.
+
+The dark box under window text is in the original non-package screenshots too
+(`~/Downloads/AOUI/Original.png`), so it is not a package-parity gap. Recoloring
+`glass.png` / clearing `inner.png` did not change it and those edits were
+reverted. Tomorrow: find what actually paints that box.
+
+`TabButton` always draws engine `GFX_GUI_TAB_*` (stock teal). The original
+suite replaced those GFX ids in the global skin; a package cannot. Swapping
+Wear's tabs for ordinary Buttons made the Wear package fail and the client
+fell back to stock Wear. That swap was reverted: Wear is the ndGUI window
+again, tabs still teal. Tomorrow: skin every `TabButton` without dropping the
+`target` behavior that keeps the package alive. Current ones:
+
+- Wear: Weap, Cloth, Impl, Social
+- Perks: Profession, Group, General
+- Chat frame: `chat_frame_tab` (the chat host creates these; do not replace the widget)
+
+### Tomorrow
+
+1. **TabButton chrome** — Wear, Perks, and chat-frame tabs. Do not replace the
+   widget in a way that aborts the package (that sent Wear back to stock).
+2. **Dark content box** — present in the original screenshots too. Find the
+   real paint source. Do not recolor `glass.png` / `inner.png` again until that
+   source is known.
+3. **Marketplace 32-cap** — proper Mission-Hub-style hubs, or omit roles to
+   stay at 32, or wait on Spiritech. Do not run `bundle_hubs.py`.
+4. **Ship** — regenerate the marketplace zip at 0.3.7 (do not bump), then
+   push and open the PR when asked.
+
 You should be able to launch and test the pre-hub UI again.
 
 ### Marketplace 32-cap (open)

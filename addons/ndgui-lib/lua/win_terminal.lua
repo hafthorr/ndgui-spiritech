@@ -11,6 +11,7 @@ local BASE = "library://notum.ndgui-lib/terminal_"
 --   * the chosen-reward panel shows the cost per roll and what this session's rolls cost
 --   * recent chosen rewards are remembered (shared by all characters)
 local Window = ui.require("core.window")
+ui.require("notum.ndgui-lib/button") -- hide ndgui_btnwrap together with the Button
 local Shell = ui.require("notum.ndgui-lib/shell")
 local Briefs = ui.require("notum.ndgui-lib/briefs")
 local Map = ui.require("notum.ndgui-lib/terminal_map")

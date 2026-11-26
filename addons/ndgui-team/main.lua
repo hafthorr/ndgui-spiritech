@@ -15,28 +15,44 @@ local toggle = ui.find(content, "ncu_toggle")
 local compact_toggle = ui.find(content, "compact_toggle")
 local invite = ui.find(content, "invite_button")
 local leave = ui.find(content, "leave_button")
--- marketplace chrome wraps Buttons; size the wrap (View.name is not reliable on userdata)
-local function chrome_of(btn)
-	local function walk(host)
-		for i = 1, ui.child_count(host) do
-			local kid = ui.child(host, i)
-			for j = 1, ui.child_count(kid) do
-				if ui.child(kid, j) == btn then
-					return kid
+-- Button-row wraps in content.xml order: Compact, NCU, Leave, Recruit.
+-- Do not match them with view equality; that misses the wrap and Leave's chrome stays up.
+local function button_wraps(host)
+	local found = {}
+	local function chrome(view)
+		if ui.child_count(view) ~= 3 then
+			return false
+		end
+		for i = 1, 3 do
+			if ui.child_count(ui.child(view, i)) ~= 0 then
+				return false
+			end
+		end
+		return true
+	end
+	for i = 1, ui.child_count(host) do
+		local kid = ui.child(host, i)
+		if ui.child_count(kid) == 2 then
+			local a, b = ui.child(kid, 1), ui.child(kid, 2)
+			if chrome(a) or chrome(b) then
+				found[#found + 1] = kid
+			else
+				local nested = button_wraps(kid)
+				for _, wrap in ipairs(nested) do
+					found[#found + 1] = wrap
 				end
 			end
-			local deeper = walk(kid)
-			if deeper then
-				return deeper
+		else
+			local nested = button_wraps(kid)
+			for _, wrap in ipairs(nested) do
+				found[#found + 1] = wrap
 			end
 		end
 	end
-	return walk(content) or btn
+	return found
 end
-local toggle_chrome = chrome_of(toggle)
-local compact_chrome = chrome_of(compact_toggle)
-local invite_chrome = chrome_of(invite)
-local leave_chrome = chrome_of(leave)
+local wraps = button_wraps(content)
+local compact_chrome, toggle_chrome, leave_chrome, invite_chrome = wraps[1], wraps[2], wraps[3], wraps[4]
 local rows, members, nanos = {}, {}, {}
 local shows_ncu = false
 local frame, state
@@ -120,8 +136,12 @@ local function layout(window, width, height)
 		ui.limits(toggle_chrome, ncu_button_w, BUTTON_HEIGHT, ncu_button_w, BUTTON_HEIGHT)
 		ui.limits(toggle, ncu_button_w, BUTTON_HEIGHT, ncu_button_w, BUTTON_HEIGHT)
 		local fixed = Window.CONTENT_SIDES + BUTTON_ROW_BORDERS + NCU_BUTTON_WITH_GAPS
-		button_width = math.min(BUTTON_WIDTH, (width - fixed) / 2)
-		invite_width = button_width
+		if ui.requested_visible(leave) then
+			button_width = math.min(BUTTON_WIDTH, (width - fixed) / 2)
+			invite_width = button_width
+		else
+			button_width, invite_width = 0, math.min(BUTTON_WIDTH, width - fixed)
+		end
 	end
 	ui.size(leave_chrome, button_width, leave_h)
 	ui.size(leave, button_width, leave_h)
@@ -290,6 +310,9 @@ local function present(update)
 	ui.text(ui.find(content, "team_info"), state.in_team
 		and "Team level: " .. UNREPORTED_TEAM_LEVEL .. "  Team side: " .. (sides[state.side] or "Unknown") or "No team")
 	ui.visible(leave, state.in_team)
+	if leave_chrome then
+		ui.visible(leave_chrome, state.in_team)
+	end
 	ui.enabled(invite, state.can_invite)
 	ui.actions.bind(leave, game.team.prepare_leave(), "left", "release")
 	ui.actions.bind(invite, game.team.prepare_invite("target"), "left", "release")

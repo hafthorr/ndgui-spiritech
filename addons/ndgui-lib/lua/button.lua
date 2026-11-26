@@ -3,6 +3,95 @@
 ui.define("notum.ndgui-lib/button", function()
 	local M = {}
 	local CAP = 4
+	-- A wrapped button hides only its label when Lua calls ui.visible on the Button.
+	-- Remember each Button -> ndgui_btnwrap (identity, no ui.find) and hide the wrap too.
+	local maps = {}
+	local raw_visible = ui.visible
+	local raw_load = ui.load
+
+	local function leaf(view)
+		local ok, n = pcall(ui.child_count, view)
+		return ok and n == 0
+	end
+
+	local function chrome_view(view)
+		local ok, n = pcall(ui.child_count, view)
+		if not ok or n ~= 3 then
+			return false
+		end
+		for i = 1, 3 do
+			local cok, kid = pcall(ui.child, view, i)
+			if not cok or not kid or not leaf(kid) then
+				return false
+			end
+		end
+		return true
+	end
+
+	local function index(view, map)
+		local ok, n = pcall(ui.child_count, view)
+		if not ok or not n or n < 1 then
+			return
+		end
+		for i = 1, n do
+			local cok, kid = pcall(ui.child, view, i)
+			if cok and kid then
+				local knok, kn = pcall(ui.child_count, kid)
+				if knok and kn == 2 then
+					local aok, a = pcall(ui.child, kid, 1)
+					local bok, b = pcall(ui.child, kid, 2)
+					if aok and bok and a and b then
+						local btn = (chrome_view(a) and b) or (chrome_view(b) and a) or nil
+						if btn then
+							map[btn] = kid
+						end
+					end
+				end
+				index(kid, map)
+			end
+		end
+	end
+
+	local function wrap_for(view)
+		for i = 1, #maps do
+			local map = maps[i]
+			local wrap = map[view]
+			if wrap then
+				return wrap
+			end
+			-- ui.find and ui.child are different proxies. Table keys use
+			-- identity, so match with == and remember the proxy we were given.
+			for btn, candidate in pairs(map) do
+				if btn == view then
+					map[view] = candidate
+					return candidate
+				end
+			end
+		end
+	end
+
+	function ui.visible(view, on)
+		local result = raw_visible(view, on)
+		if on ~= nil then
+			local wrap = wrap_for(view)
+			if wrap then
+				raw_visible(wrap, on)
+			end
+		end
+		return result
+	end
+
+	function ui.load(file)
+		local view = raw_load(file)
+		if view then
+			local map = {}
+			pcall(index, view, map)
+			if next(map) then
+				maps[#maps + 1] = map
+			end
+		end
+		return view
+	end
 	local HEIGHTS = { 19, 20, 22, 23, 24, 26, 28, 32 }
 
 	local function nearest_height(h)

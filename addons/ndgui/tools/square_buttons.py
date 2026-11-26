@@ -146,7 +146,7 @@ def skin_package(tag):
     wrap_bits = []
     for name in ("weight", "layout_borders", "v_alignment", "h_alignment", "visible", "enabled"):
         val = attr(btn, name)
-        if val is not None and name in ("weight", "layout_borders", "v_alignment", "h_alignment"):
+        if val is not None and name in ("weight", "layout_borders", "v_alignment", "h_alignment", "visible"):
             wrap_bits.append(f'{name}="{val}"')
             btn = re.sub(r'\s+' + name + r'="[^"]*"', "", btn)
     min_size = attr(btn, "min_size") or f"Point(-1,{h})"
