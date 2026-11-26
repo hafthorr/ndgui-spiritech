@@ -29,6 +29,11 @@ local function vm(settings)
   ui.desired_width = function(v) return #(v.text or "") * 7 end
   ui.desired_height = function() return 16 end
   ui.click_through = function(v, b) assert(v); v.click_through = b end
+  -- like the client: colours are #RRGGBB / #AARRGGBB (at most 9 bytes)
+  local function colour(c) assert(type(c) == "string" and #c <= 9, "color exceeds its UTF-8 byte limit: " .. tostring(c)) end
+  ui.fill_color = function(v, c) assert(v); colour(c); v.fill = c end
+  ui.text_color = function(v, c) assert(v); colour(c); v.color = c end
+  ui.graphic_tint = function(v, c) assert(v); colour(c); v.tint = c end
   ui.opacity = function(v, o) assert(v and o >= 0 and o <= 1, "opacity"); v.opacity = o end
   H.pointers = {}
   ui.on_pointer = function(v, cb) assert(v and type(cb) == "function"); H.pointers[v] = cb end
@@ -135,13 +140,14 @@ end
 -- ---- three VMs: chat, floating combat text, zone notice ---------------------------------------
 storage = {}
 local chat, fct, zone = vm(), vm(), vm()
+-- like the client: the chat role gets no character information
+chat.env.game.character.subscribe = function() error("Character information is unavailable for this package.") end
 -- the client calls chat callbacks right after mount
 chat.env.chat_visual(false)
 chat.env.chat_state(true, true)
 chat.env.chat_output("", "")
 check(find(chat, "chat_content").opacity == 1 and find(chat, "chat_content").click_through == false, "chat VM shows its chat content")
 check(find(fct, "chat_content").opacity == 0 and find(fct, "chat_content").click_through == true, "other VMs keep it invisible and click-through")
-for _, cb in ipairs(chat.subs) do cb({ reset = true }, { name = "Bobtheagent", key = "rk1:bob", level = 50, profession = 5 }, {}, {}) end
 
 -- the FCT VM gets combat text; nobody hosts the HUD before ELECT_AFTER_MS
 fct.env.floating_text_spawn({ { token = 1, text = "1200", rgb = 0xFF0000, random = 0.5 } }, 1.0)
@@ -181,7 +187,9 @@ chat.env.chat_present({
   msg({ body = "Pandemonium: 1 day 2 hours", time_ms = NOW + 4 }),
 })
 check(chat.lines[1]:find("^> ") ~= nil, "the tell line gets a marker in chat: " .. tostring(chat.lines[1]))
-check(#chat.lines == 5, "every chat line still shows")
+chat.env.chat_present({ msg({ kind = "channel", structured = true, channel = "OOC", sender = "Carl", body = "where is Bobtheagent", time_ms = NOW + 5 }) })
+check(chat.lines[#chat.lines]:find("^> ") ~= nil, "your name (from the HUD over the bus) marks a line")
+check(#chat.lines == 6, "every chat line still shows")
 fct.now = NOW + 6000
 fct.env.floating_text_tick({}, 10.0)
 check(visible(find(fct, "alert")) and find(fct, "alert_text").text:find("Pandemonium") == nil, "an alert banner shows")
@@ -223,6 +231,13 @@ zone.env.zone_notice_apply({ arrived = false, lines = {}, countdown = "", opens_
 check(Bus.get("words") == "ql300", "ndgui watch saves the word: " .. Bus.get("words"))
 chat.env.chat_present({ msg({ kind = "vicinity", structured = true, sender = "Zed", body = "selling QL300 stuff", time_ms = NOW + 60 }) })
 check(chat.lines[#chat.lines]:find("^> ") ~= nil, "a watch word marks the chat line")
+
+-- zone names: the notice line that is a name, not a sentence
+do
+  local Z = vm().ui.require("intel.zone")
+  check(Z.zone_name({ "Suppression field at 75%. Wildlife may attack you.", "Omni-1 Trade" }) == "Omni-1 Trade", "zone name skips the gas sentence")
+  check(Z.zone_name({ "Suppression field at 75%. Wildlife may attack you." }) == nil, "no name when there is only a notice")
+end
 
 -- ---- alt items (ndgui-inventory's "which character has it") ----------------------------------
 do

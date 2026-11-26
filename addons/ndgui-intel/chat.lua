@@ -83,12 +83,13 @@ ui.define("intel.chat", function()
 		content = ui.find(root, "chat_content")
 		entry = ui.find(content, "chat_entry")
 		target = ui.find(content, "chat_target")
-		game.character.subscribe("self", "", function(_, character)
-			self_name = character and character.name or self_name
-		end)
+		-- the chat role gets no game.character ("Character information is unavailable for this
+		-- package"): the HUD VM publishes your name as bus state "self_name"
 	end
 
 	function C.chat_present(messages)
+		local name = Bus.get("self_name")
+		self_name = name ~= "" and name or nil
 		local context = { self_name = self_name, words = load_words() }
 		for _, message in ipairs(messages) do
 			context.now = message.time_ms ~= 0 and message.time_ms or ui.time()

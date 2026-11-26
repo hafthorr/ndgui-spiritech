@@ -214,7 +214,7 @@ ui.define("intel.hud", function()
 			row.id = record and record.id
 			if record then
 				local here = record.id == me.id
-				ui.fill_color(row.back, here and "0xC0183048" or (index % 2 == 0 and "0x600A1016" or "0x900A1016"))
+				ui.fill_color(row.back, here and "#C0183048" or (index % 2 == 0 and "#600A1016" or "#900A1016"))
 				ui.image(row.prof, (record.p or 0) > 0 and ("gfx://GFX_GUI_ICON_PROFESSION_" .. record.p) or "")
 				ui.text(row.name, record.n or "?")
 				ui.tooltip(row.name, (record.n or "?") .. "  " .. Ledger.profession(record.p) .. ((record.o or "") ~= "" and (nl .. record.o) or ""))
@@ -444,6 +444,9 @@ ui.define("intel.hud", function()
 			rates = Ledger.rates(now_ms())
 		end
 		me.name, me.level, me.profession, me.org = character.name, character.level, character.profession, character.organization
+		if me.name then
+			Bus.set("self_name", me.name) -- for the chat VM (no game.character there)
+		end
 		me.cash = stat_value(stats, 61) or me.cash
 		local xp, axp = bar(bars, "xp"), bar(bars, "alien")
 		if xp and xp.maximum and xp.maximum > 0 and xp.current then

@@ -45,7 +45,10 @@ ui.define("intel.zone", function()
 			lines[index] = { shadow = text(value, SHADOW, size), face = text(value, index == 1 and FACE or SUB, size) }
 		end
 		showing = { born = reading.now_ms, lines = lines }
-		Bus.publish("zone", { name = reading.lines[1] or "", sub = reading.lines[2] or "" })
+		local name = Z.zone_name(reading.lines)
+		if name then
+			Bus.publish("zone", { name = name })
+		end
 	end
 
 	local function hide_countdown()
@@ -79,6 +82,17 @@ ui.define("intel.zone", function()
 		ui.place(countdown.shadow, x + SHADOW_OFFSET, y + SHADOW_OFFSET)
 		ui.opacity(countdown.face, opacity)
 		ui.opacity(countdown.shadow, opacity)
+	end
+
+	-- the zone's name among the notice lines: not a sentence ("Suppression field at 75%. Wildlife
+	-- may attack you."), not a countdown
+	function Z.zone_name(lines)
+		for _, line in ipairs(lines or {}) do
+			local text = (line or ""):gsub("^%s+", ""):gsub("%s+$", "")
+			if text ~= "" and #text <= 60 and not text:find("[%.!%%:]") and not text:lower():find("suppression", 1, true) then
+				return text
+			end
+		end
 	end
 
 	function Z.mount(layer)
