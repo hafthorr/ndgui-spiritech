@@ -305,7 +305,8 @@ def generated():
 
 # ---- square replacements for rounded stock frames ---------------------------
 def square_slot(size, closed):
-    """Item/slot frame: square 3-line DarkTech frame; OPEN keeps a see-through (key) centre."""
+    """Item/slot frame. OPEN uses a colour-key centre so a BitmapView child of ItemSlotView
+    does not cover the native icon; CLOSED is an opaque sunk well."""
     w, h = size
     img = Image.new("RGB", size, C["sunk"] if closed else KEY)
     d = ImageDraw.Draw(img)

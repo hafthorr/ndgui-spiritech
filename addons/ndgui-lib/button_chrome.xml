@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- DarkTech 3-slice button chrome. Images and height are set from lua/button.lua. -->
+<root>
+  <View name="ndgui_chrome" interactive="false" view_layout="horizontal">
+    <BitmapView name="ndgui_btn_l" interactive="false" image="library://notum.ndgui-lib/buttons/btn22_raised_left.png" min_size="Point(4,22)" max_size="Point(4,22)" />
+    <BitmapView name="ndgui_btn_m" interactive="false" image="library://notum.ndgui-lib/buttons/btn22_raised_middle.png" weight="1" min_size="Point(0,22)" max_size="Point(-1,22)" />
+    <BitmapView name="ndgui_btn_r" interactive="false" image="library://notum.ndgui-lib/buttons/btn22_raised_right.png" min_size="Point(4,22)" max_size="Point(4,22)" />
+  </View>
+</root>

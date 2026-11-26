@@ -81,6 +81,8 @@ There's nothing else to install: no Python, no exe. The installer is a plain Pow
 
 Linux/Mac, or building from source: `python install.py` (see [INSTALL.md](INSTALL.md)).
 
+**Launcher Addons:** when ndGUI is on the Spiritech Addons page, install the marketplace suite there, then pick Notum Dovvetech providers in Options. That alone is enough for in-game HUD, DarkTech buttons, compass, and maps. Optionally run `install.ps1 -SkinLayouts` from the player zip for square Login/Options screens. See [docs/marketplace-listing.md](docs/marketplace-listing.md). The full `install.bat` path above still does everything in one shot.
+
 Full guide, options, updating after a client patch, and troubleshooting: **[INSTALL.md](INSTALL.md)**.
 
 ## Snap to grid
@@ -104,7 +106,7 @@ The Grid Overlay always draws the size you set (a small grid shows every 2nd / 3
 
 ## How it works (one paragraph)
 
-Spiritech loads Lua/XML UI packages from `client/UI/Addons`. This repo holds **15 totally AI-hand-made packages** ([`addons/`](addons)) and the Python tools that derive the other **26** from the game's own UI. They also square every button and paint the DarkTech skin. `build_release.py` runs all of that once, on a developer's machine, and zips the result. The player's `install.ps1` then only copies the packages, swaps in the patched screen layouts, merges the finished skin images into the game's graphics file (`cd_image/gui/Default`), and selects the ndGUI providers. It keeps `*.stock` backups of everything it touches. Details are in [CONTRIBUTING.md](CONTRIBUTING.md).
+Spiritech loads Lua/XML UI packages from `client/UI/Addons`. This repo holds **15 totally AI-hand-made packages** ([`addons/`](addons)) and the Python tools that derive the other **26** from the game's own UI. They also square every button and paint the DarkTech skin. `build_release.py` runs all of that once, on a developer's machine, and zips the result (player zip plus a packages-only marketplace suite). The player's `install.ps1` then only copies the packages, swaps in the patched screen layouts, merges the finished skin images into the game's graphics file (`cd_image/gui/Default`), and selects the ndGUI providers. It keeps `*.stock` backups of everything it touches. Details are in [CONTRIBUTING.md](CONTRIBUTING.md) and [docs/marketplace-listing.md](docs/marketplace-listing.md).
 
 ## Known limits
 

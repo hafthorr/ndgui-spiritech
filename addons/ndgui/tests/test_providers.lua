@@ -133,7 +133,7 @@ if placed.experience and placed.alien then
   check(placed.experience.x + placed.experience.w <= placed.alien.x, "XP and AXP do not overlap")
 end
 
--- Compass.
+-- Compass: mark strip at 3 px/degree (library:// waypoint/caret), no atlas sprites.
 local C = load_pkg("ndgui-compass")
 if C then
   check(role(C, "prk.compass"), "compass declares prk.compass")
@@ -141,18 +141,22 @@ if C then
   check(math.abs((C.root.x + C.root.w / 2) - W / 2) <= 1 and C.root.y == 4, "compass centred on the top edge")
   C.env.compass_apply({ has_heading = true, heading = 1.0, has_waypoint = true, has_position = true,
     waypoint_playfield = 1, playfield = 1, x = 0, z = 0, waypoint_x = 10, waypoint_z = 10 })
-  check((C.calls["compass.sprite"] or 0) == 4 and C.calls["compass.finish"] == 1, "compass draws band twice, waypoint and caret")
+  check((C.calls["compass.sprite"] or 0) == 0, "package compass does not use atlas sprites")
+  local wp = C.find(C.root, "pkg_waypoint")
+  local caret = C.find(C.root, "pkg_caret")
+  local marks = C.find(C.root, "pkg_marks")
+  check(wp and wp.visible == true and caret and marks and type(caret.x) == "number",
+    "package compass places marks, waypoint and caret")
   check(C.find(C.root, "compass_distance").text == "14 m", "compass shows the waypoint distance: " .. tostring(C.find(C.root, "compass_distance").text))
-  check(C.root.w == 320, "compass is 320 wide with the ndGUI art")
-  check(C.find(C.root, "ndgui_compass_frame").visible == false, "no plate or frame with the ndGUI art")
+  check(C.root.w == 320, "compass is 320 wide with package art")
+  check(C.find(C.root, "ndgui_compass_frame").visible == false and C.find(C.root, "compass_pkg").visible == true,
+    "package compass shows pkg strip, hides stock frame")
 end
--- without the ndGUI skin installed: the old framed stock compass
-local C2 = Mock.new(addons, core, { width = W, height = Hh })
-C2.env.ui.compass.graphic_width = function(g) return g:find("NDGUI", 1, true) and 0 or 256 end
-if pcall(C2.load_package, "ndgui-compass") then
-  C2.env.compass_apply({ has_heading = true, heading = 1.0 })
-  check(C2.root.w == 137 and C2.find(C2.root, "ndgui_compass_frame").visible == true
-    and C2.find(C2.root, "compass_band").w == 129, "skin missing: framed stock compass")
+-- Stock framed fallback remains in window.xml for emergency use (compass_box / compass_band).
+local C2 = load_pkg("ndgui-compass")
+if C2 then
+  check(C2.find(C2.root, "compass_box") and C2.find(C2.root, "compass_band"),
+    "stock compass fallback widgets remain in the tree")
 end
 
 -- Target panels: fixed-size unit frames fed by the native slot plus game.character facts.
@@ -818,16 +822,16 @@ do
       { kind = "wedge", x = 130, y = 140, facing = 0, radius = 20, half_angle = .5 },
       { kind = "shop", x = 90, y = 90, facing = 0, radius = 0, half_angle = 0 } }) }
     check(calls[1], "playfield_map_markers runs" .. (calls[1] and "" or (": " .. tostring(calls[2]))))
-    check(drawn[#drawn] == "GFX_GUI_NDGUI_MAP_PLAYER", "player arrow draws last (on top)")
+    check(drawn[#drawn] == "GFX_GUI_MAP_ARROW", "player arrow draws last (on top)")
     local has = {}
     for _, g in ipairs(drawn) do has[g] = true end
-    check(has.GFX_GUI_NDGUI_MAP_MONSTER and has.GFX_GUI_NDGUI_MAP_SHOP and has.fan, "monster, shop and vision cone draw")
+    check(has.GFX_GUI_MAPSQUARE_MONSTER and has.GFX_GUI_MAPSQUARE_SHOP and has.fan, "monster, shop and vision cone draw")
     check(env.MapOverlay.counts.monster == 1 and env.MapOverlay.counts.shop == 1, "legend counts markers")
     env.MapOverlay.shown.monster = false
     env.MapOverlay.compose()
     has = {}
     for _, g in ipairs(drawn) do has[g] = true end
-    check(not has.GFX_GUI_NDGUI_MAP_MONSTER and has.GFX_GUI_NDGUI_MAP_SHOP, "monster filter hides monsters only")
+    check(not has.GFX_GUI_MAPSQUARE_MONSTER and has.GFX_GUI_MAPSQUARE_SHOP, "monster filter hides monsters only")
     calls = { pcall(env.playfield_map_wheel, 1, 500, 500) }
     check(calls[1], "playfield_map_wheel runs" .. (calls[1] and "" or (": " .. tostring(calls[2]))))
     calls = { pcall(env.playfield_map_context, 500, 500) }
@@ -843,23 +847,12 @@ do
     check(calls[1], "calibration walk runs" .. (calls[1] and "" or (": " .. tostring(calls[2]))))
     calls = { pcall(env.playfield_map_context, 500, 500) }
     check(calls[1] and (H.calls["menu.action"] or 0) == before, "context menu offers no (parked) waypoint actions")
-    -- client rejects our sprites: the map falls back to stock markers instead of failing
-    local real_sprite = map_surface.sprite
-    map_surface.sprite = function(g) if g:find("NDGUI", 1, true) then error("A map sprite requires an installed GUI graphic identifier.") end drawn[#drawn + 1] = g end
-    for k in pairs(env.MapSpriteRejected) do env.MapSpriteRejected[k] = nil end
-    local survived = pcall(env.MapOverlay.compose)
-    local stock = false
-    for _, g in ipairs(drawn) do if g == "GFX_GUI_MAP_ARROW" then stock = true end end
-    check(survived and stock, "rejected sprites fall back to stock markers")
-    map_surface.sprite = real_sprite
-    -- every sprite the map draws is generated by skin.py
-    local skin = io.open(here .. "/tools/skin.py", "rb"):read("a")
+    -- marketplace path uses stock GFX_GUI_MAP_* only (no custom atlas dependency)
     local src = io.open(addons .. "/ndgui-playfield-map/markers.lua", "rb"):read("a")
-    local missing_sprite = {}
-    for g in src:gmatch('"GFX_GUI_NDGUI_MAP_([A-Z_]+)"') do
-      if not skin:find('"' .. g .. '": %(') then missing_sprite[#missing_sprite + 1] = g end
-    end
-    check(#missing_sprite == 0, "map sprites exist in skin.py" .. (#missing_sprite > 0 and (": " .. table.concat(missing_sprite, ",")) or ""))
+    check(not src:find('"GFX_GUI_NDGUI_', 1, true) and not src:find('"GFX_NDGUI_', 1, true),
+      "playfield markers have no custom atlas string refs")
+    local stock_ok = src:find("GFX_GUI_MAP_ARROW", 1, true) and src:find("GFX_GUI_MAPSQUARE_MONSTER", 1, true)
+    check(stock_ok, "playfield markers use stock GFX_GUI_MAP_* sprites")
   end
 end
 
@@ -869,7 +862,7 @@ do
   local map_surface = { attach = function() end, pan = function() end, zoom = function() end,
     read = function(f) return ({ width = 400, height = 400, screen_width = 2000, screen_height = 1334 })[f] or 0 end,
     markers_begin = function() for i = #drawn, 1, -1 do drawn[i] = nil end end, markers_end = function() end,
-    sprite = function(g) drawn[#drawn + 1] = g end, fan = function() end }
+    sprite = function(g) drawn[#drawn + 1] = g end, fan = function() drawn[#drawn + 1] = "fan" end }
   local H = Mock.new(addons, core, { width = W, height = Hh, loose = true, map_surface = map_surface })
   local ok, err = pcall(H.load_package, "ndgui-planet-map")
   check(ok, "ndgui-planet-map loads (loose host)" .. (ok and "" or (": " .. tostring(err))))
@@ -887,10 +880,10 @@ do
     check(calls[1], "planet_map_visibility runs" .. (calls[1] and "" or (": " .. tostring(calls[2]))))
     calls = { pcall(env.planet_map_update, 1, 3) }
     check(calls[1], "planet_map_update runs" .. (calls[1] and "" or (": " .. tostring(calls[2]))))
-    check(drawn[#drawn] == "GFX_GUI_NDGUI_MAP_YOU", "planet 'you' beacon draws on top")
+    check(drawn[#drawn] == "GFX_GUI_PLANETMAP_PLAYER_MARKER", "planet 'you' beacon draws on top")
     local has = {}
     for _, g in ipairs(drawn) do has[g] = true end
-    check(has.GFX_GUI_NDGUI_MAP_MARKED and has.GFX_GUI_NDGUI_MAP_ROUTE and has.GFX_GUI_NDGUI_MAP_RING, "mission beacon, route and halo draw")
+    check(has.GFX_GUI_PLANETMAP_MISSION_MARKER2 and has.fan, "mission beacon, route and halo draw")
     check((texts.ndplanet_name or ""):find("Rubi-Ka", 1, true) and (texts.ndplanet_name or ""):find("1/3", 1, true), "status shows map name and zoom (" .. tostring(texts.ndplanet_name) .. ")")
     check((texts.ndplanet_mission or ""):find("E", 1, true), "mission bearing east before calibration (" .. tostring(texts.ndplanet_mission) .. ")")
     -- walk 100 m east: 10 content units -> 0.1 units/m; mission is 200 units away -> 2.0 km
@@ -903,13 +896,8 @@ do
     calls = { pcall(env.planet_map_context, 10, 10, 0) }
     check(calls[1], "planet_map_context runs" .. (calls[1] and "" or (": " .. tostring(calls[2]))))
     env.ui.text = old_text
-    local skin = io.open(here .. "/tools/skin.py", "rb"):read("a")
     local src = io.open(addons .. "/ndgui-planet-map/main.lua", "rb"):read("a")
-    local missing = {}
-    for g in src:gmatch('"GFX_GUI_NDGUI_MAP_([A-Z_]+)"') do
-      if not skin:find('"' .. g .. '": %(') then missing[#missing + 1] = g end
-    end
-    check(#missing == 0, "planet sprites exist in skin.py" .. (#missing > 0 and (": " .. table.concat(missing, ",")) or ""))
+    check(not src:find("GFX_GUI_NDGUI_MAP_", 1, true), "planet map has no NDGUI atlas refs")
   end
 end
 
@@ -1422,6 +1410,28 @@ end
 for _, d in ipairs({ "compass", "hotbar", "meter", "mission-hub", "planet-map", "playfield-map", "status-bars", "target-panels", "team", "watch" }) do
   local src = io.open(addons .. "/ndgui-" .. d .. "/main.lua", "rb"):read("a")
   check(src:find('ui.require("notum.ndgui-lib/grid")', 1, true), "ndgui-" .. d .. " loads the grid")
+end
+
+-- inventory cells: stacked well template + slot_cells bind (not bare icon_grid on the wrap)
+do
+  local slot = io.open(addons .. "/ndgui-inventory/slot.xml", "rb")
+  if slot then
+    local xml = slot:read("a"); slot:close()
+    check(xml:find('name="ndgui_slotcell"', 1, true) and xml:find('name="ndgui_slot"', 1, true)
+      and xml:find("library://notum.ndgui-lib/slots/open_54.png", 1, true),
+      "inventory slot.xml is ndgui_slotcell with inner ndgui_slot")
+  else
+    check(false, "inventory slot.xml is ndgui_slotcell with inner ndgui_slot (missing file)")
+  end
+  local main = io.open(addons .. "/ndgui-inventory/main.lua", "rb")
+  if main then
+    local src = main:read("a"); main:close()
+    check(src:find('ui.require("notum.ndgui-lib/slot_cells")', 1, true),
+      "inventory uses notum.ndgui-lib/slot_cells")
+  end
+  local cells = io.open(addons .. "/ndgui-lib/lua/slot_cells.lua", "rb")
+  check(cells ~= nil, "ndgui-lib ships slot_cells.lua")
+  if cells then cells:close() end
 end
 
 print(fail == 0 and "ALL PASS" or ("FAILURES " .. fail)); os.exit(fail == 0 and 0 or 1)

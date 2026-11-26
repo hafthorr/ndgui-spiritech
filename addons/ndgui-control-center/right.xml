@@ -9,22 +9,22 @@
       <Button name="right_next" graphic_mode="tinted" min_size="Point(6,22)" max_size="Point(6,22)" color="Default" v_alignment="center" layout_borders="Rect(5,0,0,0)" gfxid_raised="GFX_GUI_CONTROLCENTER_BIGARROW_RIGHT_STATE1" gfxid_hover="GFX_GUI_CONTROLCENTER_BIGARROW_RIGHT_STATE3" gfxid_pressed="GFX_GUI_CONTROLCENTER_BIGARROW_RIGHT_STATE2" />
     </View>
     <View name="right_menu" view_layout="horizontal" v_alignment="center">
-      <Button name="ncu_window" min_size="Point(30,26)" max_size="Point(30,26)" view_layout="stacked" layout_borders="Rect(0,0,2,0)" graphic_mode="tinted" color="3D6F9A" gfxid_raised="GFX_GUI_TAB_BACKGROUND" gfxid_hover="GFX_GUI_TAB_ACTIVE" gfxid_pressed="GFX_GUI_TAB_ACTIVE">
+      <Button name="ncu_window" min_size="Point(30,26)" max_size="Point(30,26)" view_layout="stacked" layout_borders="Rect(0,0,2,0)" flat="true" fill_color="0xFF16202A" active_fill_color="0xFF3D6F9A">
         <BitmapView name="ncu_window_icon" min_size="Point(20,20)" max_size="Point(20,20)" image="library://notum.ndgui-lib/icons/ncu.png" h_alignment="center" v_alignment="center" color="FFFFFF" />
       </Button>
-      <Button name="map" min_size="Point(30,26)" max_size="Point(30,26)" view_layout="stacked" layout_borders="Rect(0,0,2,0)" graphic_mode="tinted" color="3D6F9A" gfxid_raised="GFX_GUI_TAB_BACKGROUND" gfxid_hover="GFX_GUI_TAB_ACTIVE" gfxid_pressed="GFX_GUI_TAB_ACTIVE">
+      <Button name="map" min_size="Point(30,26)" max_size="Point(30,26)" view_layout="stacked" layout_borders="Rect(0,0,2,0)" flat="true" fill_color="0xFF16202A" active_fill_color="0xFF3D6F9A">
         <BitmapView name="map_icon" min_size="Point(20,20)" max_size="Point(20,20)" image="library://notum.ndgui-lib/icons/map.png" h_alignment="center" v_alignment="center" color="FFFFFF" />
       </Button>
-      <Button name="missions" min_size="Point(30,26)" max_size="Point(30,26)" view_layout="stacked" layout_borders="Rect(0,0,2,0)" graphic_mode="tinted" color="3D6F9A" gfxid_raised="GFX_GUI_TAB_BACKGROUND" gfxid_hover="GFX_GUI_TAB_ACTIVE" gfxid_pressed="GFX_GUI_TAB_ACTIVE">
+      <Button name="missions" min_size="Point(30,26)" max_size="Point(30,26)" view_layout="stacked" layout_borders="Rect(0,0,2,0)" flat="true" fill_color="0xFF16202A" active_fill_color="0xFF3D6F9A">
         <BitmapView name="missions_icon" min_size="Point(20,20)" max_size="Point(20,20)" image="library://notum.ndgui-lib/icons/missions.png" h_alignment="center" v_alignment="center" color="FFFFFF" />
       </Button>
-      <Button name="store" min_size="Point(30,26)" max_size="Point(30,26)" view_layout="stacked" layout_borders="Rect(0,0,2,0)" graphic_mode="tinted" color="3D6F9A" gfxid_raised="GFX_GUI_TAB_BACKGROUND" gfxid_hover="GFX_GUI_TAB_ACTIVE" gfxid_pressed="GFX_GUI_TAB_ACTIVE">
+      <Button name="store" min_size="Point(30,26)" max_size="Point(30,26)" view_layout="stacked" layout_borders="Rect(0,0,2,0)" flat="true" fill_color="0xFF16202A" active_fill_color="0xFF3D6F9A">
         <BitmapView name="store_icon" min_size="Point(20,20)" max_size="Point(20,20)" image="library://notum.ndgui-lib/icons/store.png" h_alignment="center" v_alignment="center" color="FFFFFF" />
       </Button>
-      <Button name="team" min_size="Point(30,26)" max_size="Point(30,26)" view_layout="stacked" layout_borders="Rect(0,0,2,0)" graphic_mode="tinted" color="3D6F9A" gfxid_raised="GFX_GUI_TAB_BACKGROUND" gfxid_hover="GFX_GUI_TAB_ACTIVE" gfxid_pressed="GFX_GUI_TAB_ACTIVE">
+      <Button name="team" min_size="Point(30,26)" max_size="Point(30,26)" view_layout="stacked" layout_borders="Rect(0,0,2,0)" flat="true" fill_color="0xFF16202A" active_fill_color="0xFF3D6F9A">
         <BitmapView name="team_icon" min_size="Point(20,20)" max_size="Point(20,20)" image="library://notum.ndgui-lib/icons/team.png" h_alignment="center" v_alignment="center" color="FFFFFF" />
       </Button>
-      <Button name="friends" min_size="Point(30,26)" max_size="Point(30,26)" view_layout="stacked" layout_borders="Rect(0,0,2,0)" graphic_mode="tinted" color="3D6F9A" gfxid_raised="GFX_GUI_TAB_BACKGROUND" gfxid_hover="GFX_GUI_TAB_ACTIVE" gfxid_pressed="GFX_GUI_TAB_ACTIVE">
+      <Button name="friends" min_size="Point(30,26)" max_size="Point(30,26)" view_layout="stacked" layout_borders="Rect(0,0,2,0)" flat="true" fill_color="0xFF16202A" active_fill_color="0xFF3D6F9A">
         <BitmapView name="friends_icon" min_size="Point(20,20)" max_size="Point(20,20)" image="library://notum.ndgui-lib/icons/friends.png" h_alignment="center" v_alignment="center" color="FFFFFF" />
       </Button>
     </View>
@@ -32,7 +32,9 @@
       <TextView value="DEF" font_size="11" color="2F7EC4" v_alignment="center" layout_borders="Rect(0,0,5,0)" />
       <Slider name="aggdef" track_height="18" track_slices="Rect(1,5,1,5)" min_size="Point(128,18)" max_size="Point(128,18)" bg_gfx="GFX_GUI_CONTROLCENTER_AGGDEF_SLIDER_BACKGROUND" thumb_gfx="GFX_GUI_CONTROLCENTER_AGGDEF_SLIDER" thumb_width="11" weight="1" />
       <TextView value="AGG" font_size="11" color="C44747" v_alignment="center" layout_borders="Rect(5,0,0,0)" />
-      <Button name="aggdef_info" visible="false" graphic_mode="tinted" color="Default" min_size="Point(15,15)" max_size="Point(15,15)" v_alignment="center" layout_borders="Rect(4,0,0,0)" gfxid_raised="GFX_GUI_WINDOW_ICON_I" gfxid_hover="GFX_GUI_WINDOW_ICON_I" gfxid_pressed="GFX_GUI_WINDOW_ICON_I" tooltip="How AGG/DEF affects your character" />
+      <Button name="aggdef_info" visible="false" flat="true" fill_color="0x00000000" min_size="Point(15,15)" max_size="Point(15,15)" v_alignment="center" layout_borders="Rect(4,0,0,0)" view_layout="stacked" tooltip="How AGG/DEF affects your character">
+        <BitmapView interactive="false" image="library://notum.ndgui-lib/window/info.png" min_size="Point(15,15)" max_size="Point(15,15)" h_alignment="center" v_alignment="center" />
+      </Button>
     </View>
   </View>
 </root>

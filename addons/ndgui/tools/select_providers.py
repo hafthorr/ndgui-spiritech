@@ -36,9 +36,13 @@ def client_running():
 
 def providers():
     found = {}
-    for manifest in glob.glob(os.path.join(ADDONS, "ndgui*", "package.xml")):
+    manifests = glob.glob(os.path.join(ADDONS, "ndgui*", "package.xml"))
+    manifests += glob.glob(os.path.join(ADDONS, "notum.ndgui*", "package.xml"))
+    for manifest in sorted(set(manifests)):
         text = open(manifest, encoding="utf-8").read()
         pid = re.search(r'<Package id="([^"]+)"', text)
+        if not pid:
+            continue
         for role in re.findall(r'<Provides role="([^"]+)"', text):
             found[role] = pid.group(1)
     return found

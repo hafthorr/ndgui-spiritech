@@ -125,6 +125,7 @@ function M.new(addons_dir, core_dir, opts)
   ui.image = function(v, src) assert(v, "image nil view"); v.image = src end
   ui.fill_color = function(v, c) assert(v, "fill_color nil view"); v.fill = c end
   ui.font_size = function(v, n) assert(v and type(n) == "number" and n >= 1 and n <= 256, "font_size"); v.font = n end
+  ui.text_width = function(v) assert(v, "text_width nil view"); return #(v.text or "") * 7 end
   ui.opacity = function(v, a) assert(v and a >= 0 and a <= 1, "opacity"); v.opacity = a end
   H.stopped = 0
   ui.stop_updates = function() H.stopped = H.stopped + 1 end

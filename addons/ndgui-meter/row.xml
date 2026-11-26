@@ -8,6 +8,6 @@
     <TextView name="row_value_shadow" value="" color="000000" font_size="11" text_alignment="right" size_to_text="false" h_alignment="right" v_alignment="center" layout_borders="Rect(0,1,4,0)" />
     <TextView name="row_value" value="" color="FFFFFF" font_size="11" text_alignment="right" size_to_text="false" h_alignment="right" v_alignment="center" layout_borders="Rect(0,0,5,0)" />
     <!-- invisible flat button on top: takes the click (like the stock ChatConfig rows) -->
-    <Button name="row_hit" flat="true" label="" selection_color="0x30789FBF" />
+    <View name="ndgui_btnwrap" view_layout="stacked" min_size="Point(-1,28)" max_size="Point(-1,28)"><View name="ndgui_chrome" interactive="false" view_layout="horizontal"><BitmapView name="ndgui_btn_l" interactive="false" image="library://notum.ndgui-lib/buttons/btn28_raised_left.png" min_size="Point(4,28)" max_size="Point(4,28)" /><BitmapView name="ndgui_btn_m" interactive="false" image="library://notum.ndgui-lib/buttons/btn28_raised_middle.png" weight="1" min_size="Point(0,28)" max_size="Point(-1,28)" /><BitmapView name="ndgui_btn_r" interactive="false" image="library://notum.ndgui-lib/buttons/btn28_raised_right.png" min_size="Point(4,28)" max_size="Point(4,28)" /></View><Button name="row_hit" label="" selection_color="0x30789FBF" flat="true" text_alignment="center" /></View>
   </View>
 </root>

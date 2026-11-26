@@ -10,7 +10,7 @@
         <View name="detail_back" />
         <View view_layout="vertical" layout_borders="Rect(8,8,8,8)">
           <View view_layout="horizontal">
-            <ItemSlotView name="detail_icon" icon_fit="center" min_size="Point(48,48)" max_size="Point(48,48)" v_alignment="top" />
+            <View name="ndgui_slotcell" view_layout="stacked" min_size="Point(48,48)" max_size="Point(48,48)"><BitmapView name="ndgui_slot_back" interactive="false" image="library://notum.ndgui-lib/slots/open_48.png" min_size="Point(48,48)" max_size="Point(48,48)" /><ItemSlotView name="detail_icon" icon_fit="center" min_size="Point(48,48)" max_size="Point(48,48)" slot_gfx="" /></View>
             <View view_layout="vertical" layout_borders="Rect(8,0,0,0)">
               <TextView name="detail_title" value="" color="F2F25C" font_size="14" word_wrap="true" size_to_text="false" />
               <TextView name="detail_status" value="" color="9AA8B4" font_size="11" size_to_text="false" layout_borders="Rect(0,3,0,0)" />
@@ -28,7 +28,7 @@
             <TextView name="detail_pay" value="" color="FFD84A" font_size="12" size_to_text="false" />
             <TextView name="detail_where" value="" color="3DE33D" font_size="11" size_to_text="false" layout_borders="Rect(0,3,0,0)" />
             <View name="detail_reward" view_layout="horizontal" layout_borders="Rect(0,6,0,0)">
-              <ItemSlotView name="detail_reward_icon" interactive="false" icon_fit="center" min_size="Point(32,32)" max_size="Point(32,32)" v_alignment="center" />
+              <View name="ndgui_slotcell" view_layout="stacked" min_size="Point(32,32)" max_size="Point(32,32)"><BitmapView name="ndgui_slot_back" interactive="false" image="library://notum.ndgui-lib/slots/open_36.png" min_size="Point(32,32)" max_size="Point(32,32)" /><ItemSlotView name="detail_reward_icon" interactive="false" icon_fit="center" min_size="Point(32,32)" max_size="Point(32,32)" slot_gfx="" /></View>
               <TextView name="detail_reward_name" value="" color="C5D7E6" font_size="11" word_wrap="true" size_to_text="false" v_alignment="center" layout_borders="Rect(6,0,0,0)" />
             </View>
             <TextView name="detail_text" value="" color="AFC2D2" font_size="11" word_wrap="true" size_to_text="false" layout_borders="Rect(0,8,0,0)" />

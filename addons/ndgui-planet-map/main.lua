@@ -74,25 +74,21 @@ local map_name = ""
 local previous_cx, previous_cy
 local me = { x = nil, z = nil, playfield = nil }
 
--- ---- sprites (DarkTech from tools/skin.py, stock fallback) ----------------------
-local FALLBACK = {
-	GFX_GUI_NDGUI_MAP_YOU = "GFX_GUI_PLANETMAP_PLAYER_MARKER",
-	GFX_GUI_NDGUI_MAP_MARKED = "GFX_GUI_PLANETMAP_MISSION_MARKER2",
-}
+-- ---- markers: stock planet sprites + DarkTech fan primitives (no NDGUI atlas) ---
+local YOU = "GFX_GUI_PLANETMAP_PLAYER_MARKER"
+local MARKED = "GFX_GUI_PLANETMAP_MISSION_MARKER2"
+local C_ROUTE, C_RING = "#E8C05A", "#6CB6FF"
 local rejected = {}
 local function sprite(graphic, x, y)
 	if rejected[graphic] then
-		if FALLBACK[graphic] then
-			pcall(view.sprite, FALLBACK[graphic], x, y, 0, 1)
-		end
 		return
 	end
 	if not pcall(view.sprite, graphic, x, y, 0, 1) then
 		rejected[graphic] = true
-		if FALLBACK[graphic] then
-			pcall(view.sprite, FALLBACK[graphic], x, y, 0, 1)
-		end
 	end
+end
+local function dot(x, y, radius, color)
+	view.fan(x, y, radius, 0, math.pi * 2, color)
 end
 PlanetSpriteRejected = rejected
 
@@ -203,21 +199,21 @@ local function compose_markers()
 		local length = math.sqrt(dx * dx + dy * dy)
 		local count = math.min(300, math.floor(length / math.max(0.01, ROUTE_PX * step)))
 		for i = 2, count - 2 do
-			sprite("GFX_GUI_NDGUI_MAP_ROUTE", mx + dx * i / count, my + dy * i / count)
+			dot(mx + dx * i / count, my + dy * i / count, math.max(1, step), C_ROUTE)
 		end
 	end
 	if has_me then
 		local radius = HALO_PX * step
 		for i = 0, 15 do
 			local a = 2 * math.pi * i / 16
-			sprite("GFX_GUI_NDGUI_MAP_RING", mx + radius * math.cos(a), my + radius * math.sin(a))
+			dot(mx + radius * math.cos(a), my + radius * math.sin(a), math.max(1, step), C_RING)
 		end
 	end
 	if has_quest then
-		sprite("GFX_GUI_NDGUI_MAP_MARKED", qx, qy)
+		sprite(MARKED, qx, qy)
 	end
 	if has_me then
-		sprite("GFX_GUI_NDGUI_MAP_YOU", mx, my)
+		sprite(YOU, mx, my)
 	end
 	view.markers_end()
 end

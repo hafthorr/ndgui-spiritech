@@ -5,7 +5,7 @@
     <BitmapView name="buff_track" image="library://notum.ndgui-lib/bars/track_h.png" />
     <BitmapView name="buff_fill" image="library://notum.ndgui-lib/bars/target_h.png" graphic_mode="tinted" color="3D6F9A" h_alignment="left" />
     <View view_layout="horizontal">
-      <ItemSlotView name="buff_icon" interactive="false" icon_fit="cover" min_size="Point(20,20)" max_size="Point(20,20)" v_alignment="center" />
+      <ItemSlotView name="buff_icon" interactive="false" icon_fit="cover" min_size="Point(20,20)" max_size="Point(20,20)" slot_gfx="" />
       <TextView name="buff_name" value="" color="E6EEF5" font_size="11" size_to_text="false" v_alignment="center" layout_borders="Rect(5,0,0,0)" />
       <TextView name="buff_time" value="" color="E6EEF5" font_size="11" text_alignment="right" size_to_text="false" v_alignment="center" />
     </View>
