@@ -64,3 +64,4 @@ python3 build_marketplace.py --addons-dir /path/to/client/UI/Addons
 - `square_buttons.py` emits/unwraps slotcells; `fork_windows.py` / `fork_hud.py` swap the require for inventory/actions/trade/nano/npc-chat/NCU. Hotbar already had package chrome.
 - Provider tests ALL PASS; client synced; `release/ndgui-0.3.7.zip` rebuilt.
 - Style: slot/compass/button/tool comments brought in line with Core (sparse) and ndgui-lib prose headers (`briefs.lua` / `grid.lua` voice); dropped "modern-ui"/"sibling-behind" jargon from code comments.
+- Docs: README / INSTALL / marketplace-listing present Marketplace and install-script as peer paths (script = fuller atlas / Login-Options).

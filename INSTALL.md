@@ -1,8 +1,18 @@
 # Installing ndGUI for Spiritech
 
-## Windows (the normal way)
+You can install from the **Spiritech Marketplace** (in-game HUD) or with the **install script** (same HUD, plus a fuller atlas merge for Login/Options and native chrome). Use either, or Marketplace first and the script's `-SkinLayouts` later for the extra skin.
 
-You don't need Python or an exe. The installer is a PowerShell script (`install.ps1`), and `install.bat` just starts it. Both are plain text, so open them in Notepad if you want to see what they do.
+## Spiritech Marketplace
+
+1. Quit the game.
+2. Install **ndGUI** from the Launcher **Addons** page (packages land as `notum.ndgui*` under `client/UI/Addons`).
+3. Options → Interface & HUD → **UI packages** → select the Notum Dovvetech providers; re-enter the character.
+
+That covers the in-game HUD, DarkTech buttons, slot wells, compass, and maps. Login / Options / character screens stay stock until you also run the install script (or `-SkinLayouts` below). Details: [docs/marketplace-listing.md](docs/marketplace-listing.md).
+
+## Windows install script (full atlas)
+
+Merges DarkTech art into the game's graphics atlas and squares Login / Options / character screens. You don't need Python or an exe: `install.ps1` is plain PowerShell, and `install.bat` just starts it. Open either in Notepad if you want to see what they do.
 
 1. **Quit the game.** The game reads its skin at start and rewrites its settings on exit. If it's running, the installer waits until you close it.
 2. Download **`ndgui-spiritech-<version>.zip`** from the [Releases page](../../releases).
@@ -25,18 +35,12 @@ You don't need Python or an exe. The installer is a PowerShell script (`install.
    Press **Enter** to install.
 5. Start the game.
 
-## Spiritech Launcher Addons (marketplace)
+**Already installed from Marketplace?** For atlas + Login/Options only, without touching packages or providers:
 
-1. Quit the game.
-2. Install **ndGUI** from the Launcher **Addons** page (packages land as `notum.ndgui*` under `client/UI/Addons`).
-3. Options → Interface & HUD → **UI packages** → select the Notum Dovvetech providers; re-enter the character.
-4. Optional Login/Options squaring only — unpack the GitHub **player** zip and run:
-   ```powershell
-   .\install.ps1 -SkinLayouts
-   .\install.ps1 -SkinLayouts -KeepProviders   # keep providers you already chose
-   ```
-
-The marketplace zip is enough for in-game HUD, DarkTech buttons, compass, and maps. Details: [docs/marketplace-listing.md](docs/marketplace-listing.md). The full `install.bat` path below remains the one-shot install that does everything.
+```powershell
+.\install.ps1 -SkinLayouts
+.\install.ps1 -SkinLayouts -KeepProviders   # keep providers you already chose
+```
 
 ### It can't find my game
 

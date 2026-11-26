@@ -68,7 +68,19 @@ Inventory, Wear, Stats, Skills, Nano Programs, Team, Raid, Friends, Pets, Perks,
 
 ## Install (short version)
 
-There's nothing else to install: no Python, no exe. The installer is a plain PowerShell script you can read in Notepad.
+Two ways in. Both use the same DarkTech HUD; the difference is how deep the skin goes.
+
+### Spiritech Marketplace (in-game HUD)
+
+1. Quit the game.
+2. In the Spiritech Launcher, open **Addons** and install **ndGUI**.
+3. Options → Interface & HUD → **UI packages** → pick the **Notum Dovvetech** providers; re-enter the character.
+
+That is enough for the in-game HUD, DarkTech buttons, slot wells, compass, and maps. Details: [docs/marketplace-listing.md](docs/marketplace-listing.md).
+
+### Install script (full atlas + Login/Options)
+
+The player installer merges DarkTech art into the game's graphics atlas and squares Login / Options / character screens. No Python or exe: `install.bat` is plain PowerShell you can read in Notepad.
 
 1. **Quit the game.**
 2. Download **`ndgui-spiritech-<version>.zip`** from the **[latest release](../../releases)** and **unpack it** (right-click → *Extract All*).
@@ -76,12 +88,12 @@ There's nothing else to install: no Python, no exe. The installer is a plain Pow
    It finds the game by itself. If it can't, it opens a folder picker: choose the folder that holds `PRK.Client.exe`.
 4. Start the game. If something still looks stock, log out to character select and back in once.
 
+**Already on Marketplace?** Unpack the same player zip and run `install.ps1 -SkinLayouts` (or `-SkinLayouts -KeepProviders`) for atlas / Login-Options only, without redoing packages.
+
 **Update:** run `install.bat` and pick **2) Update to the newest version**. It downloads the latest release from GitHub and installs it. Also re-run it after a game patch, which may put stock files back.
 **Undo everything:** run `install.bat` and pick **4) Uninstall**. Every game file it touches is backed up first.
 
 Linux/Mac, or building from source: `python install.py` (see [INSTALL.md](INSTALL.md)).
-
-**Launcher Addons:** when ndGUI is on the Spiritech Addons page, install the marketplace suite there, then pick Notum Dovvetech providers in Options. That alone is enough for in-game HUD, DarkTech buttons, compass, and maps. Optionally run `install.ps1 -SkinLayouts` from the player zip for square Login/Options screens. See [docs/marketplace-listing.md](docs/marketplace-listing.md). The full `install.bat` path above still does everything in one shot.
 
 Full guide, options, updating after a client patch, and troubleshooting: **[INSTALL.md](INSTALL.md)**.
 
@@ -106,7 +118,7 @@ The Grid Overlay always draws the size you set (a small grid shows every 2nd / 3
 
 ## How it works (one paragraph)
 
-Spiritech loads Lua/XML UI packages from `client/UI/Addons`. This repo holds **15 totally AI-hand-made packages** ([`addons/`](addons)) and the Python tools that derive the other **26** from the game's own UI. They also square every button and paint the DarkTech skin. `build_release.py` runs all of that once, on a developer's machine, and zips the result (player zip plus a packages-only marketplace suite). The player's `install.ps1` then only copies the packages, swaps in the patched screen layouts, merges the finished skin images into the game's graphics file (`cd_image/gui/Default`), and selects the ndGUI providers. It keeps `*.stock` backups of everything it touches. Details are in [CONTRIBUTING.md](CONTRIBUTING.md) and [docs/marketplace-listing.md](docs/marketplace-listing.md).
+Spiritech loads Lua/XML UI packages from `client/UI/Addons`. This repo holds **15 totally AI-hand-made packages** ([`addons/`](addons)) and the Python tools that derive the other **26** from the game's own UI. They also square every button and paint the DarkTech skin. `build_release.py` runs all of that once, on a developer's machine, and zips the result (player zip plus a packages-only marketplace suite for the Spiritech Addons page). The Marketplace install is packages only; `install.ps1` also swaps in patched screen layouts, merges skin images into the game's graphics atlas (`cd_image/gui/Default`), and can select the ndGUI providers. It keeps `*.stock` backups of everything it touches. Details are in [CONTRIBUTING.md](CONTRIBUTING.md) and [docs/marketplace-listing.md](docs/marketplace-listing.md).
 
 ## Known limits
 

@@ -1,5 +1,10 @@
 # Spiritech Addons marketplace listing
 
+ndGUI is offered two ways: the **Spiritech Marketplace** suite (packages only) and the
+GitHub **player zip** / `install.ps1` (packages plus a fuller graphics-atlas merge).
+Marketplace alone is enough for the in-game HUD; the install script adds Login/Options
+squaring and optional atlas retint that the Launcher cannot apply.
+
 ## What the marketplace can and cannot do
 
 The Spiritech Launcher Addons page installs a **suite zip** of packages into
@@ -7,10 +12,10 @@ The Spiritech Launcher Addons page installs a **suite zip** of packages into
 run a custom installer, merge a graphics atlas, patch Login/Options layouts, or
 rewrite `Client.xml` UI package providers.
 
-| Piece | Marketplace zip alone | Optional residual (`-SkinLayouts`) / full `install.ps1` |
+| Piece | Marketplace zip alone | Install script (`install.ps1` / `-SkinLayouts`) |
 | --- | --- | --- |
-| HUD / window packages + Buff Watch / Meter / Grid | yes | (already present) |
-| DarkTech window chrome, 3-slice buttons, pin, compass PNGs in `notum.ndgui-lib` | yes | — |
+| HUD / window packages + Buff Watch / Meter / Grid | yes | yes (or already present) |
+| DarkTech window chrome, 3-slice buttons, pin, compass, slot wells in `notum.ndgui-lib` | yes | — |
 | Maps usable (stock facing sprites + DarkTech fan/line primitives) | yes | — |
 | Pixel-identical custom map-marker bitmaps | **no** (atlas-only API) | yes if you still merge skin.py map sprites |
 | Square buttons on Login / Options / character screens | **no** | yes (Layouts patch) |
@@ -18,9 +23,9 @@ rewrite `Client.xml` UI package providers.
 | Native-interior teal (list scrollbars, system dropdown guts) | residual | optional atlas retint |
 
 **In-game product:** the marketplace zip is self-sufficient for HUD functionality and
-DarkTech buttons / pin / compass / maps. `-SkinLayouts` is **optional** and only
-needed for Login/Options squaring and optional native-chrome retint — not for
-labelled toolbar buttons or compass/map usefulness.
+DarkTech buttons / pin / compass / maps / slot wells. The install script is the path for
+**more complete atlas replacement** (Login/Options squaring and optional native-chrome
+retint). Use `-SkinLayouts` after a Marketplace install if you only want that residual skin.
 
 ## Artifacts
 
@@ -54,7 +59,7 @@ Suggested listing fields:
 | --- | --- |
 | Name | `ndGUI` (or `Notum Dovvetech`) |
 | Author | ndGUI / thedenis (confirm with maintainer) |
-| Description | Full DarkTech / Notum Dovvetech UI for Spiritech: HUD, windows, Buff Watch, Damage Meter, maps, compass. After install, pick Notum Dovvetech providers under Options → Interface & HUD → UI packages. Optional: run `-SkinLayouts` from the GitHub player zip only if you want square Login/Options screens. |
+| Description | Full DarkTech / Notum Dovvetech UI for Spiritech: HUD, windows, Buff Watch, Damage Meter, maps, compass. After install, pick Notum Dovvetech providers under Options → Interface & HUD → UI packages. For square Login/Options and a fuller atlas merge, also run the GitHub player zip (`install.ps1` or `-SkinLayouts`). |
 | Version | match `install.py` `VERSION` |
 | Changelog | copy the matching `## <version>` section from `CHANGELOG.md` |
 | Screenshots | in-game HUD, inventory, Buff Watch (upload via portal) |
@@ -92,4 +97,4 @@ On a client with **no** prior ndGUI skin/Layouts:
 3. Confirm: labelled toolbars (meter, maps, terminal), window pin/close, compass strip, local + planet maps (markers/route), control-center tabs/minibar.
 4. Expect residual teal only on native list scrollbars / system dropdown guts; Login/Options remain stock unless `-SkinLayouts` is run.
 
-The full `install.ps1` / `install.bat` path (packages + skin + screens + providers) remains supported and does not require the marketplace.
+The full `install.ps1` / `install.bat` path (packages + atlas skin + screens + providers) remains a supported one-shot install and does not require the marketplace.
