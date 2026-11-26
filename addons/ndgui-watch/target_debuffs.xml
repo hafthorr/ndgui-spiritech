@@ -1,0 +1,9 @@
+<?xml version="1.0"?>
+<root>
+  <!-- ndGUI Target Debuffs: your effects on the target, then the missing parts of your rotation. Sizes from main.lua. -->
+  <View name="td_content" view_layout="vertical" layout_borders="Rect(3,3,3,3)">
+    <TextView name="td_head" value="NO TARGET" color="7F9BB0" font_size="10" size_to_text="false" />
+    <View name="td_rows" view_layout="vertical" layout_borders="Rect(0,2,0,0)" />
+    <TextView name="td_empty" value="" color="5F7486" font_size="11" size_to_text="false" visible="false" />
+  </View>
+</root>

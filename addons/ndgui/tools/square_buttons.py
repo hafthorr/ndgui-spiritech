@@ -79,11 +79,28 @@ def attr(tag, name):
 
 
 def unwrap_buttons(text):
-    """Peel ndgui_btnwrap layers until none remain (fixes nested wraps)."""
+    """Peel ndgui_btnwrap layers until none remain (fixes nested wraps).
+
+    Spacing and visibility live on the wrap after skinning. Put them back on
+    the Button so the next skin pass can move them again.
+    """
     total = 0
+
+    def peel(m):
+        nonlocal total
+        total += 1
+        wrap = m.group(0)
+        btn = m.group(1)
+        open_end = wrap.find(">")
+        open_tag = wrap[:open_end]
+        for name in ("weight", "layout_borders", "v_alignment", "h_alignment", "visible"):
+            val = re.search(r'\b' + name + r'="([^"]*)"', open_tag)
+            if val and not re.search(r'\b' + name + r'="', btn):
+                btn = btn.replace("<Button", f'<Button {name}="{val.group(1)}"', 1)
+        return btn
+
     while True:
-        text, n = WRAP.subn(r"\1", text)
-        total += n
+        text, n = WRAP.subn(peel, text)
         if n == 0:
             break
     return text, total
@@ -129,7 +146,7 @@ def skin_package(tag):
     wrap_bits = []
     for name in ("weight", "layout_borders", "v_alignment", "h_alignment", "visible", "enabled"):
         val = attr(btn, name)
-        if val is not None and name in ("weight", "layout_borders", "v_alignment", "h_alignment"):
+        if val is not None and name in ("weight", "layout_borders", "v_alignment", "h_alignment", "visible"):
             wrap_bits.append(f'{name}="{val}"')
             btn = re.sub(r'\s+' + name + r'="[^"]*"', "", btn)
     min_size = attr(btn, "min_size") or f"Point(-1,{h})"
@@ -237,10 +254,21 @@ def unwrap_slots(text):
         r'</View>',
     ):
         rx = re.compile(pattern, re.S)
+
+        def peel(match, counter):
+            # Slots under 24px are left bare on purpose. Keep a well that was
+            # authored by hand (team 16px, pet 26x18) or the next pass deletes it.
+            w, h = slot_size(match.group(1))
+            if min(w, h) < 24:
+                return match.group(0)
+            counter[0] += 1
+            return match.group(1)
+
         while True:
-            text, n = rx.subn(r"\1", text)
-            total += n
-            if n == 0:
+            counter = [0]
+            text = rx.sub(lambda match: peel(match, counter), text)
+            total += counter[0]
+            if counter[0] == 0:
                 break
     CHILD = re.compile(
         r'(<ItemSlotView\b[^>]*?)\s*>\s*'
@@ -302,12 +330,57 @@ def skin_wear_panels(text):
     return text, n
 
 
+WEAR_TAB_WIDTH = {
+    "wear_weapons_tab": 45,
+    "wear_clothing_tab": 45,
+    "wear_implants_tab": 43,
+    "wear_social_tab": 49,
+}
+
+
+def skin_wear_tabs(text):
+    """Wear switches pages in Lua. These four are ordinary buttons so the
+    package chrome can draw them. Widths sum to the 182px row. Height 19
+    matches the button slices. The names stay so main.lua can find them.
+    """
+    if "wear_weapons_tab" not in text or "<TabButton" not in text:
+        return text, 0
+
+    def repl(m):
+        attrs = m.group(1)
+        name = re.search(r'\bname="([^"]*)"', attrs)
+        key = name.group(1) if name else ""
+        width = WEAR_TAB_WIDTH.get(key)
+        if width is None:
+            return m.group(0)
+        attrs = re.sub(r'\s+target="[^"]*"', "", attrs)
+        attrs = re.sub(r'\s+layout_borders="[^"]*"', "", attrs)
+        attrs = re.sub(r'\s+min_size="[^"]*"', "", attrs)
+        attrs = re.sub(r'\s+max_size="[^"]*"', "", attrs)
+        return f'<Button{attrs.rstrip()} min_size="Point({width},19)" max_size="Point({width},19)" />'
+
+    text, n = re.subn(r"<TabButton\b([^>]*?)/>", repl, text)
+    text = text.replace(
+        'name="wear_tabs" view_layout="horizontal" selected_on_top="true" paint_on_top="true" '
+        'min_size="Point(-1,17)" max_size="Point(-1,17)"',
+        'name="wear_tabs" view_layout="horizontal" selected_on_top="true" paint_on_top="true" '
+        'min_size="Point(-1,19)" max_size="Point(-1,19)"',
+    )
+    text = text.replace(
+        'name="wear_content" view_layout="vertical" min_size="Point(182,311)" max_size="Point(182,311)"',
+        'name="wear_content" view_layout="vertical" min_size="Point(182,313)" max_size="Point(182,313)"',
+    )
+    return text, n
+
+
 def patch_text(text, package_mode):
     count = 0
     if package_mode:
         text, n = unwrap_buttons(text)
         count += n
         text, n = unwrap_slots(text)
+        count += n
+        text, n = skin_wear_tabs(text)
         count += n
 
     skin = skin_package if package_mode else skin_atlas

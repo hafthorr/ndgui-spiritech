@@ -91,9 +91,17 @@ If step 4 says there are no game settings yet (it's your first-ever start), star
 
 Run `install.bat` → **4**. It resets the providers to the built-ins, puts back the stock skin, screens and window file from the `*.stock` copies, and removes every ndGUI package (`ndgui*` and marketplace `notum.ndgui*`). Window positions saved by ndGUI stay in the game settings, where they're harmless. If you installed from the Launcher Addons page, also remove the listing there so it does not reappear as an unmanaged conflict later.
 
-## Linux / Mac / from source (Python)
+## Linux / Mac (Python)
 
-You need **Python 3.8+** and **Pillow**. This builds everything on your machine from the repo:
+The player zip includes `install.py` next to `install.bat`. Unpack the whole zip and run it from that folder. Python 3.8+ is enough; it installs the prebuilt packages, screens, and skin, same as `install.bat`.
+
+```bash
+python install.py --install
+python install.py --install --client "/path/to/PRK-AO-Native/client"
+python install.py --uninstall
+```
+
+From a git checkout you need **Python 3.8+** and **Pillow**. That builds everything on your machine from the repo:
 
 ```bash
 python -m pip install pillow

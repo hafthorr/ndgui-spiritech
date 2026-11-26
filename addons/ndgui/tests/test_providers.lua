@@ -713,7 +713,7 @@ check(same, "library colors match theme.lua darktech")
 -- fork_hud.py packages: each loads under the mock host and declares its role.
 for _, case in ipairs({
   { "ndgui-ncu", "prk.ncu" }, { "ndgui-target-ncu", "prk.target-ncu" }, { "ndgui-faction", "prk.faction" },
-  { "ndgui-chat", "prk.chat" }, { "ndgui-chat-config", "prk.chat-config" }, { "ndgui-raid-bar", "prk.raid-bars" },
+  { "ndgui-intel", "prk.chat" }, { "ndgui-chat-config", "prk.chat-config" }, { "ndgui-raid-bar", "prk.raid-bars" },
   { "ndgui-timer-bars", "prk.timer-bars" }, { "ndgui-team-invite", "prk.team-invite" },
   { "ndgui-sneak-indicator", "prk.sneak-indicator" }, { "ndgui-logout-progress", "prk.logout-progress" },
 }) do
@@ -1431,6 +1431,29 @@ do
   end
   local cells = io.open(addons .. "/ndgui-lib/lua/slot_cells.lua", "rb")
   check(cells ~= nil, "ndgui-lib ships slot_cells.lua")
+  local strip = io.open(addons .. "/ndgui-lib/lua/ncu_strip.lua", "rb")
+  check(strip ~= nil, "ndgui-lib ships ncu_strip.lua")
+  if strip then
+    local body = strip:read("a")
+    strip:close()
+    check(body:find("notum.ndgui-lib/slot_cells", 1, true) and not body:find("shared%s*=%s*true"),
+      "ncu_strip uses slot_cells without Core shared=true")
+  end
+  local team_slot = io.open(addons .. "/ndgui-team/team_ncu_slot.xml", "rb")
+  check(team_slot ~= nil, "ndgui-team ships team_ncu_slot.xml")
+  if team_slot then
+    local xml = team_slot:read("a")
+    team_slot:close()
+    check(xml:find("ndgui_slotcell", 1, true) and xml:find("open_36.png", 1, true),
+      "team_ncu_slot is a stacked library well")
+  end
+  local team_main = io.open(addons .. "/ndgui-team/main.lua", "rb")
+  if team_main then
+    local src = team_main:read("a")
+    team_main:close()
+    check(src:find('ui.require("notum.ndgui-lib/ncu_strip")', 1, true),
+      "ndgui-team uses notum.ndgui-lib/ncu_strip")
+  end
   if cells then cells:close() end
 end
 

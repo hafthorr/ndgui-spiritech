@@ -7,6 +7,8 @@ ui.require("notum.ndgui-lib/grid") -- ndGUI: snap to grid while moving/resizing 
 --               The window menu sets the warning time, shows hidden buffs again, or lists everything
 --   Team Buffs  a member per row, a buff per column (buffs anyone on the team has): time left, or red
 --               when missing. Click a member to target them, then cast as usual (an addon cannot cast)
+--   Target Debuffs  your effects on the target as draining bars; learns your rotation (an effect of
+--               yours seen on two enemies) and shows a red REAPPLY row when the enemy lacks one
 --   Alerts      a banner under the compass, always on (the Buff Watch window menu turns it off): low
 --               health, a debuff landing on you, low nano, a long buff about to end
 -- Data: game.effects ("self", "target", "team"), game.character, game.team. Read-only.
@@ -527,6 +529,151 @@ local function refresh_team()
 end
 
 -- =========================================================================================
+-- Target Debuffs window: what you keep on your target, and what of it is missing
+-- =========================================================================================
+-- Your effects on the target as draining bars (red in the last seconds). It also learns your
+-- rotation: an effect of yours seen on two different enemies is "yours to keep up", and when your
+-- enemy target lacks it a red REAPPLY row shows. Right-click a row to stop or start tracking it.
+local MAX_TD = 10
+local TD_W = 250
+local td = ui.load("target_debuffs.xml")
+local td_head, td_rows_host, td_empty = ui.find(td, "td_head"), ui.find(td, "td_rows"), ui.find(td, "td_empty")
+local td_rows = make_rows(td_rows_host, MAX_TD)
+local rotation, rotation_off = read_set("NdguiWatchRotation"), read_set("NdguiWatchRotationOff")
+local rotation_seen = {}
+local td_list = {}
+local td_frame
+
+local function td_enemy()
+	return target.name ~= nil and not target.is_self and (self_id == nil or target.id ~= self_id)
+		and (target.is_npc == true or ui.in_combat())
+end
+
+local function td_track(name, on)
+	if on then
+		rotation[name], rotation_off[name] = true, nil
+	else
+		rotation[name], rotation_off[name] = nil, true
+	end
+	write_set("NdguiWatchRotation", rotation)
+	write_set("NdguiWatchRotationOff", rotation_off)
+end
+
+local function td_height()
+	return TITLE_ENDS + BORDERS + HEAD_H + math.max(1, math.min(#td_list, MAX_TD)) * ROW_H + 6
+end
+
+local function render_td(now)
+	local inner = TD_W - Window.CONTENT_SIDES - BORDERS
+	for index, row in ipairs(td_rows) do
+		local entry = td_list[index]
+		if entry and entry.missing then
+			ui.visible(row.root, true)
+			row.entry, row.ref = entry, nil
+			ui.size(row.root, inner, ROW_H - 2)
+			ui.size(row.buff_track, inner, ROW_H - 2)
+			ui.size(row.buff_fill, inner, ROW_H - 2)
+			local pulse = (now // 500) % 2 == 0
+			ui.graphic_tint(row.buff_fill, pulse and "#5A1A1A" or "#3A1212")
+			ui.content(row.buff_icon, false)
+			ui.size(row.buff_name, math.max(20, inner - 20 - 5 - 60 - 4), ROW_H - 2)
+			ui.size(row.buff_time, 60, ROW_H - 2)
+			ui.text(row.buff_name, entry.name)
+			ui.text_color(row.buff_name, "#FFB0A0")
+			ui.text(row.buff_time, "REAPPLY")
+			ui.text_color(row.buff_time, pulse and "#FF8A70" or "#E0503C")
+			ui.tooltip(row.root, entry.name .. " is part of your rotation and not on this target." .. string.char(10)
+				.. "Right-click: stop tracking it")
+		else
+			if row.entry and row.entry.missing then
+				row.ref = nil -- the row showed a missing entry: repaint name and icon
+				ui.text_color(row.buff_time, TEXT)
+			end
+			show_row(row, entry, target.sampled, now, inner, true)
+		end
+	end
+end
+
+local function refresh_td(now)
+	local mine = {}
+	local on_self = target.name ~= nil and (target.is_self or (self_id ~= nil and target.id == self_id))
+	if target.name and not on_self then
+		mine = Watch.on_target(target.effects, self_id, target.sampled, now)
+	end
+	td_list = {}
+	for index = 1, math.min(#mine, MAX_TD) do
+		td_list[index] = mine[index]
+	end
+	if td_enemy() then
+		for _, name in ipairs(Watch.missing(mine, rotation)) do
+			if #td_list < MAX_TD then
+				td_list[#td_list + 1] = { missing = true, name = name }
+			end
+		end
+	end
+	local missing = #td_list - math.min(#mine, MAX_TD)
+	if not target.name then
+		ui.text(td_head, "NO TARGET")
+	elseif on_self then
+		ui.text(td_head, "TARGETING YOURSELF")
+	else
+		ui.text(td_head, string.upper(target.name) .. (missing > 0 and ("  -  " .. missing .. " MISSING") or ""))
+	end
+	ui.text_color(td_head, missing > 0 and "#E0503C" or MUTED)
+	ui.visible(td_empty, #td_list == 0)
+	ui.text(td_empty, target.name and not on_self and "Nothing of yours on it." or "")
+	local height = td_height()
+	if td_frame and td_frame.last_height ~= height then
+		td_frame.last_height = height
+		td_frame:resize(TD_W, height)
+	else
+		render_td(now)
+	end
+end
+
+for _, row in ipairs(td_rows) do
+	ui.on_pointer_release(row.root, "right", function()
+		local entry = row.entry
+		local name = entry and (entry.missing and entry.name or (entry.effect and entry.effect.name)) or ""
+		if name == "" then
+			return
+		end
+		ui.menu.clear(row.root)
+		ui.menu.add(row.root, "Keep this up (warn when missing)", rotation[name] == true, function()
+			td_track(name, not rotation[name])
+			refresh_td(ui.time())
+		end)
+		ui.menu.show(row.root)
+	end)
+end
+
+td_frame = Window.create({
+	template = "library://notum.ndgui-lib/window.xml",
+	title = "Target Debuffs", content = td, width = TD_W, height = 120,
+	horizontal = "center", vertical = "start", layout = function(window)
+		local height = td_height()
+		ui.limits(window.root, TD_W, height, TD_W, height)
+		ui.request_size(window.root, TD_W, height)
+		local inner = TD_W - Window.CONTENT_SIDES - BORDERS
+		ui.size(td_head, inner, HEAD_H)
+		ui.size(td_empty, inner, EMPTY_H)
+		window:fit_title(TD_W, true)
+		window:fit_content(TD_W, height)
+		render_td(ui.time())
+	end,
+	menu = {
+		{ label = "Forget my learned rotation", checked = false, invoke = function()
+			rotation, rotation_off, rotation_seen = {}, {}, {}
+			write_set("NdguiWatchRotation", rotation)
+			write_set("NdguiWatchRotationOff", rotation_off)
+			refresh_td(ui.time())
+		end },
+	},
+})
+ui.add(root, td_frame.root)
+ui.register_view(td_frame.root, "target_debuffs")
+
+-- =========================================================================================
 -- Alerts banner
 -- =========================================================================================
 local banner = ui.load("alert.xml")
@@ -612,6 +759,10 @@ game.effects.subscribe("target", function(update)
 	target.effects = collection and collection.effects or {}
 	target.sampled = update.sampled_at_ms or ui.time()
 	refresh_lists(ui.time())
+	if #Watch.learn(rotation_seen, target.effects, self_id, target.id, target.is_npc == true, rotation, rotation_off) > 0 then
+		write_set("NdguiWatchRotation", rotation)
+	end
+	refresh_td(ui.time())
 end)
 
 game.character.subscribe("self", "", function(_, character)
@@ -630,7 +781,9 @@ game.character.subscribe("target", "", function(_, character)
 	target.name = character and character.name or nil
 	target.id = character and character.id or nil
 	target.is_self = character and character.is_self == true or false
+	target.is_npc = character and character.is_npc or nil
 	refresh_lists(ui.time())
+	refresh_td(ui.time())
 end)
 
 game.team.subscribe(function(update)
@@ -669,7 +822,9 @@ ui.on_update(function(now)
 	refresh_lists(now) -- buffs move from the icon strip to the rows as they reach the warning time
 	render_team(now)
 	render_alert(now)
+	refresh_td(now)
 end)
 
 refresh_lists(ui.time())
 refresh_team()
+refresh_td(ui.time())

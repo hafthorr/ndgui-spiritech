@@ -20,8 +20,8 @@ The client doesn't let one package mix a standalone overlay with role providers,
 | `ndgui-compass` | provider | `prk.compass` |
 | `ndgui-target-panels` | provider | `prk.target-panels` |
 | `ndgui-hotbar` | provider | `prk.hotbar` |
-| `ndgui-playfield-map` | provider | `prk.playfield-map` |
-| `ndgui-planet-map` | provider | `prk.planet-map` |
-| `ndgui-<window>` ×30 | generated providers | every other window and HUD role |
+| `ndgui-maps` | provider hub | `prk.playfield-map`, `prk.planet-map` |
+| `ndgui-team-hub` | provider hub | `prk.team`, `prk.team-invite` |
+| `ndgui-<window>` / `*-hub` | generated providers | remaining window and HUD roles (≤32 packages total) |
 
 The client only runs providers once they're selected (**Options → Interface & HUD → UI packages**; the installer does it for you). Changes apply from the next character session. A provider that fails is replaced by the built-in for that session, so the HUD never disappears.

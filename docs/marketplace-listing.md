@@ -48,6 +48,9 @@ python build_marketplace.py --addons-dir /path/to/client/UI/Addons
 Suite rules (match modern-ui): top-level folders only, folder name == package id
 (`notum.ndgui-hotbar/`), every `package.xml` stamped with the same `version` and
 `apiVersion` (default `0.1.0`), each folder contains `LICENSE`, no `tools/`.
+The portal cap was raised, so the full suite (about 40 packages, one per role, including
+Intel in place of a separate chat package) ships as-is. `build_marketplace.py` does
+**not** run `bundle_hubs.py`. Legacy `notum.ndgui` (no Provides) is excluded.
 
 ## Portal listing metadata (upload outside this repo)
 

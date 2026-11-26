@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <View name="ndgui_slotcell" view_layout="stacked" min_size="Point(16,16)" max_size="Point(16,16)">
+    <BitmapView name="ndgui_slot_back" interactive="false" image="library://notum.ndgui-lib/slots/open_36.png" min_size="Point(16,16)" max_size="Point(16,16)" />
+    <ItemSlotView name="ndgui_slot" min_size="Point(16,16)" max_size="Point(16,16)" slot_gfx="" icon_fit="center" overlay_inset="0" />
+  </View>
+</root>

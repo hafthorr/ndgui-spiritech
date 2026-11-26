@@ -7,6 +7,21 @@ Versions follow Semantic Versioning 2.0.0: `MAJOR.MINOR.PATCH`.
 - PATCH bumps fix tokens, scale math, or docs without a config change.
 - While the major version is 0, the client view layer is still incomplete. The Lua model is safe to load offline.
 
+## Unreleased
+
+Needs the game client 0.3.5 (addon API 0.2.0) or newer. Run the installer again: the new Intel package takes over the chat role.
+
+- **Intel** (new package `ndgui-intel`: chat, overhead combat text and zone notice in one package; its parts share data through `ndgui-lib/bus.lua`):
+  - **Intel strip**: XP / alien XP / credits per hour, time to next level, session clock; Alts / Log / reset buttons. Movable.
+  - **Alerts** for tells, your name and watch words (banner + a marker on the chat line), and a **Log** of this session's alerts and loot.
+  - **Alts**: level, XP, credits (with a total), last zone, last played and raid locks of every character you play on this PC.
+  - **Commands**: `ndgui alts | log | hud | reset | watch <word> | unwatch <word> | words`.
+  - **Overhead combat numbers** in ndGUI style: quick hits merge (`2,340 x5`), big hits and crits pop in gold. Options > Combat > Floating combat text.
+  - **Zone notice** in ndGUI colours.
+- **"Which character has it?"**: bag and bank windows remember their items per character; their search box shows `Alts: N` with where else the item is.
+- **Target Debuffs** (Buff Watch): your effects on the target, and a red REAPPLY row for any part of your learned rotation that's missing.
+- The chat role moved from the generated `ndgui-chat` to `ndgui-intel` (the installer removes the old package).
+
 ## 0.3.7
 
 - **Mission Terminal shows every offer's pay, XP, playfield, QL and reward right away** (client 0.3.5 sends them with the offers), so no more Ctrl-clicking each offer into Info. The watch list matches the reward and playfield straight away too.

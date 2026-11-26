@@ -24,7 +24,7 @@ ROLES = {
     "Ncu": ("prk.ncu", "NCU"),
     "TargetNcu": ("prk.target-ncu", "Target NCU"),
     "Faction": ("prk.faction", "Faction"),
-    "Chat": ("prk.chat", "Chat"),
+    # Chat: ndgui-intel provides prk.chat (stock lines + alerts / loot / raid locks for the Intel HUD)
     "ChatConfig": ("prk.chat-config", "Chat Config"),
     "RaidBar": ("prk.raid-bars", "Raid Bars"),
     "TimerBars": ("prk.timer-bars", "Timer Bars"),

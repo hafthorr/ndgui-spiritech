@@ -2,6 +2,7 @@
   <Requires package="notum.ndgui-lib" />
   <View id="buffs" name="Buff Watch" />
   <View id="team_buffs" name="Team Buffs" />
+  <View id="target_debuffs" name="Target Debuffs" />
   <Script src="watch.lua" />
   <Script src="main.lua" />
 </Package>

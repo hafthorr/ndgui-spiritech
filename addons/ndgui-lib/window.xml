@@ -26,7 +26,6 @@
         </View>
           <BitmapView name="ndgui_accent" image="library://notum.ndgui-lib/window/accent.png" min_size="Point(3,18)" max_size="Point(3,18)" v_alignment="center" layout_borders="Rect(3,0,0,0)" />
           <View name="window_title_tab" view_layout="stacked" min_size="Point(-1,18)" max_size="Point(-1,18)" v_alignment="center" layout_borders="Rect(0,0,0,0)">
-            <BitmapView name="ndgui_tab" image="library://notum.ndgui-lib/window/tab.png" />
             <View view_layout="horizontal">
               <TextView name="window_title" weight="1" color="C5D7E6" font_size="13" layout_borders="Rect(6,0,0,0)" v_alignment="center" />
               <HLayoutSpacer weight="0" min_size="Point(14,0)" max_size="Point(14,0)" />

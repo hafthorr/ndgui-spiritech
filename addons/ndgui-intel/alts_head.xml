@@ -1,0 +1,12 @@
+<?xml version="1.0"?>
+<root>
+  <View name="alts_head" view_layout="horizontal" min_size="Point(-1,18)" max_size="Point(-1,18)" layout_borders="Rect(0,0,0,2)">
+    <TextView value="CHARACTER" color="7F9BB0" font_size="10" size_to_text="false" min_size="Point(147,18)" max_size="Point(147,18)" v_alignment="center" layout_borders="Rect(23,0,0,0)" />
+    <TextView value="LVL" color="7F9BB0" font_size="10" size_to_text="false" text_alignment="right" min_size="Point(34,18)" max_size="Point(34,18)" v_alignment="center" layout_borders="Rect(0,0,8,0)" />
+    <TextView value="XP" color="7F9BB0" font_size="10" size_to_text="false" min_size="Point(40,18)" max_size="Point(40,18)" v_alignment="center" />
+    <TextView value="CREDITS" color="7F9BB0" font_size="10" size_to_text="false" text_alignment="right" min_size="Point(70,18)" max_size="Point(70,18)" v_alignment="center" layout_borders="Rect(0,0,10,0)" />
+    <TextView value="LAST ZONE" color="7F9BB0" font_size="10" size_to_text="false" min_size="Point(150,18)" max_size="Point(150,18)" v_alignment="center" />
+    <TextView value="SEEN" color="7F9BB0" font_size="10" size_to_text="false" min_size="Point(62,18)" max_size="Point(62,18)" v_alignment="center" />
+    <TextView value="RAID LOCKS" color="7F9BB0" font_size="10" size_to_text="false" min_size="Point(150,18)" max_size="Point(150,18)" v_alignment="center" />
+  </View>
+</root>

@@ -1,0 +1,8 @@
+<?xml version="1.0"?>
+<root>
+  <View name="log_row" view_layout="horizontal" min_size="Point(-1,18)" max_size="Point(-1,18)">
+    <TextView name="log_time" value="" color="7F9BB0" font_size="11" size_to_text="false" min_size="Point(40,18)" max_size="Point(40,18)" v_alignment="center" />
+    <TextView name="log_kind" value="" color="4FB3E8" font_size="11" size_to_text="false" min_size="Point(46,18)" max_size="Point(46,18)" v_alignment="center" />
+    <TextView name="log_text" value="" color="E6EEF5" font_size="11" size_to_text="false" interactive="true" weight="1" v_alignment="center" />
+  </View>
+</root>
