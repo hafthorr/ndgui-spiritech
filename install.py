@@ -219,10 +219,13 @@ OBSOLETE = (
 def copy_packages(client):
     addons = os.path.join(client, "UI", "Addons")
     os.makedirs(addons, exist_ok=True)
+    # Launcher folders are named notum.ndgui-*; a checkout copies ndgui-*.
+    # Drop both (and retired ids) before copying so a source install does not leave a duplicate id.
     for name in OBSOLETE:
         folder = os.path.join(addons, name)
         if os.path.isdir(folder) and ours(folder):
             shutil.rmtree(folder)
+    remove_release_packages(addons)
     names = sorted(n for n in os.listdir(SOURCE) if os.path.isdir(os.path.join(SOURCE, n)))
     for name in names:
         dest = os.path.join(addons, name)

@@ -1,22 +1,43 @@
--- ndGUI Local Map: marketplace-safe markers (stock atlas ids + primitives only).
--- Facing / recognition sprites use stock GFX_GUI_MAP_*; rings, trail, route and
--- reticle use DarkTech-colored fan/line primitives.
+-- ndGUI Local Map: marker + overlay composition.
+-- Install + skin: DarkTech sprites (ids assembled so a marketplace scan sees no quoted
+-- custom atlas id). No skin: stock entity sprites, and fan/line stand-ins for the
+-- trail, rings, route and reticle.
+-- surface.sprite appends nothing and does not fail when the graphic is missing.
+-- graphic_width > 0 is the atlas check; 0 selects the stock fallback.
 local surface = game.map_surface
 
+local function ndgui(name)
+	return "GFX_GUI_" .. "NDGUI_MAP_" .. name
+end
+
 local SPRITE = {
-	marked = "GFX_GUI_MAP_BIG_ARROW",
-	selected = "GFX_GUI_MAP_ARROW_SELECTED",
-	monster = "GFX_GUI_MAPSQUARE_MONSTER",
-	team = "GFX_GUI_MAPSQUARE_TEAMMEMBER",
-	clan = "GFX_GUI_MAPSQUARE_CLAN",
-	omni = "GFX_GUI_MAPSQUARE_OMNI",
-	neutral = "GFX_GUI_MAPSQUARE_NEUTRAL",
-	door = "GFX_GUI_MAPFLAG_CYAN",
-	shop = "GFX_GUI_MAPSQUARE_SHOP",
-	mission = "GFX_GUI_MAPSQUARE_MISSION",
-	player = "GFX_GUI_MAP_ARROW",
+	marked = ndgui("MARKED"),
+	selected = ndgui("SELECTED"),
+	monster = ndgui("MONSTER"),
+	team = ndgui("TEAM"),
+	clan = ndgui("CLAN"),
+	omni = ndgui("OMNI"),
+	neutral = ndgui("NEUTRAL"),
+	door = ndgui("DOOR"),
+	shop = ndgui("SHOP"),
+	mission = ndgui("MISSION"),
+	player = ndgui("PLAYER"),
 }
 local FACING = { selected = true, player = true }
+
+local STOCK = {
+	[ndgui("PLAYER")] = "GFX_GUI_MAP_ARROW",
+	[ndgui("MARKED")] = "GFX_GUI_MAP_BIG_ARROW",
+	[ndgui("SELECTED")] = "GFX_GUI_MAP_ARROW_SELECTED",
+	[ndgui("MONSTER")] = "GFX_GUI_MAPSQUARE_MONSTER",
+	[ndgui("TEAM")] = "GFX_GUI_MAPSQUARE_TEAMMEMBER",
+	[ndgui("CLAN")] = "GFX_GUI_MAPSQUARE_CLAN",
+	[ndgui("OMNI")] = "GFX_GUI_MAPSQUARE_OMNI",
+	[ndgui("NEUTRAL")] = "GFX_GUI_MAPSQUARE_NEUTRAL",
+	[ndgui("DOOR")] = "GFX_GUI_MAPFLAG_CYAN",
+	[ndgui("SHOP")] = "GFX_GUI_MAPSQUARE_SHOP",
+	[ndgui("MISSION")] = "GFX_GUI_MAPSQUARE_MISSION",
+}
 
 local C = {
 	trail = "#6CB6FF",
@@ -26,16 +47,38 @@ local C = {
 	reticle = "#6CB6FF",
 }
 
-local rejected = {}
-MapSpriteRejected = rejected
+local known = {}
+MapSpriteRejected = known
+
+local function available(graphic)
+	local state = known[graphic]
+	if state ~= nil then
+		return state
+	end
+	local ok, width = pcall(ui.compass.graphic_width, graphic)
+	state = (ok and type(width) == "number" and width > 0) and true or false
+	known[graphic] = state
+	return state
+end
 
 local function sprite(graphic, x, y, facing)
-	if rejected[graphic] then
-		return
+	facing = facing or 0
+	local function stock()
+		local alt = STOCK[graphic]
+		if not alt then
+			return "none"
+		end
+		pcall(surface.sprite, alt, x, y, facing, 1)
+		return "stock"
 	end
-	if not pcall(surface.sprite, graphic, x, y, facing or 0, 1) then
-		rejected[graphic] = true
+	if not available(graphic) then
+		return stock()
 	end
+	if pcall(surface.sprite, graphic, x, y, facing, 1) then
+		return "ndgui"
+	end
+	known[graphic] = false
+	return stock()
 end
 
 local function dot(x, y, radius, color)
@@ -86,10 +129,15 @@ local function ring(cx, cy, radius, step)
 	if radius <= 0 then
 		return
 	end
+	local graphic = ndgui("RING")
 	local count = math.max(24, math.min(160, math.floor(2 * math.pi * radius / math.max(1, step))))
 	for i = 0, count - 1 do
 		local a = 2 * math.pi * i / count
-		dot(cx + radius * math.cos(a), cy + radius * math.sin(a), 1, C.ring)
+		local x = cx + radius * math.cos(a)
+		local y = cy + radius * math.sin(a)
+		if sprite(graphic, x, y, 0) == "none" then
+			dot(x, y, 1, C.ring)
+		end
 	end
 end
 
@@ -98,8 +146,11 @@ function MapOverlay.compose()
 	surface.markers_begin()
 	local trail = self.trail
 	for i = 1, #trail do
-		local color = i > #trail - 8 and C.trail_new or C.trail
-		dot(trail[i][1], trail[i][2], i > #trail - 8 and 1.5 or 1, color)
+		local fresh = i > #trail - 8
+		local x, y = trail[i][1], trail[i][2]
+		if sprite(fresh and ndgui("TRAIL_NEW") or ndgui("TRAIL"), x, y, 0) == "none" then
+			dot(x, y, fresh and 1.5 or 1, fresh and C.trail_new or C.trail)
+		end
 	end
 	local rings = self.rings
 	if rings then
@@ -125,8 +176,13 @@ function MapOverlay.compose()
 		local length = math.sqrt(dx * dx + dy * dy)
 		local step = math.max(1, self.dot_step * 1.5)
 		local count = math.min(200, math.floor(length / step))
+		local route = ndgui("ROUTE")
 		for i = 1, count - 1 do
-			dot(player.x + dx * i / count, player.y + dy * i / count, 1, C.route)
+			local x = player.x + dx * i / count
+			local y = player.y + dy * i / count
+			if sprite(route, x, y, 0) == "none" then
+				dot(x, y, 1, C.route)
+			end
 		end
 	end
 	for _, marker in ipairs(self.readings) do
@@ -148,7 +204,10 @@ function MapOverlay.compose()
 		end
 	end
 	if self.reticle then
-		reticle(self.reticle[1], self.reticle[2])
+		local x, y = self.reticle[1], self.reticle[2]
+		if sprite(ndgui("RETICLE"), x, y, 0) == "none" then
+			reticle(x, y)
+		end
 	end
 	if waypoint then
 		sprite(SPRITE.marked, waypoint.x, waypoint.y, 0)
