@@ -7,7 +7,7 @@ Versions follow Semantic Versioning 2.0.0: `MAJOR.MINOR.PATCH`.
 - PATCH bumps fix tokens, scale math, or docs without a config change.
 - While the major version is 0, the client view layer is still incomplete. The Lua model is safe to load offline.
 
-## Unreleased
+## 0.4.0
 
 Needs the game client 0.3.5 (addon API 0.2.0) or newer. Run the installer again: the new Intel package takes over the chat role.
 
@@ -21,6 +21,16 @@ Needs the game client 0.3.5 (addon API 0.2.0) or newer. Run the installer again:
 - **"Which character has it?"**: bag and bank windows remember their items per character; their search box shows `Alts: N` with where else the item is.
 - **Target Debuffs** (Buff Watch): your effects on the target, and a red REAPPLY row for any part of your learned rotation that's missing.
 - The chat role moved from the generated `ndgui-chat` to `ndgui-intel` (the installer removes the old package).
+- **Compass** reads on light ground again. The outlined strip is back at full width. With the ndGUI skin it uses the atlas art. Without the skin (the marketplace suite) it slides a 320 px window of that same strip as you turn, instead of stretching one sliver.
+- **Local Map and Planet Map** use the custom markers when those graphics are in the skin. Otherwise they use the stock icons, which stay visible. Trails, rings, the route and the reticle stay dots and lines.
+- **Control Center** wings, minibar and menubar use the stock tab and status-bar art again, which the installer retints.
+- **Window titles** no longer have a rectangle behind the word. **Wear**'s page tabs are ndGUI buttons.
+- Wrapped buttons hide their frame when the button is hidden, so an empty chrome frame does not stay on screen.
+- **Skills:** the category and action columns sit in from the left edge again. Hidden priority buttons no longer leave an empty frame.
+- **Floating combat text** no longer unloads the package when a number is at the edge of the screen.
+- **Mission Terminal offer rows** no longer have a button bar through them. Clicking the row still picks that offer.
+- **Mission Terminal** can be resized. The offer list scrolls when the window is shorter. With the map open, extra width goes to the map.
+- Linux and Mac: the release zip includes `install.py`.
 
 ## 0.3.7
 

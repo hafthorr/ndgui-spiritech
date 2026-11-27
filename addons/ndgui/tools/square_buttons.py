@@ -131,7 +131,11 @@ def skin_package(tag):
     tag = strip_ndgui_gfx(tag)
     if 'button_style="select"' in tag:
         return tag
-    if "label=" not in tag and "font_size=" not in tag:
+    shown = attr(tag, "label")
+    if shown is None and "font_size=" not in tag:
+        return tag
+    # An empty label is a hit target stretched over a row (Mission Terminal offers), not a button.
+    if shown is not None and shown.strip() == "":
         return tag
     # Stock icon buttons (non-NDGUI gfxid) stay on the atlas.
     if "gfxid_raised" in tag and not had_ndgui:

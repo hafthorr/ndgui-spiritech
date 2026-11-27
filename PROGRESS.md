@@ -1,5 +1,15 @@
 # Progress
 
+## Mission Terminal report (2026-11-27)
+
+Release 0.4.0 is paused. Local `main` has an unpushed merge of PR #6 (`97624b4`). The 0.4.0 changelog, `VERSION`, and both zips are uncommitted. Do not tag or upload until the terminal is settled.
+
+Crimson_Dawn: the Mission Terminal is not resizable, and the offer rows have small long boxes through them. Screenshot is the terminal (map open, watch list, reward rows), not the Missions list. The installed client already has both causes.
+
+- `win_terminal.lua` used to create the window with `resizable = false`. `shell.lua` treats that as `fixed_size` and drops a drag. Fixed in the 0.4.0 tree: `resizable = true`, the layout keeps the dragged size (floor 480 px, map at least 220 px), offers sit in `offers_scroll`, and extra width goes to the map. Offer text uses the laid-out column width.
+- `terminal_offer.xml` used to stack a 28 px `ndgui_btnwrap` on `offer_hit` (`label=""`). `skin_package` now leaves an empty label alone, and the row is the bare flat button again. Introduced in `8400809`, which is in the portal 0.3.7 zip and was not in the GitHub tag `v0.3.7` (`dd3f7c7`). The updater compares that tag to the install stamp, so a 0.3.7 install is told it is current.
+- Copied `terminal_offer.xml`, `terminal_content.xml`, and `lua/win_terminal.lua` into the live `notum.ndgui-lib` on 2026-11-27. Restart the client to see it. The 0.4.0 zips were rebuilt after this fix. Not tagged, not uploaded.
+
 ## Dev install on this machine (2026-11-26)
 
 The client is `/home/blasky/Games/PRK-Spiritech/client`. Play uses the

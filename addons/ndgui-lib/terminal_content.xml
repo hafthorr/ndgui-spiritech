@@ -9,7 +9,10 @@
       <TextView name="status" value="" font_size="11" color="9FB3C4" size_to_text="false" min_size="Point(-1,15)" max_size="Point(-1,15)" v_alignment="center" />
       <View name="ndgui_btnwrap" view_layout="stacked" min_size="Point(48,18)" max_size="Point(48,18)" visible="false"><View name="ndgui_chrome" interactive="false" view_layout="horizontal"><BitmapView name="ndgui_btn_l" interactive="false" image="library://notum.ndgui-lib/buttons/btn19_raised_left.png" min_size="Point(4,19)" max_size="Point(4,19)" /><BitmapView name="ndgui_btn_m" interactive="false" image="library://notum.ndgui-lib/buttons/btn19_raised_middle.png" weight="1" min_size="Point(0,19)" max_size="Point(-1,19)" /><BitmapView name="ndgui_btn_r" interactive="false" image="library://notum.ndgui-lib/buttons/btn19_raised_right.png" min_size="Point(4,19)" max_size="Point(4,19)" /></View><Button name="map_toggle" label="Map" font_size="11" min_size="Point(48,18)" max_size="Point(48,18)" tooltip="Show or hide the offer map" flat="true" text_alignment="center" /></View>
     </View>
-    <View name="offers" view_layout="vertical" layout_borders="Rect(0,3,0,0)" />
+    <!-- Offers scroll when the window is shorter than the list. -->
+    <ScrollView name="offers_scroll" capture_input="true" v_scrollbar_mode="auto" scrollbar_width="11" weight="1" min_size="Point(40,64)">
+      <ScrollViewChild name="offers" view_layout="vertical" capture_input="true" layout_borders="Rect(0,3,0,0)" />
+    </ScrollView>
     <!-- watch list -->
     <TextView name="watch_head" value="WATCH FOR  (comma separated: item, zone, type...)" font_size="11" color="7F9BB0" size_to_text="false" min_size="Point(-1,15)" max_size="Point(-1,15)" layout_borders="Rect(0,8,0,2)" />
     <View view_layout="horizontal" min_size="Point(-1,22)" max_size="Point(-1,22)">

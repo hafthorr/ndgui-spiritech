@@ -49,11 +49,13 @@ local LOG_MAX, RECENT_MAX = 8, 6
 local ROWS = { "difficulty", "good", "order", "open", "physical", "headon", "credits" }
 
 local width = WIDTH
+local pane = WIDTH - 11 -- column width after layout; row text follows this, not the label minimum
 local request_label = "Request"
 local sliders = {}
 local values = {} -- current staged slider values (1..7)
 local watch_terms = {}
 local rows = {}
+local current_offers = {}
 local last_offers_key
 local rolls, spent, matches = 0, 0, 0
 local match_log = {} -- newest first: { text = summary, terms = "x, y", roll = n }
@@ -177,9 +179,13 @@ for index = 1, OFFERS do
 	ui.visible(root, false)
 end
 
+local function text_span()
+	return math.max(80, pane - 10)
+end
+
 local function offer_height(text)
 	-- two lines fit beside the icon; longer summaries get more lines
-	local chars_per_line = math.max(20, math.floor((width - 11 - 10 - TEXT_LEFT) / 6.2))
+	local chars_per_line = math.max(20, math.floor((text_span() - TEXT_LEFT) / 6.2))
 	local lines = math.max(2, math.ceil(#(text or "") / chars_per_line))
 	return math.max(ICON + 6, lines * 14 + 8)
 end
@@ -191,7 +197,7 @@ local function show_offer(row, offer)
 	end
 	local found, brief = offer_terms(offer)
 	local hit = #found > 0
-	local inner = width - 11 - 10
+	local inner = text_span()
 	local text_w = inner - TEXT_LEFT
 	local badge_h = hit and 13 or 0
 	local pay = offer_summary(brief)
@@ -268,12 +274,13 @@ local function show_log()
 		lines[#lines + 1] = "Roll " .. item.roll .. "  [" .. item.terms .. "]  " .. item.text
 	end
 	ui.text(log_view, table.concat(lines, "\n"))
-	local chars_per_line = math.max(20, math.floor((width - 21) / 5.6))
+	local span = text_span()
+	local chars_per_line = math.max(20, math.floor(span / 5.6))
 	local n = 0
 	for _, line in ipairs(lines) do
 		n = n + math.max(1, math.ceil(#line / chars_per_line))
 	end
-	ui.size(log_view, width - 21, n * 13 + 2)
+	ui.size(log_view, span, n * 13 + 2)
 end
 
 -- ---- recent chosen rewards --------------------------------------------------------------
@@ -315,7 +322,8 @@ local function show_recent(pinned_mode)
 	if on then
 		local text = "Recent: " .. table.concat(others, "  ·  ")
 		ui.text(recent_view, text)
-		ui.size(recent_view, width - 21, math.max(1, math.ceil(#text / math.floor((width - 21) / 5.6))) * 13 + 2)
+		local span = text_span()
+		ui.size(recent_view, span, math.max(1, math.ceil(#text / math.floor(span / 5.6))) * 13 + 2)
 	end
 end
 
@@ -429,37 +437,88 @@ local function window_width()
 	return width + (map_shown() and MAP_WIDTH or 0)
 end
 
+local MAP_MIN = 220
+local MIN_H, PREFERRED_H = 480, 720
+local SIDES = Window.CONTENT_SIDES or 11
+local ENDS = 33 -- title bar and frame, same as core.window
+
+local function positive(n)
+	return type(n) == "number" and n > 0 and n or nil
+end
+
+-- The drag wins. Offers sit in a scroll view, so a shorter window keeps the sliders and buttons.
+local function layout_window(window, requested_w, requested_h)
+	local min_w = width + (map_shown() and MAP_MIN or 0)
+	ui.limits(window.root, min_w, MIN_H, 1800, 1400)
+	if not positive(requested_w) or requested_w < min_w then
+		requested_w = math.max(min_w, window_width())
+	end
+	if not positive(requested_h) or requested_h < MIN_H then
+		requested_h = PREFERRED_H
+	end
+	ui.request_size(window.root, requested_w, requested_h)
+	local chosen_w = positive(ui.chosen_width(window.root)) or requested_w
+	local chosen_h = positive(ui.chosen_height(window.root)) or requested_h
+	if chosen_w < min_w then chosen_w = requested_w end
+	if chosen_h < MIN_H then chosen_h = requested_h end
+	window:fit_title(chosen_w, true)
+	window:fit_content(chosen_w, chosen_h)
+	local content_w = math.max(0, chosen_w - SIDES)
+	local content_h = math.max(0, chosen_h - ENDS)
+	local frame_view = ui.find(content, "terminal_frame")
+	ui.size(frame_view, content_w, content_h)
+	local column_w
+	if map_shown() then
+		local natural = width - SIDES
+		if content_w - natural < MAP_MIN then
+			column_w = math.max(260, content_w - MAP_MIN)
+		else
+			column_w = natural
+		end
+	else
+		column_w = content_w
+	end
+	pane = column_w
+	ui.size(column, column_w, content_h)
+	ui.visible(map_host, map_shown())
+	if map_shown() then
+		ui.size(map_host, math.max(0, content_w - column_w), content_h)
+	end
+	ui.visible(map_toggle, Map.available)
+	ui.text(map_toggle, map_on and "Map <" or "Map >")
+	ui.size(status, math.max(40, column_w - 10 - (Map.available and 52 or 0)), 15)
+	ui.size(reward_back, math.max(40, column_w - 10), 48)
+	for index, row in ipairs(rows) do
+		if current_offers[index] then
+			show_offer(row, current_offers[index])
+		end
+	end
+	show_log()
+	show_recent(last_reward and last_reward.pinned_mode)
+end
+
 -- ---- window -----------------------------------------------------------------------------
 frame = Shell.window({
 	template = "library://notum.ndgui-lib/window.xml",
 	title = "Mission Terminal",
 	remember_open = false, -- client 0.3: a terminal is opened by the terminal, not reopened at login
 	content = content,
-	width = width,
-	resizable = false,
+	width = window_width(),
+	height = PREFERRED_H,
+	resizable = true,
 	horizontal = "center",
 	vertical = "center",
-	layout = function(window)
-		local total = window_width()
-		ui.size(window.root, total, -1)
-		ui.size(content, total - 11, -1)
-		ui.size(column, width - 11, -1)
-		ui.visible(map_host, map_shown())
-		ui.visible(map_toggle, Map.available)
-		ui.text(map_toggle, map_on and "Map <" or "Map >")
-		ui.size(status, width - 21 - (Map.available and 52 or 0), 15)
-		ui.size(reward_back, width - 21, 48)
-		window:fit_title(total, true)
-	end,
+	layout = layout_window,
 })
 ui.fill_color(reward_back, BACK)
 ui.on_click(map_toggle, function()
 	map_on = not map_on
 	store("map", map_on and "on" or "off")
-	frame:resize(window_width(), -1)
+	local w = positive(ui.chosen_width(frame.root)) or window_width()
+	local h = positive(ui.chosen_height(frame.root)) or PREFERRED_H
+	frame:resize(w + (map_on and MAP_WIDTH or -MAP_WIDTH), h)
 end)
 
-local current_offers = {}
 refresh_offers = function()
 	local any_hit, hits = false, {}
 	for index, row in ipairs(rows) do
@@ -470,7 +529,6 @@ refresh_offers = function()
 	Map.show(current_offers, hits)
 	ui.text(ui.find(frame.root, "window_title"), any_hit and "Mission Terminal  -  MATCH!" or "Mission Terminal")
 	show_status()
-	frame:resize(window_width(), -1)
 end
 
 function M.mission_terminal_configure(label_request, accept_label, labels)
@@ -497,7 +555,12 @@ function M.mission_terminal_configure(label_request, accept_label, labels)
 		end
 	end
 	width = math.max(WIDTH, column * 2 + 120 + 21)
-	frame:resize(window_width(), -1)
+	local w = positive(ui.chosen_width(frame.root)) or window_width()
+	local h = positive(ui.chosen_height(frame.root)) or PREFERRED_H
+	if w < window_width() then
+		w = window_width()
+	end
+	frame:resize(w, h)
 end
 
 -- client 0.3.5+: the offer map's tile records and mouse wheel

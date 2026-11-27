@@ -1283,6 +1283,17 @@ do
     local labels = {}
     for i = 1, 7 do labels[i] = { minimum = "Lo" .. i, maximum = "Hi" .. i, progress = 0.5 } end
     env.mission_terminal_configure("Request", "Accept", labels)
+    local found_hit, wrapped_hit = false, false
+    local function walk_hit(v, parent)
+      if v.name == "offer_hit" then
+        found_hit = true
+        if parent and parent.name == "ndgui_btnwrap" then wrapped_hit = true end
+      end
+      for _, kid in ipairs(v.kids or {}) do walk_hit(kid, v) end
+    end
+    walk_hit(H.root)
+    check(found_hit and not wrapped_hit, "offer row is a click target, not a button bar")
+    check(H.root.min_h == 480, "terminal resize has a floor: " .. tostring(H.root.min_h))
     local staged = {}
     env.game.mission_terminal = setmetatable({ slider = function(i, v) staged[i] = v; return true end }, { __index = function() return function() return false end end })
     local reward = { pinned_mode = false, has_pin = false, icon = 0, name = "", ql = 0, cost = 0 }

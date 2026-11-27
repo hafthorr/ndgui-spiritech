@@ -2,9 +2,9 @@
 """Build the Spiritech Addons marketplace suite zip.
 
     python build_marketplace.py
-    python build_marketplace.py --from-zip release/ndgui-spiritech-0.3.7.zip
+    python build_marketplace.py --from-zip release/ndgui-spiritech-0.4.0.zip
     python build_marketplace.py --addons-dir /path/to/client/UI/Addons
-    API_VERSION=0.1.0 python build_marketplace.py --version 0.3.7
+    API_VERSION=0.1.0 python build_marketplace.py --version 0.4.0
 
 Spiritech publishing rules (same as modern-ui):
   - each package in its own top-level folder with a package.xml (nothing else at the top level)
