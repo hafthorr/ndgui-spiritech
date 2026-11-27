@@ -44,14 +44,14 @@ jobs:
           printf "\n**Download:** ndgui-spiritech-%s.zip below, unzip, double-click install.bat. Linux/Mac: see INSTALL.md.\n" "$VERSION" >> notes.md
           printf "\n**Marketplace:** ndgui-%s.zip is the Spiritech portal upload (packages only).\n" "$VERSION" >> notes.md
           API=$(python3 - "$ZIP" <<'PY'
-import re, sys, zipfile
-z = zipfile.ZipFile(sys.argv[1])
-name = next(n for n in z.namelist() if n.endswith("package.xml") and "/Addons/" in n)
-text = z.read(name).decode("utf-8", "replace")
-found = re.search(r'apiVersion="([^"]+)"', text)
-print(found.group(1) if found else "0.2.0")
-PY
-)
+          import re, sys, zipfile
+          z = zipfile.ZipFile(sys.argv[1])
+          name = next(n for n in z.namelist() if n.endswith("package.xml") and "/Addons/" in n)
+          text = z.read(name).decode("utf-8", "replace")
+          found = re.search(r'apiVersion="([^"]+)"', text)
+          print(found.group(1) if found else "0.2.0")
+          PY
+          )
           python3 build_marketplace.py --version "$VERSION" --api-version "$API" --from-zip "$ZIP"
           MARKET="release/ndgui-${VERSION}.zip"
           test -f "$MARKET" || { echo "missing $MARKET"; exit 1; }
