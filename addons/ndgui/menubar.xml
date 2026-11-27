@@ -1,6 +1,6 @@
 <root>
   <View name="menubar_frame" view_layout="stacked" capture_input="true">
-    <BitmapView name="menubar_back" image="library://notum.ndgui-lib/window/tab.png" />
+    <BitmapView name="menubar_back" image="gfx://GFX_GUI_TAB_BACKGROUND" graphic_mode="tinted" color="1B2C3B" />
     <View name="menubar" view_layout="horizontal" capture_input="true" h_alignment="right" v_alignment="center" />
   </View>
 </root>

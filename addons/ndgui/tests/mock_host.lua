@@ -88,6 +88,7 @@ function M.new(addons_dir, core_dir, opts)
   ui.horizontal_alignment = ui.horizontal_alignment or function() return "start" end
   ui.vertical_alignment = ui.vertical_alignment or function() return "start" end
   function ui.place(v, x, y) assert(v, "place nil"); v.x, v.y = x, y end
+  function ui.image(v, source) assert(v, "image nil"); v.image = source end
   function ui.visible(v, b) assert(v, "visible nil"); v.visible = b end
   function ui.text_color(v, c) assert(v, "text_color nil"); v.color = c end
   H.now, H.clicks = 1000000, {}

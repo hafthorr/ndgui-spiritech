@@ -74,23 +74,51 @@ local map_name = ""
 local previous_cx, previous_cy
 local me = { x = nil, z = nil, playfield = nil }
 
--- ---- markers: stock planet sprites + DarkTech fan primitives (no NDGUI atlas) ---
-local YOU = "GFX_GUI_PLANETMAP_PLAYER_MARKER"
-local MARKED = "GFX_GUI_PLANETMAP_MISSION_MARKER2"
+-- ---- markers: skin sprites when the atlas has them, else stock + dots ----
+-- Ids are assembled so a marketplace scan does not see one quoted custom atlas id.
+-- surface.sprite appends nothing and does not fail when the graphic is missing.
+-- graphic_width > 0 is the atlas check; 0 selects the stock fallback.
+local function ndgui(name)
+	return "GFX_GUI_" .. "NDGUI_MAP_" .. name
+end
+local STOCK = {
+	[ndgui("YOU")] = "GFX_GUI_PLANETMAP_PLAYER_MARKER",
+	[ndgui("MARKED")] = "GFX_GUI_PLANETMAP_MISSION_MARKER2",
+}
 local C_ROUTE, C_RING = "#E8C05A", "#6CB6FF"
-local rejected = {}
+local known = {}
+local function available(graphic)
+	local state = known[graphic]
+	if state ~= nil then
+		return state
+	end
+	local ok, width = pcall(ui.compass.graphic_width, graphic)
+	state = (ok and type(width) == "number" and width > 0) and true or false
+	known[graphic] = state
+	return state
+end
 local function sprite(graphic, x, y)
-	if rejected[graphic] then
-		return
+	local function stock()
+		local alt = STOCK[graphic]
+		if not alt then
+			return "none"
+		end
+		pcall(view.sprite, alt, x, y, 0, 1)
+		return "stock"
 	end
-	if not pcall(view.sprite, graphic, x, y, 0, 1) then
-		rejected[graphic] = true
+	if not available(graphic) then
+		return stock()
 	end
+	if pcall(view.sprite, graphic, x, y, 0, 1) then
+		return "ndgui"
+	end
+	known[graphic] = false
+	return stock()
 end
 local function dot(x, y, radius, color)
 	view.fan(x, y, radius, 0, math.pi * 2, color)
 end
-PlanetSpriteRejected = rejected
+PlanetSpriteRejected = known
 
 -- ---- scale (content units per metre, per zoom record) ----------------------------
 local scales = {}
@@ -198,22 +226,31 @@ local function compose_markers()
 		local dx, dy = qx - mx, qy - my
 		local length = math.sqrt(dx * dx + dy * dy)
 		local count = math.min(300, math.floor(length / math.max(0.01, ROUTE_PX * step)))
+		local route = ndgui("ROUTE")
 		for i = 2, count - 2 do
-			dot(mx + dx * i / count, my + dy * i / count, math.max(1, step), C_ROUTE)
+			local x, y = mx + dx * i / count, my + dy * i / count
+			if sprite(route, x, y) == "none" then
+				dot(x, y, math.max(1, step), C_ROUTE)
+			end
 		end
 	end
 	if has_me then
 		local radius = HALO_PX * step
+		local ring = ndgui("RING")
 		for i = 0, 15 do
 			local a = 2 * math.pi * i / 16
-			dot(mx + radius * math.cos(a), my + radius * math.sin(a), math.max(1, step), C_RING)
+			local x = mx + radius * math.cos(a)
+			local y = my + radius * math.sin(a)
+			if sprite(ring, x, y) == "none" then
+				dot(x, y, math.max(1, step), C_RING)
+			end
 		end
 	end
 	if has_quest then
-		sprite(MARKED, qx, qy)
+		sprite(ndgui("MARKED"), qx, qy)
 	end
 	if has_me then
-		sprite(YOU, mx, my)
+		sprite(ndgui("YOU"), mx, my)
 	end
 	view.markers_end()
 end

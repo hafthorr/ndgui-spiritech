@@ -43,6 +43,26 @@ def save(img: Image.Image, rel: str) -> None:
     print(rel.replace("/", os.sep))
 
 
+def save_band_frames(img: Image.Image, view: int = 320) -> None:
+    """One 320px window of the wrapped strip per pixel of scroll.
+
+    A BitmapView wider than its parent is scaled to the gap at its x. The marketplace
+    compass shows these frames in a view that is exactly the clip size, and never moves it.
+    """
+    rgba = to_rgba(img)
+    width, height = rgba.size
+    folder = os.path.join(OUT, "compass", "frame")
+    os.makedirs(folder, exist_ok=True)
+    doubled = Image.new("RGBA", (width * 2, height))
+    doubled.paste(rgba, (0, 0))
+    doubled.paste(rgba, (width, 0))
+    for index in range(width):
+        doubled.crop((index, 0, index + view, height)).save(
+            os.path.join(folder, f"{index:04d}.png"), optimize=True
+        )
+    print(f"compass/frame ({width})")
+
+
 def main() -> None:
     # Buttons: all heights skin.py knows (forks / layouts may use any of them).
     for h in skin.HEIGHTS:
@@ -67,7 +87,10 @@ def main() -> None:
     save(skin.square_slot((46, 30), closed=True), "slots/closed_46x30.png")
 
     for key, make in skin.COMPASS_SPRITES.items():
-        save(make(), f"compass/{key.lower()}.png")
+        image = make()
+        save(image, f"compass/{key.lower()}.png")
+        if key == "BAND":
+            save_band_frames(image)
 
     for key, (size, draw) in skin.MAP_SPRITES.items():
         save(skin.map_sprite(size, draw), f"map/{key.lower()}.png")

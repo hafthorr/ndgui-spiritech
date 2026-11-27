@@ -46,3 +46,6 @@ Thumbs.db
 .DS_Store
 .snapshots/
 /Packages/
+
+# Scratch space
+TEMP/

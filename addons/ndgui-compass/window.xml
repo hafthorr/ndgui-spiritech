@@ -1,12 +1,14 @@
 <?xml version="1.0" encoding="utf-8"?>
 <root>
-  <!-- DarkTech compass: mark strip at 3 px/degree (same scale as former atlas band). -->
+  <!-- Outlined band, 3 px/degree. Black outline is the border; the plate stays hidden while this shows. -->
   <View name="ndgui_compass_window" capture_input="true" composite_layer="true" view_layout="vertical">
     <View name="compass_pkg" view_layout="stacked" visible="true">
-      <!-- thin DarkTech baseline -->
-      <View name="pkg_baseline" interactive="false" fill_color="0xFF6CB6FF"
-        min_size="Point(-1,1)" max_size="Point(-1,1)" v_alignment="center" />
-      <View name="pkg_marks" interactive="false" view_layout="stacked" />
+      <!-- One frame of the wrapped strip, exactly this wide, so the layout cannot scale it. -->
+      <View name="pkg_clip" interactive="false" view_layout="stacked"
+        min_size="Point(320,34)" max_size="Point(320,34)" h_alignment="left" v_alignment="top">
+        <BitmapView name="pkg_band" interactive="false" image="library://notum.ndgui-lib/compass/frame/0000.png"
+          min_size="Point(320,34)" max_size="Point(320,34)" h_alignment="left" v_alignment="top" />
+      </View>
       <BitmapView name="pkg_waypoint" interactive="false" image="library://notum.ndgui-lib/compass/waypoint.png"
         visible="false" min_size="Point(23,29)" max_size="Point(23,29)" h_alignment="left" v_alignment="top" />
       <BitmapView name="pkg_caret" interactive="false" image="library://notum.ndgui-lib/compass/caret.png"

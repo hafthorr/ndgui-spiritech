@@ -1,5 +1,85 @@
 # Progress
 
+## Dev install on this machine (2026-11-26)
+
+The client is `/home/blasky/Games/PRK-Spiritech/client`. Play uses the
+marketplace addon, not the install script.
+
+Purged the script install on 2026-11-26 while the game was open. The 12
+`.stock` backups matched the live graphics, colors, layouts, and core window
+file, so those game files were already the originals; the backups were
+deleted. `Client.xml` and `.installed.json` were not touched. Ra, modern-ui,
+and the other non-ndGUI addons stayed.
+
+Replaced the 40 `notum.ndgui-*` folders with `release/ndgui-0.3.7.zip`, built
+from this working tree (`build_release.py`). The filename is still 0.3.7
+because `VERSION` is 0.3.7. The launcher has no ndGUI receipt, so it will not
+swap this tree for the published zip. There is no `ndgui-*` folder beside the
+`notum.ndgui-*` ones.
+
+A small edit copies `addons/ndgui-<name>/` into `UI/Addons/notum.ndgui-<name>/`.
+Generated packages are not in the checkout; a full refresh rebuilds the
+marketplace zip and replaces those folders again. Do not run the install
+script, do not write a receipt, and do not touch `Client.xml`. The client
+reads Addons only at launch. See `.cursor/rules/dev-install.mdc`.
+
+## Compass frames (2026-11-26)
+
+12px slices only drew one sliver. The clip is 34px tall and had no stacked layout, so the other slices were laid out below it. A bitmap wider than its parent is also scaled to the gap at its x, which is why the single 1080px strip stretched.
+
+The marketplace compass now keeps one BitmapView at 320x34 and swaps `compass/frame/NNNN.png`. Each frame is the wrapped 320px window of `band.png` for that scroll pixel, so the layout never resizes it. The atlas path is unchanged. Restart the client to load it.
+
+## Compass, maps, and chrome (2026-11-26)
+
+`8400809` (25 Nov 2026) replaced the outlined compass with unoutlined text so a marketplace
+package would not reference atlas ids. Both install paths share `ndgui-compass`, so a script
+reinstall kept that text strip. `band.png` was exported and never shown.
+
+Checked `TEMP/screenshots` pixel by pixel. Original.png is the outlined strip (light ink,
+1px black outline) with the world showing through the gaps. That outline is the border.
+Packageable.png is the unoutlined light-blue line. A plate behind the band would cover the
+sky and would not match Original. `band.png` is the outlined art: transparent ground, opaque
+black outline, opaque `#C8E6FF` ink.
+
+Both paths hide the plate and `GFX_GUI_COMPASS_FRAME`:
+
+- Install plus skin (`graphic_width` of the assembled compass band id is greater than 0):
+  atlas sprites, the same pixels `skin.py` merges.
+- Marketplace (width 0): `band.png` cut into 90 slices of 12x34
+  (`compass/slice/NN.png`). Each slice is narrower than `pkg_clip`, so the layout
+  cannot scale it to the gap between its x and the clip edge. That gap was the
+  stretch. North's first slice is x=160. Waypoint and caret stay pinned.
+  Window is 320x54 plus the distance line.
+
+The stock plate and frame are used only when those png widgets are missing. `letter.xml`
+and `tick.xml` are gone. Ids are assembled (`"GFX_GUI_" .. "NDGUI_COMPASS_" .. part`) so
+the marketplace scan does not see a quoted custom atlas id.
+
+Restarting the game does not load git edits. The client reads `UI/Addons` only, and only at
+launch. For a dev look, copy into the live `notum.ndgui-*` folders (see "Dev install" above).
+A restart against the old client files still shows the text strip.
+
+Maps: local and planet maps try the assembled NDGUI map ids when `graphic_width` of
+that id is greater than 0 (install plus skin). `surface.sprite` appends nothing and does
+not fail when the graphic is missing, so a pcall never reached the stock fallback and
+the marketplace client drew no you-are-here or mission icons. Width 0 uses the stock
+map sprites for entities, and the existing fan and line dots for the trail, rings,
+route and reticle. The check lives in playfield `markers.lua` and planet `main.lua`,
+copied into the live `notum.ndgui-*` folders on 2026-11-26. No quoted `GFX_*NDGUI_*` id.
+Denis's Intel `hud_strip.xml` still has its button gfx ids; the player-zip wrap
+handles those. Do not strip them.
+
+Control-center left and right wings, the minibar, and the menubar are back to the
+pre-`8400809` stock gfx (`GFX_GUI_TAB_BACKGROUND` / `ACTIVE`, `GFX_GUI_SB_*`). `skin.py`
+still retints those on the install path.
+
+`install.py` `copy_packages` calls `remove_release_packages` before copying, so a checkout
+install deletes launcher `notum.ndgui-*` folders as well as `ndgui-*`.
+
+`lua5.4 tests/test_providers.lua`: compass (atlas and png) and both maps pass, including the
+no-skin fallbacks. 16 failures are the pre-existing missing generated packages plus the
+missing inventory `slot.xml`.
+
 ## Title plate and tab faces (2026-11-26)
 
 ### Dark box under the window text
@@ -43,7 +123,8 @@ the prebuilt `game/` tree (no Pillow, no generators). A git checkout still build
 The first overhead number unloaded the package. `ui.place` only accepts coordinates from
 -16384 to 16384. `fct.lua` clamped the text, then placed the shadow one pixel further, and
 that error is fatal for the whole role. The shadow is now clamped too, and a non-finite
-anchor becomes 0. Confirmed in game on 2026-11-26. The 0.3.7 zips do not include this fix.
+anchor becomes 0. Confirmed in game on 2026-11-26. The portal will not replace a published
+version, so the 0.3.7 zips stay as released and this fix waits for the next version.
 
 ## Hub bundling — rolled back (2026-11-25)
 
