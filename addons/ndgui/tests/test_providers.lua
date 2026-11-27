@@ -1052,7 +1052,12 @@ do
     end
     char_subs.self(nil, { id = 42, health = 1000, max_health = 1000, nano = 500, max_nano = 500 })
     effects_subs.self({ reset = true, sampled_at_ms = clock, data = { { subject = "me", known = true, effects = {
-      fx(1, "Cyclic Coat of Barbs", 1200, 1200), fx(2, "Minor Wilderness Protection", 40, 2700),
+      fx(1, "Cyclic Coat of Barbs", 1200, 1200, {
+        kind = "Self", ncu_cost = 4, nano_cost = 40, radius = 0, range = 20,
+        attack_delay = 2, recharge_delay = 0.5, modifiers = { "Fast Attack +20" },
+        description = "Increases the Fast Attack skill.",
+      }),
+      fx(2, "Minor Wilderness Protection", 40, 2700),
       fx(3, "Hidden Thing", 10, 10, { hidden = true }) } } } })
     local names = {}
     -- visible text views named `name`, skipping hidden subtrees
@@ -1078,9 +1083,24 @@ do
       return out
     end
     local strip = cells()
-    check(#strip == 1 and strip[1].tooltip and strip[1].tooltip:find("Cyclic Coat of Barbs", 1, true)
-      and strip[1].tooltip:find("20:00 left", 1, true),
-      "the long buff sits in the icon strip, tooltip with time left: " .. tostring(strip[1] and strip[1].tooltip))
+    local coat = strip[1] and strip[1].tooltip or ""
+    check(#strip == 1 and coat:find("Cyclic Coat of Barbs", 1, true) and coat:find("Self · NCU 4 · Nano 40", 1, true)
+      and coat:find("Remaining: 20:00", 1, true) and coat:find("Total: 1200s · Radius: 0 · Range: 20", 1, true)
+      and coat:find("Attack: 2s · Recharge: 0.5s", 1, true) and coat:find("Fast Attack +20", 1, true)
+      and coat:find("Increases the Fast Attack skill.", 1, true)
+      and coat:find("Shift-click: full description", 1, true),
+      "the long buff sits in the icon strip, with the NCU tooltip: " .. coat)
+    check(strip[1] and strip[1].bound == 1, "shift-click binds the icon to the effect")
+    local row_tip, row_bound
+    for _, r in ipairs(H.releases) do
+      if r.view.name == "buff_row" and r.view.visible ~= false then
+        local n = H.find(r.view, "buff_name")
+        if n and n.text == "Minor Wilderness Protection" then row_tip, row_bound = r.view.tooltip, r.view.bound end
+      end
+    end
+    check(row_tip and row_tip:find("Remaining: 00:40", 1, true) and row_tip:find("Shift-click: full description", 1, true)
+      and row_tip:find("Right-click: always show as a row / hide", 1, true) and row_bound == 2,
+      "a buff row has the NCU tooltip and is bound: " .. tostring(row_tip))
     -- right-click an icon: Always show as a row
     local function right_click(view)
       for _, r in ipairs(H.releases) do if r.view == view then H.menu_items = {}; r.cb(); return H.menu_items end end
