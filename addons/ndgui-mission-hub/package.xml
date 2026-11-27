@@ -2,7 +2,6 @@
   <Requires package="notum.ndgui-lib" />
   <Provides role="prk.info" />
   <Provides role="prk.missions" />
-  <Provides role="prk.mission-terminal" />
   <Script src="main.lua" />
   <InteractionScript src="interaction.lua" />
 </Package>

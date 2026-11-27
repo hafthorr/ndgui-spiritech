@@ -1,6 +1,6 @@
--- Mission briefs shared between the Info, Missions and Mission Terminal windows of one package
--- (ndgui-mission-hub). The client only hands a mission's briefing to the Info window (Look at
--- mission / Ctrl-click an offer); Info captures the page here and the other windows show it.
+-- Mission briefs shared between the Info and Missions windows of ndgui-mission-hub. The client only
+-- hands a mission's briefing to the Info window (Look at mission); Info captures the page here and
+-- Missions shows it. The Mission Terminal is another package, so it cannot read these.
 -- Stored in ui.storage (per package, shared by every character), keyed by the mission title, which
 -- is the same (shortened) title the Missions list and the terminal offers show.
 local B = {}

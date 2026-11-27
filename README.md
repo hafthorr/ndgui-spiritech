@@ -32,10 +32,12 @@ Inventory, Wear, Stats, Skills, Nano Programs, Team, Raid, Friends, Pets, Perks,
 
 **Team** (AI-hand-made): every member is a unit frame like the target panels: profession portrait, exact HP with the damage ghost, nano, distance, leader in green, absent members greyed. Click to target, right-click menu, NCU strips as before. **Compact** shows name, level and health only.
 
-**Missions, Mission Terminal and Info** (AI-hand-made, one package: Mission Hub)
-- **Info keeps every mission briefing you look at** (cash, XP, zone, item reward, description), shared by all your characters.
+**Missions and Info** (AI-hand-made, one package: Mission Hub)
+- **Info keeps every mission briefing you look at** (cash, XP, zone, item reward, description), shared by all your characters. The Missions window reads the same notes.
 - **Missions**: the list with time-left bars (blue, yellow under 30 min, red under 10) and a side pane with the chosen mission's briefing, pay, zone and reward. Folds to its title bar (`Missions (2) - 1:20`).
-- **Mission Terminal**: offer rows instead of six bare icons, each with its pay, XP, playfield, QL and reward right away (`2,827 credits · 486 XP · Rome Blue · QL 120`, `Reward: Carbonum Plate Helmet (QL 118)`). A **watch list** lights matching offers gold (it searches the summary, playfield and reward, plus the full briefing once you've looked at one in Info) and logs them; four slider **presets** (left-click applies, right-click saves); roll counter and what chosen-reward rolls cost. An **offer map** beside the rows shows where each numbered offer is (watched ones gold, the selected one ringed, and you); click a number to pick it, drag to pan, wheel or `-` `+` to zoom, **Map** hides it.
+
+**Mission Terminal** (AI-hand-made, its own package)
+- Offer rows instead of six bare icons, each with its pay, XP, playfield, QL and reward right away (`2,827 credits · 486 XP · Rome Blue · QL 120`, `Reward: Carbonum Plate Helmet (QL 118)`). A **watch list** lights matching offers gold (it searches the summary, playfield and reward) and logs them; four slider **presets** (left-click applies, right-click saves); roll counter and what chosen-reward rolls cost. An **offer map** beside the rows shows where each numbered offer is (watched ones gold, the selected one ringed, and you); click a number to pick it, drag to pan, wheel or `-` `+` to zoom, **Map** hides it. In Options, Mission terminal is this package. Info and Missions stay on Mission Hub.
 
 **Damage Meter** (AI-hand-made; Control Center > Actions > **Addons** > Damage Meter)
 - **Damage / Healing / Taken / Targets / Deaths** as bars: amount, per second, share. **Me / Team / Raid / All**.
@@ -129,7 +131,7 @@ The Grid Overlay always draws the size you set (a small grid shows every 2nd / 3
 
 ## How it works (one paragraph)
 
-Spiritech loads Lua/XML UI packages from `client/UI/Addons`. This repo holds **16 totally AI-hand-made packages** ([`addons/`](addons)) and the Python tools that derive the other **25** from the game's own UI. They also square every button and paint the DarkTech skin. `build_release.py` runs all of that once, on a developer's machine, and zips the result (player zip plus a packages-only marketplace suite for the Spiritech Addons page). The Marketplace install is packages only; `install.ps1` also swaps in patched screen layouts, merges skin images into the game's graphics atlas (`cd_image/gui/Default`), and can select the ndGUI providers. It keeps `*.stock` backups of everything it touches. Details are in [CONTRIBUTING.md](CONTRIBUTING.md) and [docs/marketplace-listing.md](docs/marketplace-listing.md).
+Spiritech loads Lua/XML UI packages from `client/UI/Addons`. This repo holds **17 totally AI-hand-made packages** ([`addons/`](addons)) and the Python tools that derive the other **25** from the game's own UI. They also square every button and paint the DarkTech skin. `build_release.py` runs all of that once, on a developer's machine, and zips the result (player zip plus a packages-only marketplace suite for the Spiritech Addons page). The Marketplace install is packages only; `install.ps1` also swaps in patched screen layouts, merges skin images into the game's graphics atlas (`cd_image/gui/Default`), and can select the ndGUI providers. It keeps `*.stock` backups of everything it touches. Details are in [CONTRIBUTING.md](CONTRIBUTING.md) and [docs/marketplace-listing.md](docs/marketplace-listing.md).
 
 ## Known limits
 

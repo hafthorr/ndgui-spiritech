@@ -205,11 +205,11 @@ def ours(folder):
 
 
 # Packages earlier releases installed that a newer one replaced. Left installed they would
-# claim those roles again (0.2.7: mission-hub; Intel provides Chat).
+# claim those roles again (0.2.7: mission-hub took Info and Missions; Intel provides Chat).
+# The Mission Terminal is its own package again (ndgui-mission-terminal).
 OBSOLETE = (
     "ndgui-info",
     "ndgui-missions",
-    "ndgui-mission-terminal",
     "ndgui-chat",
     "notum.ndgui-chat",
     "notum.ndgui",  # legacy theme package with no Provides

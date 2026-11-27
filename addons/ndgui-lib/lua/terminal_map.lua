@@ -3,9 +3,8 @@
 -- and you. Clicking a number picks that offer (native hit targets). Drawing follows the stock
 -- MissionTerminal package; the look is ndGUI's.
 --
--- The map surface has to be attached while the package loads, but ndgui-mission-hub only learns which
--- role a VM plays from its first callback. So the hub calls M.mount() at load in every VM (it does
--- nothing harmful in Info / Missions), and the terminal later moves M.pane into its window.
+-- The map surface has to be attached while the package loads, on a widget that stays. ndgui-mission-terminal
+-- builds the real window at load and M.mount() puts the surface on its offer column.
 local M = { available = false }
 
 local MARKER_RADIUS, SELECTED_RADIUS, MARKER_RIM, SELECTED_HALO = 9, 11, 2, 4

@@ -6,6 +6,16 @@ Screenshots `Pictures/Screenshots/Screenshot_20261127_145000.png` (NCU) and `Scr
 
 `addons/ndgui-watch/main.lua` now builds that tooltip from the observed effect (seconds converted to the centiseconds `ncu.presentation` expects) and binds each buff row and icon to `effect.reference`. Right-click pin/hide is unchanged. The hint line is "Shift-click: full description". Copied into the live `notum.ndgui-watch`. Restart the client. Not tagged.
 
+## Grious: Mission Terminal split out of the hub (2026-11-27)
+
+`~/Downloads/image.png`. Options had Missions and Mission terminal on `notum.ndgui-mission-hub`. The open window was the built-in: "No missions loaded" is only in `UI/Packages/MissionTerminal/content.xml`. The debugger row selected was `MissionTerminal / Mission Terminal`. Header said 0 failed. `/uidebug` drops disposed instances, so that does not mean the hub's terminal role survived. A role whose provider cannot init is rebuilt as the bundled package and the Options selection stays (`UI/Packages/README.md`).
+
+The hub attached `game.map_surface` at load onto a blank frame in every role VM, then built the real terminal only on the first `mission_terminal_*` callback. Stock and modern-ui attach once, while the terminal package loads, on the widget that stays. `win_terminal.lua` will move an already-mounted `Map.pane` onto `terminal_map_host` before `Shell.window` destroys the blank; `Map.wire` only binds zoom. That move never ran for a VM that did not get a terminal callback, and the adapter wants the surface on the lasting widget at load.
+
+Split, in the tree, not released: `addons/ndgui-mission-terminal` (`notum.ndgui-mission-terminal`) provides only `prk.mission-terminal` and requires `win_terminal` at load, so the map attaches once on the offer column. The hub keeps `prk.info` and `prk.missions` and still shares briefings through its own `ui.storage`. The terminal cannot read those briefs. Offer pay, XP, zone, QL and rewards still come from the server. Options stays one row per role. Info and Missions stay on the hub. Mission terminal has to point at the new package.
+
+Copied into the live client (`notum.ndgui-mission-hub` and new `notum.ndgui-mission-terminal`, plus the comment-level lib edits). No plain `ndgui-*` twin. `Client.xml` and `.installed.json` were not touched. Prefs still say `UiPackageProvider_mission_terminal` = `notum.ndgui-mission-hub`, so the role stays on the built-in terminal until that row is changed and the client is restarted. `lua5.4 tests/test_providers.lua`: the new hub and terminal checks pass. The same 16 failures as before (generated packages and `inventory/slot.xml` are not in git). Portal 0.4.0 is unchanged. Not tagged.
+
 ## Skills IP priorities (2026-11-27)
 
 Screenshot `Pictures/Screenshots/Screenshot_20261127_143333.png`: Set IP priorities on an Engineer. The +/- pickers show the installed Engineer table (Strength Medium, and the detail says Matches default). Save Priorities, Cancel, and Restore defaults are missing. Save Changes and Close are empty frames.

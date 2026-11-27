@@ -1,5 +1,5 @@
--- ndGUI info window as a module: required by its own package or by ndgui-mission-hub, which
--- provides Info, Missions and Mission Terminal from one package so they can share mission briefs.
+-- ndGUI info window as a module: required by ndgui-mission-hub, which provides Info and Missions
+-- from one package so they can share mission briefs.
 -- Returns its native callbacks; the requiring package routes the globals to them.
 local M = {}
 local BASE = "library://notum.ndgui-lib/info_"
@@ -194,7 +194,7 @@ local function render(refresh)
 end
 
 function M.info_show(token, facts, cells, refresh)
-	-- a mission page: keep its briefing for the Missions and Mission Terminal windows
+	-- a mission page: keep its briefing for the Missions window
 	pcall(function() Briefs.save(Briefs.capture(facts)) end)
 	save_scroll()
 	local grouped = {}

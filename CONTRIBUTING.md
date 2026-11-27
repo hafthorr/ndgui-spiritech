@@ -15,7 +15,8 @@ addons/                     hand-made packages, copied into client/UI/Addons as-
   ndgui-hotbar/             prk.hotbar
   ndgui-playfield-map/      prk.playfield-map    Local Map
   ndgui-planet-map/         prk.planet-map       Planet Map
-  ndgui-mission-hub/        info + missions + terminal
+  ndgui-mission-hub/        prk.info + prk.missions
+  ndgui-mission-terminal/   prk.mission-terminal
   ndgui-intel/              prk.chat + prk.floating-combat-text + prk.zone-notice: Intel HUD, alerts, alts
 install.ps1, install.bat    the player installer (PowerShell; ships in the release zip)
 install.py                  install straight from this checkout (developers, Linux/Mac)
@@ -78,7 +79,7 @@ The release job in `.github/workflows/ci.yml` then creates the GitHub release: n
 
 ## Sharing data between roles (`ndgui-lib/lua/bus.lua`)
 
-A package can provide several roles, but the client runs each in its own Lua VM, and they all load the same scripts. A VM learns its role from its first callback (see `ndgui-intel/main.lua` and `ndgui-mission-hub/main.lua`). The VMs share the package's `ui.storage`, so `bus.lua` puts an event ring (`publish` / `reader().poll`), last-value state (`set` / `get`) and a lease (`lease(name, owner, now, ttl)`, for "only one VM draws this") on top of it. Storage is per package id, so only roles of the same package can talk. `tests/test_intel.lua` runs several mock VMs over one storage table.
+A package can provide several roles, but the client runs each in its own Lua VM, and they all load the same scripts. A VM learns its role from its first callback (see `ndgui-intel/main.lua` and `ndgui-mission-hub/main.lua`). The VMs share the package's `ui.storage`, so `bus.lua` puts an event ring (`publish` / `reader().poll`), last-value state (`set` / `get`) and a lease (`lease(name, owner, now, ttl)`, for "only one VM draws this") on top of it. Storage is per package id, so only roles of the same package can talk. Info and Missions share briefings that way. The Mission Terminal is its own package: it builds the real window and attaches the offer map while its script loads. `tests/test_intel.lua` runs several mock VMs over one storage table.
 
 ## Rules of thumb
 
