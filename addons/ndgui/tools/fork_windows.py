@@ -180,6 +180,84 @@ def fork(src, role, title):
             if old not in code:
                 raise SystemExit(f"{src}: category button reparent block changed shape")
             code = code.replace(old, new, 1)
+            # ui.visible on the Button leaves the chrome wrap behind (and a wrap that
+            # starts hidden never appears). Record wraps before category buttons move in.
+            # One child is the 3-slice chrome and the other is not, so the priority
+            # detail grid (two 3-leaf rows) is not treated as a button.
+            code = must(
+                code,
+                'local expanded = ui.find(content, "skills_content")\n',
+                'local expanded = ui.find(content, "skills_content")\n'
+                "local function button_wraps(host)\n"
+                "\tlocal found = {}\n"
+                "\tlocal function chrome(view)\n"
+                "\t\tif ui.child_count(view) ~= 3 then\n"
+                "\t\t\treturn false\n"
+                "\t\tend\n"
+                "\t\tfor i = 1, 3 do\n"
+                "\t\t\tif ui.child_count(ui.child(view, i)) ~= 0 then\n"
+                "\t\t\t\treturn false\n"
+                "\t\t\tend\n"
+                "\t\tend\n"
+                "\t\treturn true\n"
+                "\tend\n"
+                "\tlocal function walk(view)\n"
+                "\t\tfor i = 1, ui.child_count(view) do\n"
+                "\t\t\tlocal kid = ui.child(view, i)\n"
+                "\t\t\tlocal n = ui.child_count(kid)\n"
+                "\t\t\tif n == 2 then\n"
+                "\t\t\t\tlocal a, b = ui.child(kid, 1), ui.child(kid, 2)\n"
+                "\t\t\t\tif chrome(a) ~= chrome(b) and (chrome(a) or chrome(b)) then\n"
+                "\t\t\t\t\tfound[#found + 1] = kid\n"
+                "\t\t\t\telse\n"
+                "\t\t\t\t\twalk(kid)\n"
+                "\t\t\t\tend\n"
+                "\t\t\telseif n > 0 then\n"
+                "\t\t\t\twalk(kid)\n"
+                "\t\t\tend\n"
+                "\t\tend\n"
+                "\tend\n"
+                "\twalk(host)\n"
+                "\treturn found\n"
+                "end\n"
+                "-- content.xml order, before category buttons are parented in.\n"
+                "local priority_wrap = {}\n"
+                "local wrap_names = {\n"
+                '\t"suggest_ip", "set_priorities", "reset_all", "restore_priorities",\n'
+                '\t"reset_skill", "use_default", "save_priorities", "cancel_priorities",\n'
+                '\t"accept", "quit",\n'
+                "}\n"
+                "local wraps = button_wraps(expanded)\n"
+                "if #wraps == #wrap_names then\n"
+                "\tfor i, name in ipairs(wrap_names) do\n"
+                "\t\tpriority_wrap[name] = wraps[i]\n"
+                "\tend\n"
+                "end\n"
+                "local function show_priority_button(name, on)\n"
+                "\tlocal wrap = priority_wrap[name]\n"
+                "\tif wrap then\n"
+                "\t\tui.visible(wrap, on)\n"
+                "\tend\n"
+                "\tui.visible(ui.find(expanded, name), on)\n"
+                "end\n",
+                "Skills/main.lua",
+            )
+            code = must(
+                code,
+                '\tfor _, name in ipairs({ "reset_all", "accept", "quit" }) do\n'
+                '\t\tui.visible(ui.find(expanded, name), not priorities)\n'
+                "\tend\n"
+                '\tfor _, name in ipairs({ "restore_priorities", "save_priorities", "cancel_priorities" }) do\n'
+                "\t\tui.visible(ui.find(expanded, name), priorities)\n"
+                "\tend\n",
+                '\tfor _, name in ipairs({ "reset_all", "accept", "quit" }) do\n'
+                "\t\tshow_priority_button(name, not priorities)\n"
+                "\tend\n"
+                '\tfor _, name in ipairs({ "restore_priorities", "save_priorities", "cancel_priorities" }) do\n'
+                "\t\tshow_priority_button(name, priorities)\n"
+                "\tend\n",
+                "Skills/main.lua",
+            )
         if src == "NanoPrograms" and fn == "main.lua":
             old = (
                 "local toolbar_buttons = {\n"
