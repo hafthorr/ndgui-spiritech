@@ -1,5 +1,9 @@
 # Progress
 
+## 0.4.3 (2026-11-28)
+
+Tag `v0.4.3` is `fd048be` (merge of PR 10). The dev client `notum.ndgui-*` folders were replaced from `release/ndgui-0.4.3.zip` (41 packages, version 0.4.3). `Client.xml` and `.installed.json` were not touched. Restart to load it. Portal upload is by hand.
+
 ## Intel strip buttons (2026-11-28)
 
 Alts, Log, 0, and x used `GFX_NDGUI_BTN22_*`. Those atlas ids are gone with the old skin, so the client drew stock buttons. `hud_strip.xml` now wraps them the way `square_buttons.py` wraps every other labelled button (`ndgui_btnwrap`, `library://notum.ndgui-lib/buttons/btn22_*`, flat label). `hud.lua` calls `Button.skin_tree` after load so hover and press swap the slices. Copied to `notum.ndgui-intel`. Quit and relaunch.
