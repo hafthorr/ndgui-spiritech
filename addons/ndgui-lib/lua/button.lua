@@ -1,6 +1,7 @@
 -- Package-local DarkTech buttons: library:// slices instead of GFX_NDGUI_BTN* atlas ids.
 -- Call ui.require("notum.ndgui-lib/button").skin_tree(root) after ui.load of a package root.
-ui.define("notum.ndgui-lib/button", function()
+-- This file is the library module factory (Modules root). Do not ui.define it: the client
+-- already registered that name, and a second define aborts the package.
 	local M = {}
 	local CAP = 4
 	-- A wrapped button hides only its label when Lua calls ui.visible on the Button.
@@ -171,12 +172,14 @@ ui.define("notum.ndgui-lib/button", function()
 	end
 
 	function ui.visible(view, on)
+		-- The host rejects nil. `flag and other` is nil when flag is nil.
+		if type(on) ~= "boolean" then
+			on = on and true or false
+		end
 		local result = raw_visible(view, on)
-		if on ~= nil then
-			local wrap = wrap_for(view)
-			if wrap then
-				raw_visible(wrap, on)
-			end
+		local wrap = wrap_for(view)
+		if wrap then
+			raw_visible(wrap, on)
 		end
 		return result
 	end
@@ -384,4 +387,3 @@ ui.define("notum.ndgui-lib/button", function()
 	M.nearest_height = nearest_height
 	M.slice_uri = slice_uri
 	return M
-end)

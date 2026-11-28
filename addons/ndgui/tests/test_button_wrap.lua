@@ -9,8 +9,6 @@ local function check(cond, msg)
 end
 
 local ui = {}
-local factory
-function ui.define(_, fn) factory = fn end
 function ui.child_count(view) return #view.kids end
 function ui.child(view, index) return view.kids[index] end
 function ui.visible(view, on) view.visible = on end
@@ -32,8 +30,7 @@ function ui.find(view, name)
 	return { name = name, real = real, proxy = true }
 end
 
-assert(loadfile(here .. "/../ndgui-lib/lua/button.lua", "t", { ui = ui, string = string, pcall = pcall, ipairs = ipairs, pairs = pairs, next = next, type = type, tonumber = tonumber, math = math }))()
-local Button = factory()
+local Button = assert(loadfile(here .. "/../ndgui-lib/lua/button.lua", "t", { ui = ui, string = string, pcall = pcall, ipairs = ipairs, pairs = pairs, next = next, type = type, tonumber = tonumber, math = math }))()
 
 local function node(name, kids)
 	return { name = name, kids = kids or {}, visible = true }

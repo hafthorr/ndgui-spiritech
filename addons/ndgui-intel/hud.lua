@@ -12,6 +12,7 @@
 -- Positions and open windows are kept in this package's storage (every character).
 ui.define("intel.hud", function()
 	local Bus = ui.require("notum.ndgui-lib/bus")
+	local Button = ui.require("notum.ndgui-lib/button")
 	local Ledger = ui.require("intel.ledger")
 	local H = {}
 
@@ -408,6 +409,7 @@ ui.define("intel.hud", function()
 
 	local function build_strip()
 		local view = ui.load("hud_strip.xml")
+		pcall(Button.skin_tree, view)
 		strip = { root = view }
 		for _, name in ipairs({ "grip", "xp", "axp", "cash", "time", "alts", "log", "reset", "close" }) do
 			strip[name] = ui.find(view, "strip_" .. name)

@@ -1,6 +1,6 @@
 -- Once per package VM: wrap core.window.create so DarkTech package chrome (buttons/pin)
 -- is applied without GFX_NDGUI_* atlas entries. Loaded from grid.lua (every ndGUI package).
-ui.define("notum.ndgui-lib/boot", function()
+-- Library module factory. Do not ui.define: the client already registered this file.
 	-- Install the button visibility hook before this VM loads any more layouts.
 	pcall(ui.require, "notum.ndgui-lib/button")
 	local ok, Window = pcall(ui.require, "core.window")
@@ -27,4 +27,3 @@ ui.define("notum.ndgui-lib/boot", function()
 	end
 	Window.ndgui_boot = true
 	return true
-end)

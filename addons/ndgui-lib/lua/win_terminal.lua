@@ -317,7 +317,9 @@ local function show_recent(pinned_mode)
 	for _, r in ipairs(recent) do
 		others[#others + 1] = r.name .. " QL " .. r.ql
 	end
-	local on = pinned_mode and #others > 0
+	-- pinned_mode is nil until the first reward snapshot. `nil and …` is nil, and
+	-- ui.visible rejects anything that is not a real boolean.
+	local on = pinned_mode == true and #others > 0
 	ui.visible(recent_view, on)
 	if on then
 		local text = "Recent: " .. table.concat(others, "  ·  ")
@@ -429,8 +431,8 @@ else
 end
 Map.wire()
 local map_on = stored("map") ~= "off"
-local function map_shown()
-	return Map.available and map_on
+	local function map_shown()
+	return Map.available == true and map_on
 end
 local function window_width()
 	return width + (map_shown() and MAP_WIDTH or 0)
@@ -483,7 +485,7 @@ local function layout_window(window, requested_w, requested_h)
 	if map_shown() then
 		ui.size(map_host, math.max(0, content_w - column_w), content_h)
 	end
-	ui.visible(map_toggle, Map.available)
+	ui.visible(map_toggle, Map.available == true)
 	ui.text(map_toggle, map_on and "Map <" or "Map >")
 	ui.size(status, math.max(40, column_w - 10 - (Map.available and 52 or 0)), 15)
 	ui.size(reward_back, math.max(40, column_w - 10), 48)
@@ -590,14 +592,14 @@ local function apply_reward(reward)
 	ui.selected(mode_pinned, reward.pinned_mode)
 	command(mode_random, "game.mission_terminal.random", reward.random)
 	command(mode_pinned, "game.mission_terminal.pinned", reward.pinned)
-	ui.visible(reward_row, reward.pinned_mode)
-	ui.visible(row_difficulty, not reward.pinned_mode)
+	ui.visible(reward_row, reward.pinned_mode == true)
+	ui.visible(row_difficulty, reward.pinned_mode ~= true)
 	command(reward_slot, "game.mission_terminal.choose_reward", reward.choose)
 	ui.icon(reward_slot, reward.icon or 0)
 	ui.content(reward_slot, reward.has_pin)
 	ui.text(reward_name, reward.has_pin and reward.name or "No reward chosen")
 	ui.text(reward_ql, reward.has_pin and ("QL " .. reward.ql) or "Click the slot to choose one")
-	ui.visible(reward_clear, reward.has_pin)
+	ui.visible(reward_clear, reward.has_pin == true)
 	ui.text(reward_cost, reward.has_pin and reward.cost > 0
 		and ("Each roll costs " .. credits(reward.cost) .. " credits") or "")
 	command(reward_clear, "game.mission_terminal.clear_reward", reward.clear)
