@@ -20,7 +20,7 @@ No other wrapped button is passed to `ui.visible`. Hiding a parent (page, toolba
 
 One miss that is not a hide/show: Chat Config `row.xml` is only the `chat_config_row` button, so after the wrap `ui.load` returns the frame. Headings and the window list set their text and clicks on that frame, and the label stays blank. `fork_hud.py` and the live `notum.ndgui-chat-config/main.lua` now find `chat_config_row` for text, selection, tooltip, and clicks, and still add and destroy the wrap. Restart. Not tagged.
 
-The live client's `notum.ndgui-*` folders are replaced from a build of this tree. The version string stays 0.4.0. `Client.xml` and `.installed.json` are not touched. Restart to load it. Not tagged. The published `release/ndgui-0.4.0.zip` is left as the portal build.
+Release 0.5.0. The dev client is replaced from `release/ndgui-0.5.0.zip` after the tag. `Client.xml` and `.installed.json` are not touched by that copy. Restart to load it.
 
 ## Buff Watch NCU details (2026-11-27)
 
@@ -36,7 +36,7 @@ The hub attached `game.map_surface` at load onto a blank frame in every role VM,
 
 Split, in the tree, not released: `addons/ndgui-mission-terminal` (`notum.ndgui-mission-terminal`) provides only `prk.mission-terminal` and requires `win_terminal` at load, so the map attaches once on the offer column. The hub keeps `prk.info` and `prk.missions` and still shares briefings through its own `ui.storage`. The terminal cannot read those briefs. Offer pay, XP, zone, QL and rewards still come from the server. Options stays one row per role. Info and Missions stay on the hub. Mission terminal has to point at the new package.
 
-Copied into the live client (`notum.ndgui-mission-hub` and new `notum.ndgui-mission-terminal`, plus the comment-level lib edits). No plain `ndgui-*` twin. `.installed.json` was not touched. Prefs `UiPackageProvider_mission_terminal` is `notum.ndgui-mission-terminal` (Missions stays on the hub). That is the same key Options writes. The game was closed when it was set, so the next launch uses it. `lua5.4 tests/test_providers.lua`: the new hub and terminal checks pass. The same 16 failures as before (generated packages and `inventory/slot.xml` are not in git). Portal 0.4.0 is unchanged. Not tagged.
+Copied into the live client (`notum.ndgui-mission-hub` and new `notum.ndgui-mission-terminal`, plus the comment-level lib edits). No plain `ndgui-*` twin. `.installed.json` was not touched. Prefs `UiPackageProvider_mission_terminal` is `notum.ndgui-mission-terminal` (Missions stays on the hub). That is the same key Options writes. The game was closed when it was set, so the next launch uses it. `lua5.4 tests/test_providers.lua`: the new hub and terminal checks pass. The same 16 failures as before (generated packages and `inventory/slot.xml` are not in git). Ships in 0.5.0.
 
 ## Skills IP priorities (2026-11-27)
 
