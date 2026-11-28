@@ -135,6 +135,44 @@ def special(src, ddir):
         xml = must(xml, 'graphic_mode="tinted" alpha="0.6" active_alpha="0.85"', 'alpha="0.9" active_alpha="1"', src)
         xml = must(xml, '<TextView name="window_title" weight="1"', '<TextView name="window_title" weight="1" color="C5D7E6" font_size="13"', src)
         open(path, "w", encoding="utf-8", newline="\n").write(xml)
+    elif src == "ChatConfig":
+        # row.xml's only child is the button. square_buttons wraps it, so ui.load
+        # returns the wrap. Text, clicks, and selection have to hit the button;
+        # the wrap is what gets added and destroyed.
+        code = must(
+            code,
+            '\t\t\tlocal heading = ui.load("row.xml")\n'
+            '\t\t\tui.add(channel_host, heading)\n'
+            '\t\t\tui.text(heading, (expanded[section] and "- " or "+ ") .. title)\n'
+            '\t\t\tchannel_rows[#channel_rows + 1] = heading\n'
+            '\t\t\tui.on_click(heading, function()',
+            '\t\t\tlocal heading_row = ui.load("row.xml")\n'
+            '\t\t\tlocal heading = ui.find(heading_row, "chat_config_row")\n'
+            '\t\t\tui.add(channel_host, heading_row)\n'
+            '\t\t\tui.text(heading, (expanded[section] and "- " or "+ ") .. title)\n'
+            '\t\t\tchannel_rows[#channel_rows + 1] = heading_row\n'
+            '\t\t\tui.on_click(heading, function()',
+            src,
+        )
+        code = must(
+            code,
+            '\t\tlocal row = ui.load("row.xml")\n'
+            '\t\tui.add(window_host, row)\n'
+            '\t\tui.text(row, window.name)\n'
+            '\t\tui.selected(row, window.identity == selected)\n'
+            '\t\tui.opacity(row, window.open and 1 or 0.55)\n'
+            '\t\tui.tooltip(row, window.open and "" or "Closed")\n'
+            '\t\tui.on_click(row, function() choose(window.identity) end)\n',
+            '\t\tlocal row = ui.load("row.xml")\n'
+            '\t\tlocal face = ui.find(row, "chat_config_row")\n'
+            '\t\tui.add(window_host, row)\n'
+            '\t\tui.text(face, window.name)\n'
+            '\t\tui.selected(face, window.identity == selected)\n'
+            '\t\tui.opacity(row, window.open and 1 or 0.55)\n'
+            '\t\tui.tooltip(face, window.open and "" or "Closed")\n'
+            '\t\tui.on_click(face, function() choose(window.identity) end)\n',
+            src,
+        )
     elif src == "RaidBar":
         path = os.path.join(ddir, "window.xml")
         xml = open(path, encoding="utf-8").read()

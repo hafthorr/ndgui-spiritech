@@ -1,5 +1,27 @@
 # Progress
 
+## Empty chrome, Intel crash, Intel options (2026-11-27)
+
+Grious, `~/Downloads/LinkCrash1.png` and `LinkCrash2.png`. Clicking the "someone said your name" banner failed `notum.ndgui-intel` Floating combat text and Zone notice. Both stacks are `hud.lua:99` indexing global `os` (`os.date`) from `render_log`, reached through the bus poll in `floating_text_tick` / `zone_notice_apply`. The addon sandbox has no `os`, and the index happens before `pcall`, so a log line takes the role down. The log window stays marked open, so the next mention does it again after a relog. `clock_of` now calls `os.date` inside the `pcall` and otherwise formats the unix milliseconds. `drive` also catches a HUD tick error so combat text and the zone notice stay up.
+
+The XP/hr strip and that banner had no switch. Options > Interface > Intel: **XP and credits per hour** and **Name and tell alerts**. `/ndgui hud` still hides the strip when the option is on.
+
+Market confirm is the Skills empty-frame bug. `square_buttons.py` moves `visible="false"` onto `ndgui_btnwrap`. `ui.visible` on the Button hid the label and left the frame, and a frame that started hidden never came back, so Confirm cancellation was an empty unclickable box. `ui.find` and `ui.child` are not the same value, so `button.lua`'s child map missed `ui.visible(ui.find(...))`. The find hook now remembers the handle it just returned and shows or hides that wrap. `tests/test_button_wrap.lua` uses a different find handle from the child and checks Confirm's hidden wrap.
+
+Full audit, 2026-11-27 night: parsed every `ndgui_btnwrap` in the live Addons tree and in `addons/` (407 XML files, 234 wrapped buttons, 30 packages). Then traced every `ui.visible` call back to a wrapped button name, including `view("name")` and variables assigned from `ui.find`. Lua shows or hides only these wrapped buttons:
+
+- Market `confirm_cancel`, `keep_order` (wrap starts hidden), `cancel_order`. `view()` is `ui.find` after `filters.lua` loads grid, which loads the hook.
+- Skills `reset_all`, `accept`, `quit`, `restore_priorities`, `save_priorities`, `cancel_priorities`. `show_priority_button` sets the wrap and the button. The three that start hidden are the last three. `reset_skill` sits inside `reset_area`, which is hidden as a parent. Skill row +/- and priority arrows are not wrapped.
+- Terminal `map_toggle` (wrap starts hidden) and `reward_clear`. Both are `ui.find` after `win_terminal.lua` requires button.
+- Team `leave_button`, which also sets `leave_chrome`.
+- Pets Attack / Follow / Wait, which also set each wrap.
+
+No other wrapped button is passed to `ui.visible`. Hiding a parent (page, toolbar row, credits section) hides the wrap with it. Intel never loads the hook and never toggles a single wrapped button.
+
+One miss that is not a hide/show: Chat Config `row.xml` is only the `chat_config_row` button, so after the wrap `ui.load` returns the frame. Headings and the window list set their text and clicks on that frame, and the label stays blank. `fork_hud.py` and the live `notum.ndgui-chat-config/main.lua` now find `chat_config_row` for text, selection, tooltip, and clicks, and still add and destroy the wrap. Restart. Not tagged.
+
+The live client's `notum.ndgui-*` folders are replaced from a build of this tree. The version string stays 0.4.0. `Client.xml` and `.installed.json` are not touched. Restart to load it. Not tagged. The published `release/ndgui-0.4.0.zip` is left as the portal build.
+
 ## Buff Watch NCU details (2026-11-27)
 
 Screenshots `Pictures/Screenshots/Screenshot_20261127_145000.png` (NCU) and `Screenshot_20261127_145013.png` (Buff Watch), both hovering Composite Physical Special Expertise. NCU tooltip is `ncu.presentation`: kind, NCU cost, nano cost, remaining, total, radius, range, attack, recharge, one modifier line each, then the description. Shift-click opens the nano description because the slot is `ui.bind`ed to the effect reference (same as the team NCU strip). Buff Watch only showed name, "Cast by you", and the description, and never bound the row.

@@ -95,15 +95,37 @@ ui.define("intel.hud", function()
 	end
 
 	-- ---- log + alert ------------------------------------------------------------------------
+	-- os is not in the addon sandbox. Indexing it before pcall throws and fails the whole role.
 	local function clock_of(ms)
-		local ok, text = pcall(os.date, "%H:%M", math.floor((ms or 0) / 1000))
-		return ok and text or ""
+		local secs = math.floor((ms or 0) / 1000)
+		local ok, text = pcall(function()
+			return os.date("%H:%M", secs)
+		end)
+		if ok and type(text) == "string" then
+			return text
+		end
+		local tod = secs % 86400
+		return string.format("%02d:%02d", math.floor(tod / 3600), math.floor(tod % 3600 / 60))
+	end
+
+	local function setting_on(key, default)
+		local ok, value = pcall(function()
+			return ui.settings.toggle(key)
+		end)
+		if ok and type(value) == "boolean" then
+			return value
+		end
+		return default
+	end
+
+	local function strip_on()
+		return active and setting_on("show-strip", true) and Bus.get("hud_hidden") ~= "1"
 	end
 
 	local render_log, render_strip
 
 	local function show_alert(kind, text)
-		if not built then
+		if not built or not setting_on("show-alerts", true) then
 			return
 		end
 		local look = KIND[kind] or KIND.ndgui
@@ -376,6 +398,18 @@ ui.define("intel.hud", function()
 			show_alert("ndgui", "Session counters start over.")
 			render_strip(now_ms(), true)
 		end)
+		pcall(function()
+			ui.settings.on_change(function()
+				if not built then
+					return
+				end
+				ui.visible(strip.root, strip_on())
+				if not setting_on("show-alerts", true) then
+					alert_state.until_ms = 0
+					ui.visible(alert.root, false)
+				end
+			end)
+		end)
 	end
 
 	local function build_alert()
@@ -478,10 +512,14 @@ ui.define("intel.hud", function()
 		elseif c == "log" then
 			toggle(logw)
 		elseif c == "hud" then
-			local hidden = Bus.get("hud_hidden") ~= "1"
-			Bus.set("hud_hidden", hidden and "1" or "0")
-			ui.visible(strip.root, active and not hidden)
-			show_alert("ndgui", hidden and "Intel strip hidden (ndgui hud brings it back)." or "Intel strip shown.")
+			if not setting_on("show-strip", true) then
+				show_alert("ndgui", "Intel strip is off in Options, Interface, Intel.")
+			else
+				local hidden = Bus.get("hud_hidden") ~= "1"
+				Bus.set("hud_hidden", hidden and "1" or "0")
+				ui.visible(strip.root, strip_on())
+				show_alert("ndgui", hidden and "Intel strip hidden (ndgui hud brings it back)." or "Intel strip shown.")
+			end
 		elseif c == "reset" then
 			rates.reset(now_ms())
 			show_alert("ndgui", "Session counters start over.")
@@ -561,7 +599,7 @@ ui.define("intel.hud", function()
 			return
 		end
 		active = value
-		ui.visible(strip.root, value and Bus.get("hud_hidden") ~= "1")
+		ui.visible(strip.root, strip_on())
 		ui.visible(alts.root, value and alts.open)
 		ui.visible(logw.root, value and logw.open)
 		if not value then

@@ -98,7 +98,11 @@ local function drive(now)
 	end
 	if hud_on and now >= next_tick then
 		next_tick = now + TICK_MS
-		modules.hud.tick(now)
+		-- A HUD mistake must not fail floating combat text or the zone notice.
+		local ok, err = pcall(modules.hud.tick, now)
+		if not ok then
+			Bus.set("diag:hud_error", tostring(err))
+		end
 	end
 end
 

@@ -7,9 +7,12 @@ ui.define("notum.ndgui-lib/button", function()
 	-- Remember each Button -> ndgui_btnwrap (identity, no ui.find) and hide the wrap too.
 	local maps = {}
 	local paints = {}
+	local direct = {}
+	local trees = {}
 	local raw_visible = ui.visible
 	local raw_selected = ui.selected
 	local raw_load = ui.load
+	local raw_find = ui.find
 
 	local function leaf(view)
 		local ok, n = pcall(ui.child_count, view)
@@ -54,15 +57,80 @@ ui.define("notum.ndgui-lib/button", function()
 		end
 	end
 
+	-- ui.find and ui.child are not the same value, so a map filled from ui.child misses
+	-- ui.visible(ui.find(...)). Remember the exact handle ui.find just returned.
+	local function remember(btn, wrap)
+		if btn and wrap then
+			direct[btn] = wrap
+		end
+	end
+
+	local function chrome_pair(view)
+		local ok, n = pcall(ui.child_count, view)
+		if not ok or n ~= 2 then
+			return false
+		end
+		local aok, a = pcall(ui.child, view, 1)
+		local bok, b = pcall(ui.child, view, 2)
+		if not (aok and bok and a and b) then
+			return false
+		end
+		local ca, cb = chrome_view(a), chrome_view(b)
+		return ca ~= cb and (ca or cb)
+	end
+
+	local function wraps_of(root)
+		for i = 1, #trees do
+			if trees[i].root == root then
+				return trees[i].wraps
+			end
+		end
+		local wraps = {}
+		local function walk(view)
+			if chrome_pair(view) then
+				wraps[#wraps + 1] = view
+			end
+			local ok, n = pcall(ui.child_count, view)
+			if not ok or not n or n < 1 then
+				return
+			end
+			for i = 1, n do
+				local cok, kid = pcall(ui.child, view, i)
+				if cok and kid then
+					walk(kid)
+				end
+			end
+		end
+		pcall(walk, root)
+		trees[#trees + 1] = { root = root, wraps = wraps }
+		return wraps
+	end
+
+	-- The wrap that contains a descendant named `name`. Last hit is the innermost.
+	-- A missing name is a Lua error; probe with pcall and do not use ui.find (it is this hook).
+	local function wrap_named(root, name)
+		local found
+		local wraps = wraps_of(root)
+		for i = 1, #wraps do
+			local ok, inner = pcall(raw_find, wraps[i], name)
+			if ok and inner then
+				found = wraps[i]
+			end
+		end
+		return found
+	end
+
 	local function wrap_for(view)
+		local known = direct[view]
+		if known then
+			return known
+		end
 		for i = 1, #maps do
 			local map = maps[i]
 			local wrap = map[view]
 			if wrap then
 				return wrap
 			end
-			-- ui.find and ui.child are different proxies. Table keys use
-			-- identity, so match with == and remember the proxy we were given.
 			for btn, candidate in pairs(map) do
 				if btn == view then
 					map[view] = candidate
@@ -108,7 +176,19 @@ ui.define("notum.ndgui-lib/button", function()
 		return result
 	end
 
+	function ui.find(root, name)
+		local view = raw_find(root, name)
+		if view and type(name) == "string" and name:sub(1, 6) ~= "ndgui_" then
+			local wrap = wrap_named(root, name)
+			if wrap and wrap ~= view then
+				remember(view, wrap)
+			end
+		end
+		return view
+	end
+
 	function ui.load(file)
+		trees = {}
 		local view = raw_load(file)
 		if view then
 			local map = {}

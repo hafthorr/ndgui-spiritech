@@ -10,6 +10,8 @@ Versions follow Semantic Versioning 2.0.0: `MAJOR.MINOR.PATCH`.
 ## Unreleased
 
 - **Mission Terminal is its own package again** (`ndgui-mission-terminal`). The hub was attaching the offer map to a blank frame, and the built-in terminal came back. Info and Missions stay in Mission Hub and still share briefings. In Options, point Mission terminal at Notum Dovvetech Mission Terminal.
+- **Empty button frames.** Showing or hiding a button also shows or hides its chrome. Market Confirm cancellation was an empty frame you could not click. Skills priorities were the same bug. Chat Config section headings and the window list set their label on the frame after the wrap, so those rows stayed blank; the label, selection, and click now go to the button.
+- **Intel strip and name alerts** can be turned off under Options > Interface > Intel. A name-mention popup no longer crashes combat text and the zone notice.
 
 ## 0.4.0
 

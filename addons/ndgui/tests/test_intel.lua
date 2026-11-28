@@ -14,7 +14,8 @@ local NOW = 1700000000000
 
 -- one VM of the package, with the host calls ndgui-intel uses on top of the mock
 local function vm(settings)
-  local H = Mock.new(addons, core, { width = 1920, height = 1080, settings = settings or { ["text-size"] = 16, ["merge-hits"] = true, ["big-hits"] = true } })
+  local H = Mock.new(addons, core, { width = 1920, height = 1080, settings = settings or {
+    ["text-size"] = 16, ["merge-hits"] = true, ["big-hits"] = true, ["show-strip"] = true, ["show-alerts"] = true } })
   local ui = H.ui
   H.now = NOW
   ui.time = function() return H.now end
@@ -230,6 +231,20 @@ for _, kid in ipairs(fct.root.kids) do
 end
 check(row_name == "Bobtheagent", "Alts window lists you")
 check(fct.find(fct.root, "strip_log").text == "Log 1" or fct.find(fct.root, "strip_log").text == "Log 2", "Log button counts unread alerts: " .. tostring(fct.find(fct.root, "strip_log").text))
+
+-- the client sandbox has no os. Opening the log used to index os.date and fail the role.
+do
+  local saved = fct.env.os
+  fct.env.os = nil
+  find(fct, "strip_log").on_click()
+  chat.env.chat_present({ msg({ kind = "tell", structured = true, sender = "Nina", body = "again", time_ms = NOW + 70 }) })
+  fct.now = NOW + 7000
+  local ok, err = pcall(fct.env.floating_text_tick, {}, 11)
+  check(ok, "a name/tell log line with no os does not fail floating combat text: " .. tostring(err))
+  local stamp = find(fct, "log_time").text
+  check(type(stamp) == "string" and stamp:match("^%d%d:%d%d$") ~= nil, "log clock without os: " .. tostring(stamp))
+  fct.env.os = saved
+end
 
 -- the HUD VM dies (lease not renewed): the zone VM takes over
 zone.now = NOW + 20000
