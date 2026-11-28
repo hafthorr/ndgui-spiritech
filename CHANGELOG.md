@@ -9,7 +9,7 @@ Versions follow Semantic Versioning 2.0.0: `MAJOR.MINOR.PATCH`.
 
 ## Unreleased
 
-## 0.5.0
+## 0.4.1
 
 Needs the game client 0.3.5 (addon API 0.2.0) or newer. In Options, set Mission terminal to Notum Dovvetech Mission Terminal. Info and Missions stay on Mission Hub.
 

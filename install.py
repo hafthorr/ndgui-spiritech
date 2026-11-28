@@ -27,7 +27,7 @@ and --uninstall restores them. See INSTALL.md.
 """
 import argparse, glob, hashlib, json, os, re, runpy, shutil, string, subprocess, sys, traceback
 
-VERSION = "0.5.0"
+VERSION = "0.4.1"
 REPO = os.path.dirname(os.path.abspath(__file__))
 SOURCE = os.path.join(REPO, "addons")
 # Generated on the player's machine from their own client (never copied back by --pull).
