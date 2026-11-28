@@ -24,6 +24,8 @@ One miss that is not a hide/show: Chat Config `row.xml` is only the `chat_config
 
 The in-game Options search does not show an Intel section. `category="interface" section="intel"` is in the 0.4.1 package, and a search for "intel" only lists the three floating-combat-text settings because they carry the package id. The strip now has an `x` at the right edge (`strip_close`). It sets `hud_hidden` and hides the bar. `/ndgui hud` shows it again. `tests/test_intel.lua` covers the click.
 
+Tag `v0.4.2` is `42b0e78` (merge of PR 9). The dev client `notum.ndgui-*` folders were replaced from `release/ndgui-0.4.2.zip` (41 packages, version 0.4.2, `strip_close` present). `Client.xml` and `UI/Addons/.installed.json` were not touched. Restart to load it. Portal upload is by hand.
+
 ## Buff Watch NCU details (2026-11-27)
 
 Screenshots `Pictures/Screenshots/Screenshot_20261127_145000.png` (NCU) and `Screenshot_20261127_145013.png` (Buff Watch), both hovering Composite Physical Special Expertise. NCU tooltip is `ncu.presentation`: kind, NCU cost, nano cost, remaining, total, radius, range, attack, recharge, one modifier line each, then the description. Shift-click opens the nano description because the slot is `ui.bind`ed to the effect reference (same as the team NCU strip). Buff Watch only showed name, "Cast by you", and the description, and never bound the row.
