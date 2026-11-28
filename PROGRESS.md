@@ -20,7 +20,7 @@ No other wrapped button is passed to `ui.visible`. Hiding a parent (page, toolba
 
 One miss that is not a hide/show: Chat Config `row.xml` is only the `chat_config_row` button, so after the wrap `ui.load` returns the frame. Headings and the window list set their text and clicks on that frame, and the label stays blank. `fork_hud.py` and the live `notum.ndgui-chat-config/main.lua` now find `chat_config_row` for text, selection, tooltip, and clicks, and still add and destroy the wrap. Restart. Not tagged.
 
-0.5.0 was tagged and then removed before anyone downloaded it. This cut is 0.4.1. The dev client is replaced from `release/ndgui-0.4.1.zip`. `Client.xml` and `.installed.json` are not touched. Restart to load it. Portal upload is still by hand.
+0.5.0 was tagged and then deleted before anyone downloaded it. Tag `v0.4.1` is `a63dc78` (merge of PR 8). The dev client `notum.ndgui-*` folders were replaced from `release/ndgui-0.4.1.zip` (41 packages, version 0.4.1). `Client.xml` and `.installed.json` were not touched. Restart to load it. Portal upload is still by hand.
 
 ## Buff Watch NCU details (2026-11-27)
 
