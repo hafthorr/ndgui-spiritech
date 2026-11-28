@@ -9,9 +9,12 @@ Versions follow Semantic Versioning 2.0.0: `MAJOR.MINOR.PATCH`.
 
 ## Unreleased
 
-- **Mission Terminal.** The ndGUI window loads again, with its slider presets. It was falling back to the stock terminal because the package aborted while opening.
+## 0.4.3
+
 - **Market.** Cancel order shows Confirm cancellation and Keep order, labels and all. Those two were an empty frame.
-- **Intel.** Hiding the strip also closes the Log and Alts, and a later login leaves them closed. An old name or tell no longer pops the banner again on every login. Alts, Log, reset, and the strip's x use the ndGUI button frames.
+- **Intel.** Hiding the strip also closes the Log and Alts, and a later login leaves them closed. An old name or tell no longer pops the banner again on every login.
+- **Mission Terminal.** The ndGUI window loads again, with its slider presets. It was falling back to the stock terminal because the package aborted while opening.
+- **Intel.** Alts, Log, reset, and the strip's x use the ndGUI button frames.
 
 ## 0.4.2
 
