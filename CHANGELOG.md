@@ -11,12 +11,13 @@ Versions follow Semantic Versioning 2.0.0: `MAJOR.MINOR.PATCH`.
 
 ## 0.4.1
 
-Needs the game client 0.3.5 (addon API 0.2.0) or newer. In Options, set Mission terminal to Notum Dovvetech Mission Terminal. Info and Missions stay on Mission Hub.
+In Options, set Mission terminal to Notum Dovvetech Mission Terminal. Info and Missions stay on Mission Hub.
 
-- **Mission Terminal is its own package again** (`ndgui-mission-terminal`). The hub was attaching the offer map to a blank frame, and the built-in terminal came back. Info and Missions stay in Mission Hub and still share briefings. In Options, point Mission terminal at Notum Dovvetech Mission Terminal.
-- **Empty button frames.** Showing or hiding a button also shows or hides its chrome. Market Confirm cancellation was an empty frame you could not click. Skills priorities were the same bug. Chat Config section headings and the window list set their label on the frame after the wrap, so those rows stayed blank; the label, selection, and click now go to the button.
-- **Intel strip and name alerts** can be turned off under Options > Interface > Intel. A name-mention popup no longer crashes combat text and the zone notice.
-- **Buff Watch** hover lists the same cost, timer, and stat lines as the NCU tooltip, and shift-click opens the nano description.
+- **Skills IP priorities.** Save Priorities, Cancel, and Restore defaults never appeared, and Save Changes and Close were empty frames, so the edit could not be saved. Those buttons show and hide with their frames.
+- **Buff Watch.** Hover lists the same lines as the NCU tooltip: kind, NCU cost, nano cost, time left, radius, range, attack, recharge, modifiers, and the description. Shift-click opens the nano description.
+- **Mission Terminal is its own package again** (`ndgui-mission-terminal`). The hub was attaching the offer map to a blank frame, and the built-in terminal came back. This package attaches the map while it loads. Info and Missions stay together and still share briefings. The terminal cannot read those briefs. Offer pay, XP, zone, QL and rewards still come from the server.
+- **Empty button frames.** Showing or hiding a button shows or hides its frame. Market Confirm cancellation was an empty frame you could not click. Chat Config section headings and the window list were blank frames because the label was written on the frame. The name, selection, and click are on the button now.
+- **Intel.** Options > Interface > Intel can turn off the XP and credits per hour strip, and the banner for your name, a tell, or a watch word. Clicking that banner no longer takes down floating combat text and the zone notice.
 
 ## 0.4.0
 
