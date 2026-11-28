@@ -106,14 +106,19 @@ ui.define("notum.ndgui-lib/button", function()
 		return wraps
 	end
 
-	-- The wrap that contains a descendant named `name`. Last hit is the innermost.
+	-- The wrap that contains a descendant named `name`.
 	-- A missing name is a Lua error; probe with pcall and do not use ui.find (it is this hook).
+	-- One match only. If every wrap can see the name, find is not limited to that wrap,
+	-- and guessing the last one hides the wrong frame.
 	local function wrap_named(root, name)
 		local found
 		local wraps = wraps_of(root)
 		for i = 1, #wraps do
 			local ok, inner = pcall(raw_find, wraps[i], name)
-			if ok and inner then
+			if ok and inner and inner ~= wraps[i] then
+				if found then
+					return nil
+				end
 				found = wraps[i]
 			end
 		end
@@ -348,6 +353,32 @@ ui.define("notum.ndgui-lib/button", function()
 		ui.on_click(pin_button, sync)
 		-- Docking / restore also flips selected; keep the overlay in sync.
 		ui.on_update(sync)
+	end
+
+	-- Show or hide a wrapped button and its frame together.
+	-- `walk_root` is the panel whose button frames, in tree order, are `names`.
+	-- `find_root` is the view ui.find can search (the loaded content, not a proxy-only child).
+	-- The frames are the ui.child handles taken once at load. A later ui.find handle is not
+	-- those children, and find inside a frame does not see the button, so the visibility
+	-- hook never learns the frame. Skills priorities use the same walk.
+	function M.sync_named(find_root, walk_root, names)
+		local map = {}
+		local list = wraps_of(walk_root)
+		if #list == #names then
+			for i = 1, #names do
+				map[names[i]] = list[i]
+			end
+		end
+		return function(name, on)
+			local wrap = map[name]
+			if wrap then
+				raw_visible(wrap, on)
+			end
+			local ok, handle = pcall(raw_find, find_root, name)
+			if ok and handle then
+				raw_visible(handle, on)
+			end
+		end
 	end
 
 	M.nearest_height = nearest_height

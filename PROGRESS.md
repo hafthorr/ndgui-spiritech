@@ -1,5 +1,13 @@
 # Progress
 
+## Grious 0.4.2 follow-up: Market confirm, Intel Log (2026-11-27)
+
+"That log" is the Intel Log. The name banner calls `toggle(logw)`, which saves `open:log`. The strip x only set `hud_hidden`, so the next login hid the strip and opened the Log again. Hiding the strip (x, `/ndgui hud`, or the Options toggle) now closes the Log and Alts and clears those saved flags. The HUD also replayed the last 8 bus events on every login, so the old name/tell banner came back too. Replay is commands only, and a command older than a minute is ignored. `tests/test_intel.lua`.
+
+GMI Confirm cancellation is still the empty frame. The button hook records a wrap only when `ui.find` from inside that frame can see the button. In the client that lookup does not, so `ui.visible` hid the label and left the frame, and a frame that started hidden never came back. Market now does what Skills does: `button.sync_named` walks the order panel once and shows the frame and the button together. Live `notum.ndgui-market/main.lua` and `fork_windows.py` (so the next generate keeps it). `tests/test_button_wrap.lua`.
+
+Copied into the dev client: `notum.ndgui-lib` `button.lua` and `bus.lua`, `notum.ndgui-intel` `hud.lua`, `hud_strip.xml`, `sniff.lua`, and the market `main.lua`. `Client.xml` was not touched. Restart. Not tagged.
+
 ## Empty chrome, Intel crash, Intel options (2026-11-27)
 
 Grious, `~/Downloads/LinkCrash1.png` and `LinkCrash2.png`. Clicking the "someone said your name" banner failed `notum.ndgui-intel` Floating combat text and Zone notice. Both stacks are `hud.lua:99` indexing global `os` (`os.date`) from `render_log`, reached through the bus poll in `floating_text_tick` / `zone_notice_apply`. The addon sandbox has no `os`, and the index happens before `pcall`, so a log line takes the role down. The log window stays marked open, so the next mention does it again after a relog. `clock_of` now calls `os.date` inside the `pcall` and otherwise formats the unix milliseconds. `drive` also catches a HUD tick error so combat text and the zone notice stay up.

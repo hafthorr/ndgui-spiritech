@@ -9,6 +9,9 @@ Versions follow Semantic Versioning 2.0.0: `MAJOR.MINOR.PATCH`.
 
 ## Unreleased
 
+- **Market.** Cancel order shows Confirm cancellation and Keep order, labels and all. Those two were an empty frame.
+- **Intel.** Hiding the strip also closes the Log and Alts, and a later login leaves them closed. An old name or tell no longer pops the banner again on every login.
+
 ## 0.4.2
 
 - Intel strip: an x on the right hides the XP and credits bar. `/ndgui hud` shows it again.

@@ -360,6 +360,62 @@ def fork(src, role, title):
             if old_vis not in code:
                 raise SystemExit(f"{src}: pet button visibility changed shape")
             code = code.replace(old_vis, new_vis, 1)
+        if src == "Market" and fn == "main.lua":
+            # ui.visible on these Buttons hides the label and leaves the frame. Confirm
+            # and Keep start hidden, and the visibility hook never sees that frame:
+            # ui.find from inside the frame does not return the button. Record the
+            # frames under the order panel, in content.xml order, and show both.
+            code = must(
+                code,
+                "local function view(name)\n"
+                "\treturn ui.find(content, name)\n"
+                "end\n",
+                "local function view(name)\n"
+                "\treturn ui.find(content, name)\n"
+                "end\n"
+                "local show_order_button = ui.require(\"notum.ndgui-lib/button\").sync_named(content, view(\"order_selection\"), {\n"
+                "\t\"collect_order\", \"cancel_order\", \"confirm_cancel\", \"keep_order\",\n"
+                "\t\"order_details_button\", \"order_depth_button\", \"reprice_order\",\n"
+                "})\n",
+                "Market/main.lua",
+            )
+            for old, new in (
+                (
+                    "\tui.visible(view(\"confirm_cancel\"), false)\n"
+                    "\tui.visible(view(\"keep_order\"), false)\n"
+                    "\tui.visible(view(\"cancel_order\"), true)\n",
+                    "\tshow_order_button(\"confirm_cancel\", false)\n"
+                    "\tshow_order_button(\"keep_order\", false)\n"
+                    "\tshow_order_button(\"cancel_order\", true)\n",
+                ),
+                (
+                    "\tui.visible(view(\"cancel_order\"), false)\n"
+                    "\tui.visible(view(\"confirm_cancel\"), true)\n"
+                    "\tui.visible(view(\"keep_order\"), true)\n",
+                    "\tshow_order_button(\"cancel_order\", false)\n"
+                    "\tshow_order_button(\"confirm_cancel\", true)\n"
+                    "\tshow_order_button(\"keep_order\", true)\n",
+                ),
+                (
+                    "\tui.visible(view(\"cancel_order\"), true)\n"
+                    "\tui.visible(view(\"confirm_cancel\"), false)\n"
+                    "\tui.visible(view(\"keep_order\"), false)\n",
+                    "\tshow_order_button(\"cancel_order\", true)\n"
+                    "\tshow_order_button(\"confirm_cancel\", false)\n"
+                    "\tshow_order_button(\"keep_order\", false)\n",
+                ),
+            ):
+                code = must(code, old, new, "Market/main.lua")
+            code = must(
+                code,
+                "\t\tui.visible(view(\"cancel_order\"), true)\n"
+                "\t\tui.visible(view(\"confirm_cancel\"), false)\n"
+                "\t\tui.visible(view(\"keep_order\"), false)\n",
+                "\t\tshow_order_button(\"cancel_order\", true)\n"
+                "\t\tshow_order_button(\"confirm_cancel\", false)\n"
+                "\t\tshow_order_button(\"keep_order\", false)\n",
+                "Market/main.lua",
+            )
             open(os.path.join(ddir, "pet_ncu_slot.xml"), "w", encoding="utf-8", newline="\n").write(
                 '<?xml version="1.0" encoding="utf-8"?>\n<root>\n'
                 '  <View name="ndgui_slotcell" view_layout="stacked" '
