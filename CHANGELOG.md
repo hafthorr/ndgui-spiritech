@@ -9,6 +9,10 @@ Versions follow Semantic Versioning 2.0.0: `MAJOR.MINOR.PATCH`.
 
 ## Unreleased
 
+## 0.4.2
+
+- Intel strip: an x on the right hides the XP and credits bar. `/ndgui hud` shows it again.
+
 ## 0.4.1
 
 In Options, set Mission terminal to Notum Dovvetech Mission Terminal. Info and Missions stay on Mission Hub.
