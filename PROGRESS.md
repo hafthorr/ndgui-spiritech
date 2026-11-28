@@ -1,5 +1,29 @@
 # Progress
 
+## Intel strip buttons (2026-11-28)
+
+Alts, Log, 0, and x used `GFX_NDGUI_BTN22_*`. Those atlas ids are gone with the old skin, so the client drew stock buttons. `hud_strip.xml` now wraps them the way `square_buttons.py` wraps every other labelled button (`ndgui_btnwrap`, `library://notum.ndgui-lib/buttons/btn22_*`, flat label). `hud.lua` calls `Button.skin_tree` after load so hover and press swap the slices. Copied to `notum.ndgui-intel`. Quit and relaunch.
+
+## Intel strip is not a Control Center addon (2026-11-28)
+
+The strip cannot be listed under Actions → Addons. That menu is built only from `ui.register_view` destinations, and a package may provide roles or declare windows, not both (`docs/lua-api/addons.md`). `notum.ndgui-intel` provides chat, floating combat text, and the zone notice. A `<View>` on that package would be refused and those roles would fall back to stock. The strip, Log, and alerts share that package's bus, which another package cannot read. On and off stay the Options toggle, the strip's x, and `/ndgui hud`.
+
+## Mission Terminal falling back to stock (2026-11-27)
+
+This session's client log, `logs/client-20261127_212455.log`: `Mission Terminal package failed: Core/modules.lua:8: Invalid or duplicate UI module` at `main.lua:4` (`ui.require("notum.ndgui-lib/win_terminal")`). Prefs stayed on `notum.ndgui-mission-terminal`. A provider that fails init is rebuilt as the bundled package for the rest of the process (`UI/Packages/README.md`).
+
+`<Modules root="lua" />` already registers each file as `notum.ndgui-lib/<name>`. The file is the factory and must return the module. `button.lua` and `boot.lua` also called `ui.define` with that same name, so the first real `ui.require` threw. `grid.lua` hides that with `pcall`, which is why every other window still opened. The terminal requires the button module directly, so the whole package died and the stock terminal (no presets, stock buttons) came back.
+
+Both files are factory bodies now. That got past the duplicate module. The next launch, `logs/client-20261128_000514.log`, died one step later: `Core/ui.lua:1557: Lua argument 2 must be Boolean` while building the window. `layout_window` calls `show_recent(nil)` before any reward exists. `nil and #others > 0` is nil, and `ui.visible` rejects it, so the package fails and the stock terminal is back for that process. `show_recent`, the reward row, and the map toggle now pass real booleans. `button.lua` `ui.visible` also turns a non-boolean into true or false before the host sees it. `tests/test_providers.lua`: terminal package loads. The same 16 generated-package failures. Copied `win_terminal.lua` and `button.lua` into `notum.ndgui-lib/lua/`. Quit the client completely and start it again. Not tagged.
+
+## Grious 0.4.2 follow-up: Market confirm, Intel Log (2026-11-27)
+
+"That log" is the Intel Log. The name banner calls `toggle(logw)`, which saves `open:log`. The strip x only set `hud_hidden`, so the next login hid the strip and opened the Log again. Hiding the strip (x, `/ndgui hud`, or the Options toggle) now closes the Log and Alts and clears those saved flags. The HUD also replayed the last 8 bus events on every login, so the old name/tell banner came back too. Replay is commands only, and a command older than a minute is ignored. `tests/test_intel.lua`.
+
+GMI Confirm cancellation is still the empty frame. The button hook records a wrap only when `ui.find` from inside that frame can see the button. In the client that lookup does not, so `ui.visible` hid the label and left the frame, and a frame that started hidden never came back. Market now does what Skills does: `button.sync_named` walks the order panel once and shows the frame and the button together. Live `notum.ndgui-market/main.lua` and `fork_windows.py` (so the next generate keeps it). `tests/test_button_wrap.lua`.
+
+Copied into the dev client: `notum.ndgui-lib` `button.lua` and `bus.lua`, `notum.ndgui-intel` `hud.lua`, `hud_strip.xml`, `sniff.lua`, and the market `main.lua`. `Client.xml` was not touched. Restart. Not tagged.
+
 ## Empty chrome, Intel crash, Intel options (2026-11-27)
 
 Grious, `~/Downloads/LinkCrash1.png` and `LinkCrash2.png`. Clicking the "someone said your name" banner failed `notum.ndgui-intel` Floating combat text and Zone notice. Both stacks are `hud.lua:99` indexing global `os` (`os.date`) from `render_log`, reached through the bus poll in `floating_text_tick` / `zone_notice_apply`. The addon sandbox has no `os`, and the index happens before `pcall`, so a log line takes the role down. The log window stays marked open, so the next mention does it again after a relog. `clock_of` now calls `os.date` inside the `pcall` and otherwise formats the unix milliseconds. `drive` also catches a HUD tick error so combat text and the zone notice stay up.

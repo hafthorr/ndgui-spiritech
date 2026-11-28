@@ -12,6 +12,7 @@
 -- Positions and open windows are kept in this package's storage (every character).
 ui.define("intel.hud", function()
 	local Bus = ui.require("notum.ndgui-lib/bus")
+	local Button = ui.require("notum.ndgui-lib/button")
 	local Ledger = ui.require("intel.ledger")
 	local H = {}
 
@@ -120,6 +121,30 @@ ui.define("intel.hud", function()
 
 	local function strip_on()
 		return active and setting_on("show-strip", true) and Bus.get("hud_hidden") ~= "1"
+	end
+
+	-- The Log and Alts windows remember that they were opened. Hiding the strip closes
+	-- them too, so a login with the strip hidden does not bring the Log back.
+	local function hide_panels()
+		if alts and alts.open then
+			alts.set_open(false)
+		end
+		if logw and logw.open then
+			logw.set_open(false)
+		end
+		if alert then
+			alert_state.until_ms = 0
+			ui.visible(alert.root, false)
+		end
+	end
+
+	local function apply_strip()
+		if not strip_on() then
+			hide_panels()
+		end
+		if strip then
+			ui.visible(strip.root, strip_on())
+		end
 	end
 
 	local render_log, render_strip
@@ -384,6 +409,7 @@ ui.define("intel.hud", function()
 
 	local function build_strip()
 		local view = ui.load("hud_strip.xml")
+		pcall(Button.skin_tree, view)
 		strip = { root = view }
 		for _, name in ipairs({ "grip", "xp", "axp", "cash", "time", "alts", "log", "reset", "close" }) do
 			strip[name] = ui.find(view, "strip_" .. name)
@@ -400,14 +426,14 @@ ui.define("intel.hud", function()
 		end)
 		ui.on_click(strip.close, function()
 			Bus.set("hud_hidden", "1")
-			ui.visible(strip.root, false)
+			apply_strip()
 		end)
 		pcall(function()
 			ui.settings.on_change(function()
 				if not built then
 					return
 				end
-				ui.visible(strip.root, strip_on())
+				apply_strip()
 				if not setting_on("show-alerts", true) then
 					alert_state.until_ms = 0
 					ui.visible(alert.root, false)
@@ -521,7 +547,7 @@ ui.define("intel.hud", function()
 			else
 				local hidden = Bus.get("hud_hidden") ~= "1"
 				Bus.set("hud_hidden", hidden and "1" or "0")
-				ui.visible(strip.root, strip_on())
+				apply_strip()
 				show_alert("ndgui", hidden and "Intel strip hidden (ndgui hud brings it back)." or "Intel strip shown.")
 			end
 		elseif c == "reset" then
@@ -577,7 +603,12 @@ ui.define("intel.hud", function()
 				save_record(now_ms(), true)
 			end
 		elseif topic == "cmd" then
-			command(f.c or "", f.a or "")
+			-- Replay is how a command typed before this VM took the HUD still arrives.
+			-- The bus keeps old sessions, so a command with no time, or older than a minute, is ignored.
+			local at = tonumber(f.t)
+			if at and math.abs(now_ms() - at) <= 60000 then
+				command(f.c or "", f.a or "")
+			end
 		end
 	end
 
@@ -588,7 +619,9 @@ ui.define("intel.hud", function()
 		end
 		layer = root
 		rates = Ledger.rates(now_ms())
-		reader = Bus.reader({ replay = 8 }) -- commands typed while the HUD was being elected
+		-- Commands typed while the HUD was being elected. Older alerts and loot stay
+		-- on the bus for this install, and replaying them showed the banner on every login.
+		reader = Bus.reader({ replay = 8, replay_topic = "cmd" })
 		build_strip()
 		build_alert()
 		build_alts()
@@ -603,20 +636,21 @@ ui.define("intel.hud", function()
 			return
 		end
 		active = value
-		ui.visible(strip.root, strip_on())
-		ui.visible(alts.root, value and alts.open)
-		ui.visible(logw.root, value and logw.open)
 		if not value then
+			ui.visible(strip.root, false)
+			ui.visible(alts.root, false)
+			ui.visible(logw.root, false)
 			ui.visible(alert.root, false)
-		else
-			alts.open = Bus.get("open:alts") == "1"
-			logw.open = Bus.get("open:log") == "1"
-			ui.visible(alts.root, alts.open)
-			ui.visible(logw.root, logw.open)
-			render_alts()
-			render_log()
-			render_strip(now_ms(), true)
+			return
 		end
+		alts.open = Bus.get("open:alts") == "1"
+		logw.open = Bus.get("open:log") == "1"
+		apply_strip()
+		ui.visible(alts.root, alts.open)
+		ui.visible(logw.root, logw.open)
+		render_alts()
+		render_log()
+		render_strip(now_ms(), true)
 	end
 
 	function H.tick(now)

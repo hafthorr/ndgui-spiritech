@@ -9,8 +9,6 @@ local function check(cond, msg)
 end
 
 local ui = {}
-local factory
-function ui.define(_, fn) factory = fn end
 function ui.child_count(view) return #view.kids end
 function ui.child(view, index) return view.kids[index] end
 function ui.visible(view, on) view.visible = on end
@@ -32,8 +30,7 @@ function ui.find(view, name)
 	return { name = name, real = real, proxy = true }
 end
 
-assert(loadfile(here .. "/../ndgui-lib/lua/button.lua", "t", { ui = ui, string = string, pcall = pcall, ipairs = ipairs, pairs = pairs, next = next, type = type, tonumber = tonumber, math = math }))()
-factory()
+local Button = assert(loadfile(here .. "/../ndgui-lib/lua/button.lua", "t", { ui = ui, string = string, pcall = pcall, ipairs = ipairs, pairs = pairs, next = next, type = type, tonumber = tonumber, math = math }))()
 
 local function node(name, kids)
 	return { name = name, kids = kids or {}, visible = true }
@@ -73,6 +70,15 @@ check(confirm.visible == true and cancel.visible == false, "hiding a plain view 
 ui.visible(confirm_handle, false)
 ui.visible(cancel_handle, true)
 check(confirm.visible == false and cancel.visible == true, "confirm hides and cancel comes back")
+
+-- Market does not go through the find hook. The frames are the child handles recorded
+-- under the order panel, and the button is shown with the original find.
+local show_order = Button.sync_named(root, root, { "cancel_order", "confirm_cancel", "keep_order" })
+show_order("cancel_order", false)
+show_order("confirm_cancel", true)
+show_order("keep_order", true)
+check(cancel.visible == false, "sync_named hides Cancel's frame")
+check(confirm.visible == true and keep.visible == true, "sync_named shows frames that started hidden")
 
 if fail > 0 then
 	print(fail .. " FAILURES")

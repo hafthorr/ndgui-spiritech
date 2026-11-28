@@ -88,7 +88,7 @@ ui.define("intel.sniff", function()
 			if notice or (kind == "tell" and message.sent) then
 				local command, args = S.command(body)
 				if command then
-					out[#out + 1] = { "cmd", { c = command, a = args, id = id } }
+					out[#out + 1] = { "cmd", { c = command, a = args, id = id, t = tostring(math.floor(now)) } }
 					return out
 				end
 			end

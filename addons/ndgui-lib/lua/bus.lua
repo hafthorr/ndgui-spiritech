@@ -77,12 +77,16 @@ end
 
 local RECORD = "^(%d+)" .. US .. "([^" .. US .. "]*)" .. US .. "(.*)$"
 
--- options.replay = n: also deliver up to the last n events already on the bus
+-- options.replay = n: also deliver up to the last n events already on the bus.
+-- options.replay_topic: only that topic is delivered from the backlog. Events that
+-- arrive after the reader is created are delivered whatever the topic is.
 function B.reader(options)
 	local r = { last = top() }
+	local replay_until = r.last
 	if options and options.replay then
 		r.last = math.max(0, r.last - math.min(options.replay, RING))
 	end
+	local replay_topic = options and options.replay_topic
 	function r.poll(handler)
 		local now_top = top()
 		if now_top < r.last then
@@ -94,7 +98,9 @@ function B.reader(options)
 		for seq = r.last + 1, now_top do
 			local s, topic, payload = read("bus:" .. (seq % RING)):match(RECORD)
 			if tonumber(s) == seq then
-				handler(topic, B.decode(payload), seq)
+				if not replay_topic or seq > replay_until or topic == replay_topic then
+					handler(topic, B.decode(payload), seq)
+				end
 			end
 		end
 		r.last = now_top

@@ -79,6 +79,11 @@ do
   got = {}
   r.poll(function(topic) got[#got + 1] = topic end)
   check(#got == 0, "bus reader does not repeat events")
+  local replay = Bus.reader({ replay = 8, replay_topic = "cmd" })
+  Bus.publish("cmd", { c = "words" })
+  got = {}
+  replay.poll(function(topic) got[#got + 1] = topic end)
+  check(#got == 1 and got[1] == "cmd", "replay keeps a new command and drops older alerts: " .. table.concat(got, ","))
   for i = 1, Bus.RING + 10 do Bus.publish("x", { n = i }) end
   local n = 0
   r.poll(function() n = n + 1 end)
@@ -231,8 +236,20 @@ for _, kid in ipairs(fct.root.kids) do
 end
 check(row_name == "Bobtheagent", "Alts window lists you")
 check(fct.find(fct.root, "strip_log").text == "Log 1" or fct.find(fct.root, "strip_log").text == "Log 2", "Log button counts unread alerts: " .. tostring(fct.find(fct.root, "strip_log").text))
+find(fct, "strip_log").on_click()
+local function frame_open(H, title)
+  for _, kid in ipairs(H.root.kids) do
+    if kid.name == "frame" and visible(kid) and H.find(kid, "frame_title").text == title then
+      return true
+    end
+  end
+  return false
+end
+check(frame_open(fct, "Intel Log"), "the Log window opens from the strip")
 find(fct, "strip_close").on_click()
 check(not visible(find(fct, "strip")), "the strip x hides the Intel bar")
+check(not frame_open(fct, "Intel Log"), "hiding the strip closes the Log")
+check(Bus.get("open:log") ~= "1", "the Log stays closed: " .. tostring(Bus.get("open:log")))
 Bus.set("hud_hidden", "0")
 
 -- the client sandbox has no os. Opening the log used to index os.date and fail the role.
@@ -276,6 +293,18 @@ do
   check(Z.zone_name({ "Suppression field at 75%. Wildlife may attack you." }) == nil, "no name when there is only a notice")
   check(Z.zone_name({ "Suppression field at 75%. Wildlife may attack you.", "Entering 'Newland City'." }) == "Newland City", "zone name from Entering '...' (as the client sends it)")
 end
+
+-- A later login: the strip was hidden and the Log was left open, and a tell is still on the bus.
+Bus.set("hud_hidden", "1")
+Bus.set("open:log", "1")
+local again = vm()
+again.now = NOW + 120000
+again.env.floating_text_spawn({ { token = 3, text = "1", rgb = 0xFFFFFF, random = 0 } }, 20)
+again.env.floating_text_tick({}, 21)
+check(find(again, "strip") ~= nil and not visible(find(again, "strip")), "the next login keeps the Intel strip hidden")
+check(not frame_open(again, "Intel Log"), "the next login does not open the Log")
+check(Bus.get("open:log") ~= "1", "hiding the strip clears the saved Log: " .. tostring(Bus.get("open:log")))
+check(not visible(find(again, "alert")), "an old tell does not banner again on login")
 
 -- ---- alt items (ndgui-inventory's "which character has it") ----------------------------------
 do
