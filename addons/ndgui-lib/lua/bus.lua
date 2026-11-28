@@ -1,7 +1,7 @@
 -- A message bus between the VMs of ONE package, over that package's ui.storage.
 --
 -- The client runs each role of a multi-role package in its own Lua VM (ndgui-intel: chat, floating
--- combat text, zone notice; ndgui-mission-hub: Info, Missions, Mission Terminal). The VMs share
+-- combat text, zone notice; ndgui-mission-hub: Info, Missions). The VMs share
 -- nothing in Lua, but they share the package's storage, and storage reads/writes are synchronous
 -- host calls on the UI thread. So one VM can write and another read in its next update:
 --

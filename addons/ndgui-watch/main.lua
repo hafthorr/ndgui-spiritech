@@ -2,8 +2,9 @@
 ui.require("notum.ndgui-lib/grid") -- ndGUI: snap to grid while moving/resizing (ndgui-lib/lua/grid.lua)
 --
 --   Buff Watch  what needs attention as rows with draining timers: debuffs on you, buffs about to run
---               out (amber), buffs you pinned; every other buff as a small icon strip (hover for
---               details, right-click: Always show as a row / Hide); then what you put on your target.
+--               out (amber), buffs you pinned; every other buff as a small icon strip (hover for the
+--               same details as NCU, shift-click for the description, right-click: Always show as a
+--               row / Hide); then what you put on your target.
 --               The window menu sets the warning time, shows hidden buffs again, or lists everything
 --   Team Buffs  a member per row, a buff per column (buffs anyone on the team has): time left, or red
 --               when missing. Click a member to target them, then cast as usual (an addon cannot cast)
@@ -14,6 +15,7 @@ ui.require("notum.ndgui-lib/grid") -- ndGUI: snap to grid while moving/resizing 
 -- Data: game.effects ("self", "target", "team"), game.character, game.team. Read-only.
 local Window = ui.require("core.window")
 local Watch = ui.require("ndgui.watch")
+local Presentation = ui.require("ncu.presentation")
 
 local root = ui.load("root.xml")
 ui.root(root)
@@ -158,28 +160,62 @@ local function icon_line_count(inner)
 	return math.min(ICON_LINES, math.ceil(#icon_list / per_line(inner)))
 end
 
-local function caster_text(effect)
-	if effect.caster == nil then
-		return ""
+-- Same lines as the NCU tooltip (ncu.presentation). Observed effects keep seconds;
+-- the NCU formatter wants the template duration and delays in centiseconds.
+local function modifier_text(effect)
+	local modifiers = effect.modifiers
+	if type(modifiers) == "table" then
+		return table.concat(modifiers, "\n")
 	end
-	return (self_id ~= nil and effect.caster == self_id) and "Cast by you" or "Cast by someone else"
+	return modifiers or ""
 end
 
-local function icon_tooltip(effect, left)
-	local nl = string.char(10)
-	local tip = effect.name or ""
-	local clock = Watch.clock(left)
-	if clock ~= "" then
-		tip = tip .. "  (" .. clock .. " left)"
+local function ncu_facts(effect, left)
+	local seconds = 0
+	local permanent = effect.permanent == true or left == math.huge
+	if not permanent and left then
+		seconds = math.max(0, math.ceil(left))
 	end
-	local who = caster_text(effect)
-	if who ~= "" then
-		tip = tip .. nl .. who
+	return {
+		name = effect.name or "",
+		effect_type = effect.kind or "Friendly",
+		ncu_cost = effect.ncu_cost or 0,
+		nano_cost = effect.nano_cost or 0,
+		permanent = permanent,
+		seconds = seconds,
+		total_time = math.floor((effect.duration or 0) * 100 + 0.5),
+		radius = effect.radius or 0,
+		attack_range = effect.range or 0,
+		attack_delay = math.floor((effect.attack_delay or 0) * 100 + 0.5),
+		recharge_delay = math.floor((effect.recharge_delay or 0) * 100 + 0.5),
+		modifiers = modifier_text(effect),
+		description = effect.description or "",
+	}
+end
+
+local INSPECT_HINT = "Shift-click: full description"
+local ROW_HINT = "Right-click: always show as a row / hide"
+
+local function effect_tooltip(effect, left, hint)
+	local tip = Presentation.tooltip(ncu_facts(effect, left), true) .. "\n" .. INSPECT_HINT
+	if hint then
+		tip = tip .. "\n" .. hint
 	end
-	if effect.description and effect.description ~= "" then
-		tip = tip .. nl .. effect.description
+	return tip
+end
+
+-- The client opens the nano description on shift-click when the view is bound to the
+-- effect. Binding is refused in combat; the next refresh tries again.
+local function bind_effect(holder, view, effect)
+	if ui.in_combat() then
+		return
 	end
-	return tip .. nl .. "Right-click: always show as a row / hide"
+	local token = effect and effect.reference or 0
+	if holder.token == token then
+		return
+	end
+	pcall(ui.bind, view, token)
+	holder.token = token
 end
 
 local function render_icons(inner, now)
@@ -202,13 +238,15 @@ local function render_icons(inner, now)
 				ui.icon(cell.slot, effect.icon or 0)
 				ui.content(cell.slot, (effect.icon or 0) ~= 0)
 			end
-			local tip = icon_tooltip(effect, Watch.left(effect, you.sampled, now))
+			bind_effect(cell, cell.root, effect)
+			local tip = effect_tooltip(effect, Watch.left(effect, you.sampled, now), ROW_HINT)
 			if cell.tip ~= tip then
 				cell.tip = tip
 				ui.tooltip(cell.root, tip)
 			end
 		else
 			cell.ref = nil
+			bind_effect(cell, cell.root, nil)
 		end
 	end
 end
@@ -233,6 +271,11 @@ local function show_row(row, entry, sampled, now, inner, mine)
 	row.entry = entry
 	if not entry then
 		row.ref = nil
+		bind_effect(row, row.root, nil)
+		if row.tip then
+			row.tip = nil
+			ui.tooltip(row.root, "")
+		end
 		return
 	end
 	local effect = entry.effect
@@ -251,17 +294,11 @@ local function show_row(row, entry, sampled, now, inner, mine)
 		ui.content(row.buff_icon, (effect.icon or 0) ~= 0)
 		ui.text(row.buff_name, effect.name or "")
 		ui.text_color(row.buff_name, entry.hostile and HOSTILE_TEXT or TEXT)
-		local tip = effect.name or ""
-		local who = caster_text(effect)
-		if who ~= "" then
-			tip = tip .. string.char(10) .. who
-		end
-		if effect.description and effect.description ~= "" then
-			tip = tip .. string.char(10) .. effect.description
-		end
-		if not entry.hostile and not mine then
-			tip = tip .. string.char(10) .. "Right-click: always show as a row / hide"
-		end
+	end
+	bind_effect(row, row.root, effect)
+	local tip = effect_tooltip(effect, left, (not entry.hostile and not mine) and ROW_HINT or nil)
+	if row.tip ~= tip then
+		row.tip = tip
 		ui.tooltip(row.root, tip)
 	end
 	-- the last ten seconds blink

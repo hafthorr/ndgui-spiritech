@@ -1052,7 +1052,12 @@ do
     end
     char_subs.self(nil, { id = 42, health = 1000, max_health = 1000, nano = 500, max_nano = 500 })
     effects_subs.self({ reset = true, sampled_at_ms = clock, data = { { subject = "me", known = true, effects = {
-      fx(1, "Cyclic Coat of Barbs", 1200, 1200), fx(2, "Minor Wilderness Protection", 40, 2700),
+      fx(1, "Cyclic Coat of Barbs", 1200, 1200, {
+        kind = "Self", ncu_cost = 4, nano_cost = 40, radius = 0, range = 20,
+        attack_delay = 2, recharge_delay = 0.5, modifiers = { "Fast Attack +20" },
+        description = "Increases the Fast Attack skill.",
+      }),
+      fx(2, "Minor Wilderness Protection", 40, 2700),
       fx(3, "Hidden Thing", 10, 10, { hidden = true }) } } } })
     local names = {}
     -- visible text views named `name`, skipping hidden subtrees
@@ -1078,9 +1083,24 @@ do
       return out
     end
     local strip = cells()
-    check(#strip == 1 and strip[1].tooltip and strip[1].tooltip:find("Cyclic Coat of Barbs", 1, true)
-      and strip[1].tooltip:find("20:00 left", 1, true),
-      "the long buff sits in the icon strip, tooltip with time left: " .. tostring(strip[1] and strip[1].tooltip))
+    local coat = strip[1] and strip[1].tooltip or ""
+    check(#strip == 1 and coat:find("Cyclic Coat of Barbs", 1, true) and coat:find("Self · NCU 4 · Nano 40", 1, true)
+      and coat:find("Remaining: 20:00", 1, true) and coat:find("Total: 1200s · Radius: 0 · Range: 20", 1, true)
+      and coat:find("Attack: 2s · Recharge: 0.5s", 1, true) and coat:find("Fast Attack +20", 1, true)
+      and coat:find("Increases the Fast Attack skill.", 1, true)
+      and coat:find("Shift-click: full description", 1, true),
+      "the long buff sits in the icon strip, with the NCU tooltip: " .. coat)
+    check(strip[1] and strip[1].bound == 1, "shift-click binds the icon to the effect")
+    local row_tip, row_bound
+    for _, r in ipairs(H.releases) do
+      if r.view.name == "buff_row" and r.view.visible ~= false then
+        local n = H.find(r.view, "buff_name")
+        if n and n.text == "Minor Wilderness Protection" then row_tip, row_bound = r.view.tooltip, r.view.bound end
+      end
+    end
+    check(row_tip and row_tip:find("Remaining: 00:40", 1, true) and row_tip:find("Shift-click: full description", 1, true)
+      and row_tip:find("Right-click: always show as a row / hide", 1, true) and row_bound == 2,
+      "a buff row has the NCU tooltip and is bound: " .. tostring(row_tip))
     -- right-click an icon: Always show as a row
     local function right_click(view)
       for _, r in ipairs(H.releases) do if r.view == view then H.menu_items = {}; r.cb(); return H.menu_items end end
@@ -1185,8 +1205,8 @@ do
   end
 end
 
--- Mission hub: one package provides Info, Missions and Mission Terminal; Info keeps the briefing
--- of a mission page in ui.storage and the other two windows (other VMs) show it.
+-- Mission hub: one package provides Info and Missions; Info keeps the briefing of a mission page
+-- in ui.storage and the Missions window (another VM) shows it. The terminal is its own package.
 do
   local store = {}
   local function hub()
@@ -1215,9 +1235,10 @@ do
   for _, line in ipairs(page) do line.rgb = -1 end
   local I = hub()
   if I then
-    for _, r in ipairs({ "prk.info", "prk.missions", "prk.mission-terminal" }) do
+    for _, r in ipairs({ "prk.info", "prk.missions" }) do
       check(role(I, r), "mission hub declares " .. r)
     end
+    check(not role(I, "prk.mission-terminal"), "mission hub does not provide the terminal")
     check(I.root ~= nil and I.find(I.root, "hub_blank") ~= nil, "hub mounts an empty frame at load")
     local ok, err = pcall(I.env.info_show, 1, page, {}, false)
     check(ok, "hub info_show runs" .. (ok and "" or (": " .. tostring(err))))
@@ -1245,29 +1266,6 @@ do
     check(M.find(M.root, "detail_brief").visible == false and M.find(M.root, "detail_hint").text:match("Look at mission once") ~= nil,
       "no brief: hint to look once")
   end
-  local T = hub()
-  if T then
-    store.watch = "fling"
-    local ok, err = pcall(T.env.mission_terminal_configure, "Request", "Accept", (function() local l = {} for i = 1, 7 do l[i] = { minimum = "Lo", maximum = "Hi", progress = 0.5 } end return l end)())
-    check(ok, "hub terminal configure runs" .. (ok and "" or (": " .. tostring(err))))
-    local state = { request = 1, accept = 2, cancel = 3, selected = false }
-    local reward = { pinned_mode = false, has_pin = false, icon = 0, name = "", ql = 0, cost = 0 }
-    ok, err = pcall(T.env.mission_terminal_apply, state, {
-      { reference = 1, icon = 3, description = "The Rome house", selected = false },
-      { reference = 2, icon = 3, description = "Find the Data Disk", selected = false },
-    }, reward)
-    check(ok, "hub terminal apply runs" .. (ok and "" or (": " .. tostring(err))))
-    local briefs, badges = {}, {}
-    local function walk(v)
-      if v.name == "offer_brief" and v.visible ~= false then briefs[#briefs + 1] = v.text end
-      if v.name == "offer_reward" and v.visible ~= false and (v.text or "") ~= "" then briefs.reward = v.text end
-      if v.name == "offer_badge" and v.visible == true then badges[#badges + 1] = v.text end
-      for _, k in ipairs(v.kids or {}) do walk(k) end
-    end
-    walk(T.root)
-    check(#briefs == 1 and briefs[1]:match("1,986 credits") and (briefs.reward or ""):match("^Reward: Nano Crystal"), "terminal row shows a looked-at offer's pay and reward: " .. tostring(briefs[1]) .. " / " .. tostring(briefs.reward))
-    check(#badges == 1 and badges[1]:match("fling"), "watch words match the kept briefing's reward: " .. table.concat(badges, "|"))
-  end
 end
 
 -- Mission Terminal: offer rows, watch list matches, roll counter, presets, chosen-reward cost.
@@ -1275,8 +1273,8 @@ do
   local H = Mock.new(addons, core, { width = W, height = Hh, loose = true })
   local store = {}
   H.env.ui.storage = { read = function(k) return store[k] or "" end, write = function(k, v) store[k] = v end }
-  local ok, err = pcall(H.load_package, "ndgui-mission-hub")
-  check(ok, "hub loads as Mission Terminal" .. (ok and "" or (": " .. tostring(err))))
+  local ok, err = pcall(H.load_package, "ndgui-mission-terminal")
+  check(ok, "mission terminal package loads" .. (ok and "" or (": " .. tostring(err))))
   if ok then
     check(role(H, "prk.mission-terminal"), "terminal declares prk.mission-terminal")
     local env = H.env
@@ -1313,7 +1311,7 @@ do
     end)
     local H2 = Mock.new(addons, core, { width = W, height = Hh, loose = true })
     H2.env.ui.storage = { read = function(k) return store[k] or "" end, write = function(k, v) store[k] = v end }
-    ok, err = pcall(H2.load_package, "ndgui-mission-hub")
+    ok, err = pcall(H2.load_package, "ndgui-mission-terminal")
     check(ok, "terminal reloads with a watch list" .. (ok and "" or (": " .. tostring(err))))
     env = H2.env
     env.mission_terminal_configure("Request", "Accept", labels)
@@ -1344,7 +1342,7 @@ do
     store.watch = "carbonum"
     local H3 = Mock.new(addons, core, { width = W, height = Hh, loose = true })
     H3.env.ui.storage = { read = function(k) return store[k] or "" end, write = function(k, v) store[k] = v end }
-    check(pcall(H3.load_package, "ndgui-mission-hub"), "terminal loads for live offer facts")
+    check(pcall(H3.load_package, "ndgui-mission-terminal"), "terminal loads for live offer facts")
     H3.env.mission_terminal_configure("Request", "Accept", labels)
     H3.env.mission_terminal_apply(state, {
       { reference = 31, icon = 5, description = "Repair a broken generator", selected = false, location = "Rome Blue", ql = 120,
@@ -1386,7 +1384,7 @@ do
       planet = function() return 0 end, record = function() end, fit = function() drawn.fit = drawn.fit + 1; return 0 end,
       target = function() drawn.targets = drawn.targets + 1 end, clear_targets = function() drawn.targets = 0 end,
     }
-    local ok4, err4 = pcall(H4.load_package, "ndgui-mission-hub")
+    local ok4, err4 = pcall(H4.load_package, "ndgui-mission-terminal")
     check(ok4, "terminal with the offer map loads" .. (ok4 and "" or (": " .. tostring(err4))))
     if ok4 then
       check(drawn.attached == 1, "the map surface is attached once, at load")
@@ -1475,7 +1473,7 @@ do
   end
 end
 -- every hand-made package that moves things loads the grid
-for _, d in ipairs({ "compass", "hotbar", "meter", "mission-hub", "planet-map", "playfield-map", "status-bars", "target-panels", "team", "watch" }) do
+for _, d in ipairs({ "compass", "hotbar", "meter", "mission-hub", "mission-terminal", "planet-map", "playfield-map", "status-bars", "target-panels", "team", "watch" }) do
   local src = io.open(addons .. "/ndgui-" .. d .. "/main.lua", "rb"):read("a")
   check(src:find('ui.require("notum.ndgui-lib/grid")', 1, true), "ndgui-" .. d .. " loads the grid")
 end

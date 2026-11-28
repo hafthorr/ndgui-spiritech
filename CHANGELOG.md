@@ -7,6 +7,17 @@ Versions follow Semantic Versioning 2.0.0: `MAJOR.MINOR.PATCH`.
 - PATCH bumps fix tokens, scale math, or docs without a config change.
 - While the major version is 0, the client view layer is still incomplete. The Lua model is safe to load offline.
 
+## Unreleased
+
+## 0.5.0
+
+Needs the game client 0.3.5 (addon API 0.2.0) or newer. In Options, set Mission terminal to Notum Dovvetech Mission Terminal. Info and Missions stay on Mission Hub.
+
+- **Mission Terminal is its own package again** (`ndgui-mission-terminal`). The hub was attaching the offer map to a blank frame, and the built-in terminal came back. Info and Missions stay in Mission Hub and still share briefings. In Options, point Mission terminal at Notum Dovvetech Mission Terminal.
+- **Empty button frames.** Showing or hiding a button also shows or hides its chrome. Market Confirm cancellation was an empty frame you could not click. Skills priorities were the same bug. Chat Config section headings and the window list set their label on the frame after the wrap, so those rows stayed blank; the label, selection, and click now go to the button.
+- **Intel strip and name alerts** can be turned off under Options > Interface > Intel. A name-mention popup no longer crashes combat text and the zone notice.
+- **Buff Watch** hover lists the same cost, timer, and stat lines as the NCU tooltip, and shift-click opens the nano description.
+
 ## 0.4.0
 
 Needs the game client 0.3.5 (addon API 0.2.0) or newer. Run the installer again: the new Intel package takes over the chat role.

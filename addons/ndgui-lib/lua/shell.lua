@@ -1,5 +1,5 @@
 -- One window frame that is mounted at load and filled later. The client wants every role's root widget
--- mounted while the script loads, but ndgui-mission-hub (Info + Missions + Mission Terminal in one
+-- mounted while the script loads, but ndgui-mission-hub (Info + Missions in one
 -- package) only learns which role a VM plays from the first callback. The hub mounts an empty frame
 -- with S.mount(); the window module then calls S.window(options) instead of Window.create + ui.root
 -- and gets that frame back, filled. Without a mounted shell S.window is plain Window.create + ui.root.

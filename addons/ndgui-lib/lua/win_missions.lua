@@ -1,5 +1,5 @@
--- ndGUI missions window as a module: required by its own package or by ndgui-mission-hub, which
--- provides Info, Missions and Mission Terminal from one package so they can share mission briefs.
+-- ndGUI missions window as a module: required by ndgui-mission-hub, which provides Info and Missions
+-- from one package so they can share mission briefs.
 -- Returns its native callbacks; the requiring package routes the globals to them.
 local M = {}
 local BASE = "library://notum.ndgui-lib/missions_"

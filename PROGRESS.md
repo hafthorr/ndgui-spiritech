@@ -1,14 +1,64 @@
 # Progress
 
+## Empty chrome, Intel crash, Intel options (2026-11-27)
+
+Grious, `~/Downloads/LinkCrash1.png` and `LinkCrash2.png`. Clicking the "someone said your name" banner failed `notum.ndgui-intel` Floating combat text and Zone notice. Both stacks are `hud.lua:99` indexing global `os` (`os.date`) from `render_log`, reached through the bus poll in `floating_text_tick` / `zone_notice_apply`. The addon sandbox has no `os`, and the index happens before `pcall`, so a log line takes the role down. The log window stays marked open, so the next mention does it again after a relog. `clock_of` now calls `os.date` inside the `pcall` and otherwise formats the unix milliseconds. `drive` also catches a HUD tick error so combat text and the zone notice stay up.
+
+The XP/hr strip and that banner had no switch. Options > Interface > Intel: **XP and credits per hour** and **Name and tell alerts**. `/ndgui hud` still hides the strip when the option is on.
+
+Market confirm is the Skills empty-frame bug. `square_buttons.py` moves `visible="false"` onto `ndgui_btnwrap`. `ui.visible` on the Button hid the label and left the frame, and a frame that started hidden never came back, so Confirm cancellation was an empty unclickable box. `ui.find` and `ui.child` are not the same value, so `button.lua`'s child map missed `ui.visible(ui.find(...))`. The find hook now remembers the handle it just returned and shows or hides that wrap. `tests/test_button_wrap.lua` uses a different find handle from the child and checks Confirm's hidden wrap.
+
+Full audit, 2026-11-27 night: parsed every `ndgui_btnwrap` in the live Addons tree and in `addons/` (407 XML files, 234 wrapped buttons, 30 packages). Then traced every `ui.visible` call back to a wrapped button name, including `view("name")` and variables assigned from `ui.find`. Lua shows or hides only these wrapped buttons:
+
+- Market `confirm_cancel`, `keep_order` (wrap starts hidden), `cancel_order`. `view()` is `ui.find` after `filters.lua` loads grid, which loads the hook.
+- Skills `reset_all`, `accept`, `quit`, `restore_priorities`, `save_priorities`, `cancel_priorities`. `show_priority_button` sets the wrap and the button. The three that start hidden are the last three. `reset_skill` sits inside `reset_area`, which is hidden as a parent. Skill row +/- and priority arrows are not wrapped.
+- Terminal `map_toggle` (wrap starts hidden) and `reward_clear`. Both are `ui.find` after `win_terminal.lua` requires button.
+- Team `leave_button`, which also sets `leave_chrome`.
+- Pets Attack / Follow / Wait, which also set each wrap.
+
+No other wrapped button is passed to `ui.visible`. Hiding a parent (page, toolbar row, credits section) hides the wrap with it. Intel never loads the hook and never toggles a single wrapped button.
+
+One miss that is not a hide/show: Chat Config `row.xml` is only the `chat_config_row` button, so after the wrap `ui.load` returns the frame. Headings and the window list set their text and clicks on that frame, and the label stays blank. `fork_hud.py` and the live `notum.ndgui-chat-config/main.lua` now find `chat_config_row` for text, selection, tooltip, and clicks, and still add and destroy the wrap. Restart. Not tagged.
+
+Release 0.5.0. The dev client is replaced from `release/ndgui-0.5.0.zip` after the tag. `Client.xml` and `.installed.json` are not touched by that copy. Restart to load it.
+
+## Buff Watch NCU details (2026-11-27)
+
+Screenshots `Pictures/Screenshots/Screenshot_20261127_145000.png` (NCU) and `Screenshot_20261127_145013.png` (Buff Watch), both hovering Composite Physical Special Expertise. NCU tooltip is `ncu.presentation`: kind, NCU cost, nano cost, remaining, total, radius, range, attack, recharge, one modifier line each, then the description. Shift-click opens the nano description because the slot is `ui.bind`ed to the effect reference (same as the team NCU strip). Buff Watch only showed name, "Cast by you", and the description, and never bound the row.
+
+`addons/ndgui-watch/main.lua` now builds that tooltip from the observed effect (seconds converted to the centiseconds `ncu.presentation` expects) and binds each buff row and icon to `effect.reference`. Right-click pin/hide is unchanged. The hint line is "Shift-click: full description". Copied into the live `notum.ndgui-watch`. Restart the client. Not tagged.
+
+## Grious: Mission Terminal split out of the hub (2026-11-27)
+
+`~/Downloads/image.png`. Options had Missions and Mission terminal on `notum.ndgui-mission-hub`. The open window was the built-in: "No missions loaded" is only in `UI/Packages/MissionTerminal/content.xml`. The debugger row selected was `MissionTerminal / Mission Terminal`. Header said 0 failed. `/uidebug` drops disposed instances, so that does not mean the hub's terminal role survived. A role whose provider cannot init is rebuilt as the bundled package and the Options selection stays (`UI/Packages/README.md`).
+
+The hub attached `game.map_surface` at load onto a blank frame in every role VM, then built the real terminal only on the first `mission_terminal_*` callback. Stock and modern-ui attach once, while the terminal package loads, on the widget that stays. `win_terminal.lua` will move an already-mounted `Map.pane` onto `terminal_map_host` before `Shell.window` destroys the blank; `Map.wire` only binds zoom. That move never ran for a VM that did not get a terminal callback, and the adapter wants the surface on the lasting widget at load.
+
+Split, in the tree, not released: `addons/ndgui-mission-terminal` (`notum.ndgui-mission-terminal`) provides only `prk.mission-terminal` and requires `win_terminal` at load, so the map attaches once on the offer column. The hub keeps `prk.info` and `prk.missions` and still shares briefings through its own `ui.storage`. The terminal cannot read those briefs. Offer pay, XP, zone, QL and rewards still come from the server. Options stays one row per role. Info and Missions stay on the hub. Mission terminal has to point at the new package.
+
+Copied into the live client (`notum.ndgui-mission-hub` and new `notum.ndgui-mission-terminal`, plus the comment-level lib edits). No plain `ndgui-*` twin. `.installed.json` was not touched. Prefs `UiPackageProvider_mission_terminal` is `notum.ndgui-mission-terminal` (Missions stays on the hub). That is the same key Options writes. The game was closed when it was set, so the next launch uses it. `lua5.4 tests/test_providers.lua`: the new hub and terminal checks pass. The same 16 failures as before (generated packages and `inventory/slot.xml` are not in git). Ships in 0.5.0.
+
+## Skills IP priorities (2026-11-27)
+
+Screenshot `Pictures/Screenshots/Screenshot_20261127_143333.png`: Set IP priorities on an Engineer. The +/- pickers show the installed Engineer table (Strength Medium, and the detail says Matches default). Save Priorities, Cancel, and Restore defaults are missing. Save Changes and Close are empty frames.
+
+`ui.visible` on those Buttons hides the label and leaves `ndgui_btnwrap` up. The wraps that start `visible="false"` (Save Priorities, Cancel, Restore defaults) never get shown, so the edit cannot be saved. Closing the window drops an unsaved priority edit. `save_priorities` is what writes `ip_priorities` in `~/.local/share/ProjectRubiKa/prefs/Client.xml`, per profession. The file already has an older `2:...` value. This Engineer screen is not using it.
+
+Fix is in `fork_windows.py` and the live `notum.ndgui-skills/main.lua`: before category buttons are parented in, record the ten content.xml wraps in order and show or hide the wrap with the Button. A 3-leaf row is chrome only when its sibling is not, so the priority detail grid is skipped. Restart the client. Not tagged.
+
+## Dev client check (2026-11-27, after the portal publish)
+
+The live `notum.ndgui-*` folders match the published portal zip byte for byte: 40 packages, 1579 files, version 0.4.0, api 0.2.0. Portal sha256 `9E02CF786904A8AB7719F4366A2BB0704BAF2B9B10B2B68F82257A67154EAD60`. No plain `ndgui-*` folder beside them. `notum.ndgui-chat` is gone. Intel provides chat, floating combat text, and the zone notice. `.installed.json` has no ndGUI line (mtime 2026-11-25). Prefs at `~/.local/share/ProjectRubiKa/prefs/Client.xml` were last written 2026-11-26 22:43 and still point every HUD role at `notum.ndgui-*`, except status bars, which stay `ra.curved-bars`. The game client was not running. The launcher was. Addons load when the game starts, so the next login is 0.4.0.
+
 ## Mission Terminal report (2026-11-27)
 
-Release 0.4.0 is paused. Local `main` has an unpushed merge of PR #6 (`97624b4`). The 0.4.0 changelog, `VERSION`, and both zips are uncommitted. Do not tag or upload until the terminal is settled.
 
 Crimson_Dawn: the Mission Terminal is not resizable, and the offer rows have small long boxes through them. Screenshot is the terminal (map open, watch list, reward rows), not the Missions list. The installed client already has both causes.
 
 - `win_terminal.lua` used to create the window with `resizable = false`. `shell.lua` treats that as `fixed_size` and drops a drag. Fixed in the 0.4.0 tree: `resizable = true`, the layout keeps the dragged size (floor 480 px, map at least 220 px), offers sit in `offers_scroll`, and extra width goes to the map. Offer text uses the laid-out column width.
 - `terminal_offer.xml` used to stack a 28 px `ndgui_btnwrap` on `offer_hit` (`label=""`). `skin_package` now leaves an empty label alone, and the row is the bare flat button again. Introduced in `8400809`, which is in the portal 0.3.7 zip and was not in the GitHub tag `v0.3.7` (`dd3f7c7`). The updater compares that tag to the install stamp, so a 0.3.7 install is told it is current.
-- Copied `terminal_offer.xml`, `terminal_content.xml`, and `lua/win_terminal.lua` into the live `notum.ndgui-lib` on 2026-11-27. Restart the client to see it. The 0.4.0 zips were rebuilt after this fix. Not tagged, not uploaded.
+- Shipped 2026-11-27. Tag `v0.4.0` is `43be1e9` (workflow YAML fix on top of the release commit). GitHub release: https://github.com/hafthorr/ndgui-spiritech/releases/tag/v0.4.0. Player zip matches the committed file. The marketplace zip CI rebuilt has the same 1579 files (zip checksum differs only by metadata). The first tag push did not publish: `.github/workflows/ci.yml` had the marketplace Python outside the YAML block, so Actions failed before any job. That was fixed and the tag was moved onto the fix. No release had been created yet.
+- Live client `notum.ndgui-*` was replaced from `release/ndgui-0.4.0.zip` (40 packages, no extra files, other addons left in place). `Client.xml` and `.installed.json` were not touched. Portal 0.4.0 was published by hand on 2026-11-27. The file bytes match that portal zip.
 
 ## Dev install on this machine (2026-11-26)
 

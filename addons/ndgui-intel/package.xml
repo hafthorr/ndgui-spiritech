@@ -3,6 +3,10 @@
   <Provides role="prk.chat" />
   <Provides role="prk.floating-combat-text" />
   <Provides role="prk.zone-notice" />
+  <Options category="interface" section="intel">
+    <Toggle key="show-strip" label="XP and credits per hour" scope="machine" default="true" hint="The Intel strip at the top left. Turn this off to hide XP/hr, credits/hr, Alts and Log." />
+    <Toggle key="show-alerts" label="Name and tell alerts" scope="machine" default="true" hint="The banner when someone says your name, sends a tell, or matches a watch word." />
+  </Options>
   <Options category="combat" section="floating-combat-text">
     <Slider key="text-size" label="Combat text size" scope="machine" default="16" hint="Logical pixels up close." min="8" max="64" steps="56" unit=" px" />
     <Toggle key="merge-hits" label="Merge quick hits" scope="machine" default="true" hint="Hits landing on one target within half a second add up: 2,340 x5." />

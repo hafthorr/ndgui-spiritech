@@ -1,6 +1,6 @@
--- ndGUI terminal window as a module: required by its own package or by ndgui-mission-hub, which
--- provides Info, Missions and Mission Terminal from one package so they can share mission briefs.
--- Returns its native callbacks; the requiring package routes the globals to them.
+-- ndGUI terminal window as a module: required by ndgui-mission-terminal while that package loads,
+-- so the offer map is attached to the window that stays. Returns its native callbacks; the
+-- package assigns them to the mission_terminal_* globals.
 local M = {}
 local BASE = "library://notum.ndgui-lib/terminal_"
 -- ndGUI Mission Terminal (prk.mission-terminal), hand-made from the stock MissionTerminal package.
@@ -421,8 +421,7 @@ ui.on_click(watch_clear, function()
 end)
 
 -- ---- offer map ---------------------------------------------------------------------------
--- The hub attached the map surface at load (Map.mount); move it beside the column. A package that
--- loads this module directly mounts it here.
+-- Attach the offer map to the column that stays. This runs while the terminal package loads.
 if Map.pane then
 	ui.add(map_host, Map.pane)
 else
