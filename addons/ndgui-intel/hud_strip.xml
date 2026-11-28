@@ -2,7 +2,7 @@
 <root>
   <!-- Intel strip: session XP / alien XP / credits per hour, session time, Alts and Log buttons.
        Drag it by the grip on the left. -->
-  <View name="strip" view_layout="stacked" capture_input="true" composite_layer="true" min_size="Point(548,26)" max_size="Point(548,26)">
+  <View name="strip" view_layout="stacked" capture_input="true" composite_layer="true" min_size="Point(574,26)" max_size="Point(574,26)">
     <BitmapView image="library://notum.ndgui-lib/chrome/strip.png" />
     <View view_layout="horizontal" layout_borders="Rect(2,2,4,2)">
       <View name="strip_grip" view_layout="stacked" capture_input="true" interactive="true" min_size="Point(12,22)" max_size="Point(12,22)" tooltip="Drag to move">
@@ -15,6 +15,8 @@
       <Button name="strip_alts" label="Alts" font_size="11" min_size="Point(44,22)" max_size="Point(44,22)" layout_borders="Rect(0,0,3,0)" tooltip="Your characters: level, credits, where, raid locks" gfxid_raised_left="GFX_NDGUI_BTN22_RAISED_LEFT" gfxid_raised_middle="GFX_NDGUI_BTN22_RAISED_MIDDLE" gfxid_raised_right="GFX_NDGUI_BTN22_RAISED_RIGHT" gfxid_hover_left="GFX_NDGUI_BTN22_HOVER_LEFT" gfxid_hover_middle="GFX_NDGUI_BTN22_HOVER_MIDDLE" gfxid_hover_right="GFX_NDGUI_BTN22_HOVER_RIGHT" gfxid_pressed_left="GFX_NDGUI_BTN22_PRESSED_LEFT" gfxid_pressed_middle="GFX_NDGUI_BTN22_PRESSED_MIDDLE" gfxid_pressed_right="GFX_NDGUI_BTN22_PRESSED_RIGHT" gfxid_selected="GFX_NDGUI_BTN22_SELECTED" />
       <Button name="strip_log" label="Log" font_size="11" min_size="Point(52,22)" max_size="Point(52,22)" layout_borders="Rect(0,0,3,0)" tooltip="Tells, your name, watch words and loot this session" gfxid_raised_left="GFX_NDGUI_BTN22_RAISED_LEFT" gfxid_raised_middle="GFX_NDGUI_BTN22_RAISED_MIDDLE" gfxid_raised_right="GFX_NDGUI_BTN22_RAISED_RIGHT" gfxid_hover_left="GFX_NDGUI_BTN22_HOVER_LEFT" gfxid_hover_middle="GFX_NDGUI_BTN22_HOVER_MIDDLE" gfxid_hover_right="GFX_NDGUI_BTN22_HOVER_RIGHT" gfxid_pressed_left="GFX_NDGUI_BTN22_PRESSED_LEFT" gfxid_pressed_middle="GFX_NDGUI_BTN22_PRESSED_MIDDLE" gfxid_pressed_right="GFX_NDGUI_BTN22_PRESSED_RIGHT" gfxid_selected="GFX_NDGUI_BTN22_SELECTED" />
       <Button name="strip_reset" label="0" font_size="11" min_size="Point(22,22)" max_size="Point(22,22)" tooltip="Start the session counters over" gfxid_raised_left="GFX_NDGUI_BTN22_RAISED_LEFT" gfxid_raised_middle="GFX_NDGUI_BTN22_RAISED_MIDDLE" gfxid_raised_right="GFX_NDGUI_BTN22_RAISED_RIGHT" gfxid_hover_left="GFX_NDGUI_BTN22_HOVER_LEFT" gfxid_hover_middle="GFX_NDGUI_BTN22_HOVER_MIDDLE" gfxid_hover_right="GFX_NDGUI_BTN22_HOVER_RIGHT" gfxid_pressed_left="GFX_NDGUI_BTN22_PRESSED_LEFT" gfxid_pressed_middle="GFX_NDGUI_BTN22_PRESSED_MIDDLE" gfxid_pressed_right="GFX_NDGUI_BTN22_PRESSED_RIGHT" gfxid_selected="GFX_NDGUI_BTN22_SELECTED" />
+      <View weight="1" min_size="Point(0,22)" max_size="Point(-1,22)" />
+      <Button name="strip_close" label="x" font_size="11" min_size="Point(22,22)" max_size="Point(22,22)" tooltip="Hide the Intel strip. /ndgui hud shows it again." gfxid_raised_left="GFX_NDGUI_BTN22_RAISED_LEFT" gfxid_raised_middle="GFX_NDGUI_BTN22_RAISED_MIDDLE" gfxid_raised_right="GFX_NDGUI_BTN22_RAISED_RIGHT" gfxid_hover_left="GFX_NDGUI_BTN22_HOVER_LEFT" gfxid_hover_middle="GFX_NDGUI_BTN22_HOVER_MIDDLE" gfxid_hover_right="GFX_NDGUI_BTN22_HOVER_RIGHT" gfxid_pressed_left="GFX_NDGUI_BTN22_PRESSED_LEFT" gfxid_pressed_middle="GFX_NDGUI_BTN22_PRESSED_MIDDLE" gfxid_pressed_right="GFX_NDGUI_BTN22_PRESSED_RIGHT" gfxid_selected="GFX_NDGUI_BTN22_SELECTED" />
     </View>
   </View>
 </root>

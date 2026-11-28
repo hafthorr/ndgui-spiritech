@@ -231,6 +231,9 @@ for _, kid in ipairs(fct.root.kids) do
 end
 check(row_name == "Bobtheagent", "Alts window lists you")
 check(fct.find(fct.root, "strip_log").text == "Log 1" or fct.find(fct.root, "strip_log").text == "Log 2", "Log button counts unread alerts: " .. tostring(fct.find(fct.root, "strip_log").text))
+find(fct, "strip_close").on_click()
+check(not visible(find(fct, "strip")), "the strip x hides the Intel bar")
+Bus.set("hud_hidden", "0")
 
 -- the client sandbox has no os. Opening the log used to index os.date and fail the role.
 do

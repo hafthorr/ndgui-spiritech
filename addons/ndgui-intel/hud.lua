@@ -18,7 +18,7 @@ ui.define("intel.hud", function()
 	local ALERT_MS, ALERT_FADE_MS = 7000, 1000
 	local LOG_KEEP, LOG_ROWS, ALT_ROWS = 60, 20, 16
 	local ALTS_W, LOG_W = 712, 560
-	local STRIP_W, STRIP_H, ALERT_W, ALERT_H = 548, 26, 420, 30
+	local STRIP_W, STRIP_H, ALERT_W, ALERT_H = 574, 26, 420, 30
 	local KIND = {
 		tell = { "TELL", "#4FB3E8" }, name = { "NAME", "#E0C040" }, word = { "WATCH", "#E08A3C" },
 		loot = { "LOOT", "#9CD69C" }, locks = { "LOCKS", "#E08A3C" }, ndgui = { "NDGUI", "#6CB6FF" },
@@ -385,7 +385,7 @@ ui.define("intel.hud", function()
 	local function build_strip()
 		local view = ui.load("hud_strip.xml")
 		strip = { root = view }
-		for _, name in ipairs({ "grip", "xp", "axp", "cash", "time", "alts", "log", "reset" }) do
+		for _, name in ipairs({ "grip", "xp", "axp", "cash", "time", "alts", "log", "reset", "close" }) do
 			strip[name] = ui.find(view, "strip_" .. name)
 		end
 		ui.add(layer, view)
@@ -397,6 +397,10 @@ ui.define("intel.hud", function()
 			rates.reset(now_ms())
 			show_alert("ndgui", "Session counters start over.")
 			render_strip(now_ms(), true)
+		end)
+		ui.on_click(strip.close, function()
+			Bus.set("hud_hidden", "1")
+			ui.visible(strip.root, false)
 		end)
 		pcall(function()
 			ui.settings.on_change(function()
